@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>時間操作ゲーム 試作品 v38</title>
+<style>
+:root{color-scheme:dark;--bg:#10131b;--panel:#1b2130;--line:#30394c;--accent:#8b9cff;--muted:#aab3c7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f3f5fb;font:15px system-ui,sans-serif}
+main{max-width:900px;margin:auto;padding:18px}h1{font-size:1.35rem;margin:0 0 5px}p{color:var(--muted);margin:5px 0 14px}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(16,19,27,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:9px max(12px,calc((100vw - 900px)/2));margin:0 -18px 14px}
+.topstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.topstat{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 9px}.topstat span{display:block;color:var(--muted);font-size:.75rem}.topstat b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95rem}.topbar progress{height:5px;margin-top:4px}
+.view{display:none}.view.active{display:block}.viewgrid{display:grid;grid-template-columns:1fr;gap:12px}.viewgrid>.panel{min-width:0}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:7px max(8px,calc((100vw - 900px)/2));padding-bottom:calc(7px + env(safe-area-inset-bottom));background:rgba(16,19,27,.97);backdrop-filter:blur(12px);border-top:1px solid var(--line)}.bottomnav button{margin:0;padding:9px 3px;border-radius:9px;font-size:.82rem;background:#20283a}.bottomnav button.active{background:#6679df;border-color:#9aa8ff}main{padding-bottom:95px}
+#functions,#facilities{display:grid;grid-template-columns:1fr;gap:10px}#functions .item,#facilities .item{border:1px solid var(--line);border-radius:12px;background:#171d2a;padding:12px;margin:0}#functions .item>button,#facilities .item>button{margin-top:8px}.item details{margin-top:8px}.item summary{cursor:pointer;color:#cbd4ff;font-weight:650;padding:5px 0}.item .detail-copy{padding:5px 0;color:var(--muted);font-size:.88rem}
+@media(min-width:650px){.viewgrid.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}#functions,#facilities{grid-template-columns:repeat(2,minmax(0,1fr))}.topstat b{font-size:1.05rem}}
+@media(max-width:420px){main{padding:12px;padding-bottom:95px}.topbar{margin:0 -12px 12px}.topstats{gap:4px}.topstat{padding:6px 5px}.topstat span{font-size:.68rem}.topstat b{font-size:.8rem}.bottomnav button{font-size:.74rem;padding:9px 1px}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+h2{font-size:1.05rem;margin:0 0 10px}.stat{display:flex;justify-content:space-between;gap:12px;margin:7px 0}.big{font-size:1.4rem;font-weight:750}
+select{background:#252d40;color:#fff;border:1px solid #596585;border-radius:8px;padding:8px}button{background:#333d58;color:white;border:1px solid #596585;border-radius:10px;padding:10px 12px;font-weight:650;cursor:pointer;margin:4px 3px 4px 0}
+button.primary{background:#6679df;border-color:#8a9aff}button:disabled{opacity:.4;cursor:not-allowed}
+progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;border-top:1px solid var(--line)}.item:first-of-type{border-top:0}
+.small{font-size:.88rem;color:var(--muted)}.tag{display:inline-block;border-radius:6px;background:#30394c;padding:3px 7px;font-size:.8rem}
+#log{min-height:2em;color:#bfcaff}.actions{display:flex;flex-wrap:wrap;gap:4px}
+</style></head><body><main>
+<div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
+<h1>時間操作ゲーム <span class="tag">試作品 v38</span></h1>
+<p>タブ切り替え・固定ステータス・カード式施設表示に対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。</p>
+<div class="view active" id="view-home"><div class="viewgrid two-col">
+<section class="panel"><h2>プレイヤー</h2>
+<div class="stat"><span>レベル</span><b id="level">1</b></div>
+<div class="stat"><span>XP</span><b id="xp">0 / 500</b></div><progress id="xpbar" value="0" max="500"></progress>
+<div class="stat"><span>所持金</span><b id="money">¥0</b></div>
+<div class="stat"><span>基本収入</span><b id="income">¥1 / 秒</b></div>
+<div class="stat"><span>施設などからのXP収入</span><b id="passiveXp">+0.00 XP / 秒</b></div>
+<div class="stat"><span>XP倍率</span><b id="xpMult">×1.00</b></div>
+<div class="stat"><span>お金倍率</span><b id="moneyMult">×1.00</b></div>
+<div class="stat"><span>タップXP</span><b id="tapXp">1.00</b></div>
+<div class="stat"><span>タップ収入</span><b id="tapMoney">¥0.50</b></div>
+<div class="stat"><span>転生回数</span><b id="rebirth">0</b></div>
+<button class="primary" id="tap">タップしてXPとお金を獲得</button>
+<button id="test1000">管理者ボタン</button>
+<div class="small">タップ収入は現在の毎秒収入の0.5%。レベルアップ報酬：Lv1000以下は毎レベル、Lv1001〜10000は2レベルごと、Lv10001〜15000は5レベルごと、Lv15001以降は2レベルごと。特別報酬はLv1000以下10Lvごと、Lv1001〜10000は20Lvごと、Lv10001〜15000は50Lvごと、Lv15001以降は20Lvごと。所持金ボーナスは通常1.5%（Lv15001以降0.5%）、特別報酬は7.5%（Lv15001以降3%）。収入ボーナスは通常1秒分の収入の75%、特別報酬は250%。管理者モードでは能力・施設の費用が0、MPが無限になります。プレイヤーレベルに上限はありません。</div></section>
+<section class="panel"><h2>時間操作</h2>
+<div class="stat"><span>能力状態</span><b id="abilityState">停止中</b></div>
+<div class="stat"><span>MP</span><b id="mp">10 / 10</b></div><progress id="mpbar" value="10" max="10"></progress>
+<div class="stat"><span>能力使用中XP</span><b id="abilityXp">+1.00 / 秒</b></div><div class="stat"><span>連続使用時間</span><b id="continuousTime">0秒</b></div><div class="stat"><span>連続使用XPボーナス</span><b id="continuousBonus">×1.00</b></div><div class="stat"><span>ボーナス成長速度</span><b id="continuousRate">×1.00</b></div><div class="stat"><span>自動タップ間隔</span><b id="autoTapInterval">1.50秒</b></div>
+<div class="stat"><span>能力使用中お金</span><b id="abilityMoney">×1.00</b></div>
+<div class="stat"><span>自動タップ倍率（時間適応）</span><b id="autoTapMult">×1.00</b></div>
+<div class="stat"><span>MPブースト</span><b id="boostStatus">なし</b></div>
+<button class="primary" id="toggle">能力を使う</button>
+<div class="stat"><label for="boostSelect">ブースト倍率を選択</label><select id="boostSelect"></select></div><button id="xpBoostBtn">XPブースト：OFF</button> <button id="moneyBoostBtn">収入ブースト：OFF</button>
+<p class="small">連続使用でXP倍率が上昇（10秒×1.1、30秒×1.25、60秒×1.5、120秒×2、180秒×2.5、240秒×3）。240秒以降は30秒ごとに+0.25。MP95%以上で成長速度×1.25、90%以上で×1.15、20%未満では成長停止。手動停止またはMP切れでリセット。XPブーストと連続使用ボーナスは乗算。精密制御はMP消費を最大80%減らし、10Lvごとに使用中のMP回復が少し増加。50Lvごとに最大MPが+5。XP/収入ブーストはそれぞれ追加でMPを消費。</p><div id="log">ゲーム開始！</div></section>
+</div></div>
+<div class="view" id="view-abilities"><section class="panel"><h2>機能強化</h2><div class="stat"><label for="buyCount">まとめ買い数</label><select id="buyCount"><option value="5">5レベル</option><option value="10">10レベル</option><option value="50">50レベル</option><option value="100">100レベル</option></select></div><div id="functions"></div></section>
+</div>
+<div class="view" id="view-facilities"><section class="panel"><h2>収入施設</h2><div class="stat"><label for="buyCountFacility">まとめ買い数</label><select id="buyCountFacility"><option value="5">5レベル</option><option value="10">10レベル</option><option value="50">50レベル</option><option value="100">100レベル</option></select></div><div class="small">まとめ買い数で購入数を選択できます。「所持金で最大10000Lv買う」は動作を軽くするため、1回につき最大10000レベルまで購入します。</div><div id="facilities"></div></section>
+</div>
+<div class="view" id="view-rebirth"><section class="panel"><h2>転生</h2><p>レベル400で解放。転生するとレベル・XP・所持金・機能強化・施設レベルがリセットされます。転生前のレベル×0.01（最低×1）を転生倍率として設定し、XP倍率とお金倍率それぞれに乗算します。転生回数に応じて能力レベル上限も解放されます。</p><div class="stat"><span>転生倍率</span><b id="mult">×1.00</b></div><div class="stat"><span>能力レベル上限</span><b id="levelCap">50</b></div><button id="rebirthBtn" disabled>転生する（レベル400で解放）</button></section>
+</div>
+<div class="view" id="view-details"><section class="panel"><h2>セーブ・詳細</h2><p class="small">このブラウザ内に手動保存します。ブラウザの設定によってはHTMLファイルからの保存が制限される場合があります。</p><div class="actions"><button id="save">保存</button><button id="load">読み込み</button><button id="reset">最初から</button></div>
+<p class="small">「管理者ボタン」で管理者モードを切り替えられます。ONにすると能力・施設の購入費用が0になり、MPが無限になります。</p></section>
+</div></div>
+<nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="details">📊 詳細</button></nav></main>
+<script>
+const $=id=>document.getElementById(id);
+const funcs=[
+ {name:"時間適応",unlock:3,base:500,rate:1.15,desc:"能力使用中のXP獲得 +2% / Lv。Lvごとに自動タップ間隔 -0.05秒（最低0.1秒）。自動タップ報酬は50Lvごとに×2、×4、×6…"},
+ {name:"局所減速",unlock:8,base:800,rate:1.18,desc:"施設収入 +2% / Lv、XP倍率 +0.2% / Lv（XPへの効果は控えめ）"},
+ {name:"身体適応",unlock:12,base:500,rate:1.15,desc:"タップXP倍率がレベルに応じて上昇。Lv100以降は自動タップXPにも追加ボーナス"},
+ {name:"精密制御",unlock:20,base:1000,rate:1.20,desc:"MP消費を最大80%減少。10Lvごとに使用中のMP回復+0.001/秒、50Lvごとに最大MP+5とXP/収入ブースト倍率+0.1"}
+];
+const buildings=[
+ {name:"自動収入装置",unlock:1,cost:500,income:1,xpIncome:0.02},
+ {name:"高効率収入装置",unlock:20,cost:2500,income:5,xpIncome:0.1},
+ {name:"エネルギー収益炉",unlock:50,cost:12000,income:20,xpIncome:0.4},
+ {name:"大型収益プラント",unlock:100,cost:60000,income:100,xpIncome:2},
+ {name:"時空収益コア",unlock:250,cost:300000,income:500,xpIncome:10}
+];
+const MAX_PLAYER_LEVEL=Infinity;
+const fresh=()=>({level:1,xp:0,money:100,mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,fl:[0,0,0,0],bl:[0,0,0,0,0]});
+let s=fresh(),last=performance.now(),shopDirty=true;
+function need(){const n=Math.max(0,s.level-1);return 100+n*5+Math.floor(n/100)+Math.floor(n*n/250)}
+function levelXpMult(){return (1+(s.level-1)*.05)*(s.rbMult||1)}
+function levelMoneyMult(){return (1+(s.level-1)*.025)*(s.rbMult||1)}
+function maxMP(){return 10+Math.floor(Math.max(0,s.fl[3]||0)/50)*5}
+function localAutoTapMult(){return Math.max(1,2*Math.floor(Math.max(0,s.fl[0]||0)/50))}
+function precisionRegen(){return Math.floor(Math.max(0,s.fl[3]||0)/10)*0.001}
+function boostMaxMultiplier(){return 1.5+Math.floor(Math.max(0,s.fl[3]||0)/50)*0.1}
+function boostMultiplier(){return Math.min(boostMaxMultiplier(),Math.max(1.5,Number(s.boostTarget)||1.5))}
+function mpBoostDrain(){const drain=0.1*(boostMultiplier()-1);return (s.mpXpBoost?drain:0)+(s.mpMoneyBoost?drain:0)}
+function continuousBonus(){const t=Math.max(0,s.continuousUseSeconds||0);if(t<10)return 1;if(t<30)return 1.1;if(t<60)return 1.25;if(t<120)return 1.5;if(t<180)return 2;if(t<240)return 2.5;return 3+Math.floor((t-240)/30)*0.25}
+function continuousGrowthRate(){if(!s.on)return 0;if(s.admin)return 1;const ratio=s.mp/Math.max(1,maxMP());if(ratio<0.2)return 0;if(ratio>=0.95)return 1.25;if(ratio>=0.9)return 1.15;return 1}
+function continuousBonusText(){return "×"+continuousBonus().toFixed(2)}
+function abilityLevelCap(){const caps=[50,100,200,350,500,750,1000,1500,2000,3000,5000];return caps[Math.min(s.rebirth,caps.length-1)]}
+function bodyAdaptMult(){const lv=Math.max(0,s.fl[2]||0);return 1+0.015*lv+0.00001*lv*lv}
+function bodyAutoXpMult(){const lv=Math.max(0,s.fl[2]||0);return 1+Math.max(0,lv-99)*0.002}
+function bodyTapMoneyMult(){const lv=Math.max(0,s.fl[2]||0);return 1+Math.max(0,lv-499)*0.001}
+const formatCache=new Map();
+function cachedFormat(key, build){if(formatCache.has(key))return formatCache.get(key);const value=build();if(formatCache.size>2500)formatCache.clear();formatCache.set(key,value);return value}
+function setTextIfChanged(el,value){if(el&&el.textContent!==value)el.textContent=value}
+function compactNumFmt(n, decimals=2){
+ n=Math.max(0,Number(n)||0);
+ const cacheKey=`c:${n}:${decimals}`;
+ if(formatCache.has(cacheKey))return formatCache.get(cacheKey);
+ const result=compactNumFmtUncached(n,decimals);if(formatCache.size>2500)formatCache.clear();formatCache.set(cacheKey,result);return result;
+}
+function compactNumFmtUncached(n, decimals=2){
+ n=Math.max(0,Number(n)||0);
+ const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極"];
+ if(n>=1e4){
+  const group=Math.floor(Math.log10(n)/4);
+  const idx=group-1;
+  const label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
+  const unit=Math.pow(10,group*4);
+  const scale=Math.pow(10,decimals);
+  const v=(Math.floor((n/unit)*scale)/scale).toFixed(decimals).replace(/\.?0+$/,'');
+  return v+label;
+ }
+ return n.toLocaleString("ja-JP",{maximumFractionDigits:decimals});
+}
+function moneyFmt(n){
+ n=Math.max(0,Number(n)||0);const key=`m:${n}`;
+ if(formatCache.has(key))return formatCache.get(key);
+ const result=n>=1e4?compactNumFmt(n)+"円":"¥"+(Math.floor(n*100)/100).toLocaleString("ja-JP",{maximumFractionDigits:2});
+ if(formatCache.size>2500)formatCache.clear();formatCache.set(key,result);return result;
+}
+function gainXP(n){
+ s.xp+=n;let ups=0,reward=0,rewardedLevels=0;
+ while(s.level<MAX_PLAYER_LEVEL&&s.xp>=need()){
+  s.xp-=need();s.level++;ups++;
+  // Lv15000超は2Lvごとの報酬に戻し、特別報酬は20Lvごと。
+  const rewardStep=s.level>15000?2:(s.level>10000?5:(s.level>1000?2:1));
+  const milestoneStep=s.level>15000?20:(s.level>10000?50:(s.level>1000?20:10));
+  if(s.level%rewardStep!==0)continue;
+  rewardedLevels++;
+  const milestone=s.level%milestoneStep===0;
+  const heldMoney=Math.max(0,s.money);
+  const incomeBonus=totalIncome()*(milestone?2.5:0.75);
+  let levelReward=(20+(s.level-2)*10)*(s.rbMult||1);
+  const heldMoneyRate=s.level>15000?(milestone?0.03:0.005):(milestone?0.075:0.015);
+  const moneyBonus=heldMoney*heldMoneyRate;
+  if(milestone)levelReward*=10;
+  const totalReward=levelReward+moneyBonus+incomeBonus;
+  s.money+=totalReward;reward+=totalReward;
+ }
+ if(ups){shopDirty=true;$("log").textContent=`レベルアップ！ +${ups}レベル。報酬対象${rewardedLevels}回、報酬 ${moneyFmt(reward)} を獲得！`;}
+}
+function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult():1;gainXP((.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)*autoMult*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1));s.money+=totalIncome()*0.005*autoMult;}
+let facilityMoneyCacheKey="",facilityMoneyCache=0,facilityXpCacheKey="",facilityXpCache=0;
+function facilityIncome(){const key=s.bl.join(",")+"|"+(s.fl[1]||0);if(key!==facilityMoneyCacheKey){facilityMoneyCache=buildings.reduce((a,b,i)=>a+(s.bl[i]>0?Math.max(1,s.bl[i]*b.income/2):0),0)*(1+(s.fl[1]||0)*0.02);facilityMoneyCacheKey=key}return facilityMoneyCache}
+function facilityXPEffectiveLevel(level){
+ level=Math.max(0,Number(level)||0);
+ // Lv1〜1000は通常成長、1001〜10000は増加分80%、10000超は増加分60%。
+ return Math.min(level,1000)+Math.max(0,Math.min(level-1000,9000))*0.80+Math.max(0,level-10000)*0.60;
+}
+function facilityXPBase(){const key=s.bl.join(",");if(key!==facilityXpCacheKey){facilityXpCache=buildings.reduce((sum,b,i)=>{const lv=Math.max(0,s.bl[i]||0);return sum+facilityXPEffectiveLevel(lv)*b.xpIncome/2*Math.max(0.75,1-lv/200000)},0);facilityXpCacheKey=key}return facilityXpCache}
+function localSlowXpMult(){return 1+Math.max(0,s.fl[1]||0)*0.002}
+// 施設ごとのレベル減衰をキャッシュ可能な基礎値に含める。プレイヤー倍率は都度反映。
+function facilityXPLevelMultiplier(level){const lv=Math.max(0,Number(level)||0);return levelXpMult()*Math.max(0.75,1-lv/200000)}
+function passiveXPIncome(){return facilityXPBase()*levelXpMult()*localSlowXpMult()*(s.on&&s.mpXpBoost?boostMultiplier():1)}
+function abilityMoneyMult(){return s.on?(1.5+(s.level-1)*.05)*(1+s.fl[1]*.02):1}
+function totalIncome(){return (1+facilityIncome())*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1)}
+function safeCost(base,rate,level){const exponent=Math.log(base)+level*Math.log(rate);if(!Number.isFinite(exponent)||exponent>700)return Number.MAX_SAFE_INTEGER;return Math.max(1,Math.min(Number.MAX_SAFE_INTEGER,Math.floor(Math.exp(exponent))))}
+// 等比数列の合計から購入可能数を二分探索。個別価格を1件ずつ試す旧方式を避ける。
+function estimatedCostSum(base,rate,startLevel,count){if(count<=0)return 0;const firstExp=Math.log(base)+startLevel*Math.log(rate);const lastExp=firstExp+(count-1)*Math.log(rate);if(lastExp>700)return Infinity;const first=Math.exp(firstExp);if(Math.abs(rate-1)<1e-12)return first*count;const sum=first*Math.expm1(count*Math.log(rate))/(rate-1);return Number.isFinite(sum)?sum:Infinity}
+function maxGeometricCount(base,rate,startLevel,budget,limit){let lo=0,hi=Math.max(0,Math.floor(limit));while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(estimatedCostSum(base,rate,startLevel,mid)<=budget)lo=mid;else hi=mid-1}return lo}
+function fCost(i){return s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i])}
+function bCost(i){if(s.admin)return 0;if(i===0){return s.bl[i]===0?250:safeCost(300,1.25,s.bl[i]-1)}return safeCost(buildings[i].cost,1.5,s.bl[i])}
+function render(){
+$("topLevel").textContent=s.level.toLocaleString("ja-JP");$("topMoney").textContent=moneyFmt(s.money);$("topXp").textContent=compactNumFmt(Math.floor(s.xp))+" / "+compactNumFmt(need());$("topXpbar").max=need();$("topXpbar").value=s.xp;$("topMp").textContent=s.admin?"∞ / ∞":s.mp.toFixed(1)+" / "+maxMP();$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
+$("level").textContent=s.level.toLocaleString("ja-JP");$("xp").textContent=compactNumFmt(Math.floor(s.xp))+" / "+compactNumFmt(need());$("xpbar").max=need();$("xpbar").value=s.xp;
+$("money").textContent=moneyFmt(s.money);$("income").textContent=moneyFmt(totalIncome())+" / 秒";$("passiveXp").textContent="+"+compactNumFmt(passiveXPIncome())+" XP / 秒";
+$("xpMult").textContent="×"+levelXpMult().toFixed(2);$("moneyMult").textContent="×"+levelMoneyMult().toFixed(2);$("tapXp").textContent=((.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)).toFixed(2);$("tapMoney").textContent=moneyFmt(totalIncome()*0.005);
+$("rebirth").textContent=s.rebirth;$("abilityState").textContent=s.on?"使用中":"停止中";$("mp").textContent=s.admin?"∞ / ∞":s.mp.toFixed(1)+" / "+maxMP();$("mpbar").max=s.admin?1:maxMP();$("mpbar").value=s.admin?1:s.mp;
+$("abilityXp").textContent="+"+compactNumFmt((1+s.fl[0]*.02)*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1))+" / 秒";$("continuousTime").textContent=Math.floor(s.continuousUseSeconds||0)+"秒";$("continuousBonus").textContent=continuousBonusText();$("continuousRate").textContent=(continuousGrowthRate()===0?"停止中":"×"+continuousGrowthRate().toFixed(2));$("autoTapInterval").textContent=autoTapInterval().toFixed(2)+"秒";$("abilityMoney").textContent="×"+abilityMoneyMult().toFixed(2);$("autoTapMult").textContent="×"+localAutoTapMult().toLocaleString("ja-JP");$("boostStatus").textContent=(s.mpXpBoost?"XP ":"")+(s.mpMoneyBoost?"収入":"")||"なし";$("toggle").textContent=s.on?"能力を停止":"能力を使う";$("xpBoostBtn").textContent="XPブースト ×"+boostMultiplier().toFixed(1)+"："+(s.mpXpBoost?"ON":"OFF");$("moneyBoostBtn").textContent="収入ブースト ×"+boostMultiplier().toFixed(1)+"："+(s.mpMoneyBoost?"ON":"OFF");const boostSel=$("boostSelect");const maxBoost=boostMaxMultiplier();if(Number(boostSel.dataset.maxBoost||0)!==maxBoost){const opts=[];for(let v=1.5;v<=maxBoost+1e-8;v+=0.1)opts.push(Number(v.toFixed(1)));if(!opts.some(v=>Math.abs(v-boostMultiplier())<1e-6))opts.push(boostMultiplier());opts.sort((a,b)=>a-b);boostSel.innerHTML=opts.map(v=>`<option value="${v.toFixed(1)}">×${v.toFixed(1)}</option>`).join("");boostSel.dataset.maxBoost=String(maxBoost);}boostSel.value=boostMultiplier().toFixed(1);$("xpBoostBtn").disabled=!s.on&&!s.mpXpBoost;$("moneyBoostBtn").disabled=!s.on&&!s.mpMoneyBoost;
+$("mult").textContent="×"+(s.rbMult||1).toFixed(2);$("levelCap").textContent=abilityLevelCap().toLocaleString("ja-JP");$("rebirthBtn").disabled=s.level<400;$("test1000").textContent=s.admin?"管理者モード：ON（解除）":"管理者ボタン（ON）";
+if(shopDirty){
+$("functions").innerHTML=funcs.map((f,i)=>{let cap=abilityLevelCap(),lv=s.fl[i],un=s.level>=f.unlock;return `<div class="item"><b>${f.name}</b> <span class="tag">Lv ${lv.toLocaleString("ja-JP")}/${cap.toLocaleString("ja-JP")}</span><div class="small">${un?`強化効果：${f.name}の性能が上昇します。<details><summary>能力の詳細</summary><div class="detail-copy">${f.desc}${i===2?`<br>現在の身体適応倍率：×${bodyAdaptMult().toFixed(2)} / 自動XP：×${bodyAutoXpMult().toFixed(2)}`:""}</div></details>`:`レベル${f.unlock}で解放`}</div><div class="stat"><span>次の強化費用</span><b>${un&&lv<cap?moneyFmt(fCost(i)):"—"}</b></div><button data-f="${i}" onclick="buyF(${i})">強化する</button><button data-fmax="${i}" onclick="buyFMax(${i})">選択数まとめて買う</button><button data-fall="${i}" onclick="buyFAll(${i})">所持金で最大10000Lv買う</button></div>`}).join("");
+$("facilities").innerHTML=buildings.map((b,i)=>{let un=s.level>=b.unlock;const lv=Math.max(0,s.bl[i]||0);const moneyEarn=lv>0?Math.max(1,lv*b.income/2)*(1+Math.max(0,s.fl[1]||0)*0.02)*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1):0;const xpEarn=facilityXPEffectiveLevel(lv)*b.xpIncome/2*facilityXPLevelMultiplier(lv)*localSlowXpMult()*(s.on&&s.mpXpBoost?boostMultiplier():1);return `<div class="item"><b>${b.name}</b> <span class="tag">Lv ${lv.toLocaleString("ja-JP")}</span><div class="small">${un?`お金収入：<span class="facility-money" data-i="${i}">+${moneyFmt(moneyEarn)} / 秒</span><br>XP収入：<span class="facility-xp" data-i="${i}">+${compactNumFmt(xpEarn)} XP / 秒</span><details><summary>成長・倍率の詳細</summary><div class="detail-copy">施設Lv1000超〜Lv10000の増加分80%、Lv10000超の増加分60%。施設XP倍率は施設Lvに応じて100%から減衰し、Lv50000で75%（以降75%固定）。局所減速・ブースト反映。</div></details>`:`レベル${b.unlock}で解放`}</div><div class="stat"><span>次の購入費用</span><b>${un?moneyFmt(bCost(i)):"—"}</b></div><button data-b="${i}" onclick="buyB(${i})">購入・強化</button><button data-bmax="${i}" onclick="buyBMax(${i})">選択数まとめて買う</button><button data-ball="${i}" onclick="buyBAll(${i})">所持金で最大10000Lv買う</button></div>`}).join("");
+shopDirty=false;
+}
+// 施設ごとの表示収入は、レベル・倍率・ブースト変化に合わせて毎回更新する。
+for(let i=0;i<buildings.length;i++){
+ const lv=Math.max(0,s.bl[i]||0);
+ const moneyEarn=lv>0?Math.max(1,lv*buildings[i].income/2)*(1+Math.max(0,s.fl[1]||0)*0.02)*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1):0;
+ const xpEarn=facilityXPEffectiveLevel(lv)*buildings[i].xpIncome/2*facilityXPLevelMultiplier(lv)*localSlowXpMult()*(s.on&&s.mpXpBoost?boostMultiplier():1);
+ const moneyEl=$("facilities").querySelector(`.facility-money[data-i="${i}"]`);
+ const xpEl=$("facilities").querySelector(`.facility-xp[data-i="${i}"]`);
+ if(moneyEl)setTextIfChanged(moneyEl,"+"+moneyFmt(moneyEarn)+" / 秒");
+ if(xpEl)setTextIfChanged(xpEl,"+"+compactNumFmt(xpEarn)+" XP / 秒");
+}
+const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],button[data-fall]");buttons.forEach(b=>{const i=Number(b.dataset.f??b.dataset.fmax??b.dataset.fall);const canBuy=s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(b.hasAttribute("data-fall")?s.admin||s.money>=fCost(i):s.money>=fCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=buildings[i].unlock&&(b.hasAttribute("data-ball")?s.admin||s.money>=bCost(i):s.money>=bCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+
+}
+window.buyF=i=>{let c=fCost(i);if(s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&s.money>=c){if(!s.admin)s.money-=c;s.fl[i]++;shopDirty=true;render()}};
+window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;let count=0,total=0,cap=abilityLevelCap(),target=Number($("buyCount").value)||5;while(count<target&&s.fl[i]+count<cap){const c=s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(c)||(!s.admin&&total+c>s.money)||c>Number.MAX_SAFE_INTEGER)break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
+
+window.buyFAll=i=>{if(s.level<funcs[i].unlock)return;const cap=abilityLevelCap(),remaining=Math.min(10000,Math.max(0,cap-s.fl[i]));let count=s.admin?remaining:maxGeometricCount(funcs[i].base,funcs[i].rate,s.fl[i],s.money,remaining);if(!count){$('log').textContent="購入資金が足りないか、能力レベル上限です。";return}let total=0;for(let k=0;k<count;k++)total+=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+k);while(!s.admin&&total>s.money&&count>0){count--;total=0;for(let k=0;k<count;k++)total+=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+k)}if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}};
+window.buyBAll=i=>{if(s.level<buildings[i].unlock)return;let count,total=0;if(i===0){const first=s.bl[i]===0?250:safeCost(300,1.25,s.bl[i]-1);let budget=s.admin?Infinity:s.money;if(s.bl[i]===0&&!s.admin){if(budget<250){$('log').textContent="購入資金が足りません。";return}count=1+maxGeometricCount(300,1.25,0,budget-250,9999)}else count=s.admin?10000:maxGeometricCount(300,1.25,s.bl[i]-1,budget,10000);count=Math.min(10000,count);for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{count=s.admin?10000:maxGeometricCount(buildings[i].cost,1.5,s.bl[i],s.money,10000);for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}while(!s.admin&&total>s.money&&count>0){count--;total=0;if(i===0){for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}}if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}else{$('log').textContent="購入資金が足りません。"}};
+window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&s.money>=c){if(!s.admin)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
+window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCount").value)||5;while(count<target){const c=s.admin?0:(i===0?(s.bl[i]+count===0?250:safeCost(300,1.25,s.bl[i]+count-1)):safeCost(buildings[i].cost,1.5,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
+$("tap").onclick=()=>{tapReward();render()};
+$("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0}else{last=performance.now()}render()};
+$("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
+$("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
+$("moneyBoostBtn").onclick=()=>{if(s.on){s.mpMoneyBoost=!s.mpMoneyBoost;render()}};
+$("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.01;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);s={...fresh(),rebirth:nextRebirth,rbMult:nextMult};shopDirty=true;autoTapTimer=0;$("log").textContent=`転生成功！ レベル${oldLevel}に応じた倍率+${addMult.toFixed(2)}を累計加算し、転生倍率×${nextMult.toFixed(2)}をXP倍率・お金倍率に適用しました。能力レベル上限は${abilityLevelCap()}です。`;render()}};
+$("save").onclick=()=>{try{localStorage.setItem("timeControlPrototypeV3",JSON.stringify(s));$("log").textContent="保存しました。"}catch(e){$("log").textContent="この環境では保存できませんでした。"}};
+$("load").onclick=()=>{try{let d=localStorage.getItem("timeControlPrototypeV3");if(d){s={...fresh(),...JSON.parse(d)};s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=[0,0,0,0,...(s.fl||[]).slice(4)];s.bl=[0,0,0,0,0,...(s.bl||[]).slice(5)];s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;shopDirty=true;$("log").textContent="読み込みました。";render()}else $("log").textContent="セーブデータがありません。"}catch(e){$("log").textContent="読み込みに失敗しました。"}};
+$("reset").onclick=()=>{if(confirm("進行状況をすべてリセットしますか？")){s=fresh();shopDirty=true;render()}};
+let autoTapTimer=0,lastRender=0;
+$("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
+
+function autoTapInterval(){return Math.max(0.1,1.5-s.fl[0]*0.05)}
+function loop(now){let dt=Math.min((now-last)/1000,1);last=now;if(s.on){autoTapTimer+=dt;while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}if(!s.admin){const drain=.1*(1-Math.min(80,s.fl[3]*2)/100)+mpBoostDrain()-precisionRegen();s.mp-=drain*dt;s.mp=Math.min(maxMP(),s.mp);}if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();gainXP(dt*(1+s.fl[0]*.02)*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*continuousBonus()*(s.mpXpBoost?boostMultiplier():1));if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}}else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt)}if(!s.admin)s.mp=Math.min(maxMP(),s.mp);s.money+=totalIncome()*dt;const facilityXP=passiveXPIncome()*dt;if(facilityXP>0)gainXP(facilityXP);if(now-lastRender>=500){lastRender=now;render()}requestAnimationFrame(loop)}
+$("buyCountFacility").value=$("buyCount").value;$("buyCountFacility").addEventListener("change",e=>{$("buyCount").value=e.target.value});$("buyCount").addEventListener("change",e=>{$("buyCountFacility").value=e.target.value});
+document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.dataset.view;document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+target));document.querySelectorAll(".bottomnav button").forEach(b=>b.classList.toggle("active",b===btn));window.scrollTo({top:0,behavior:"smooth"});}));
+render();requestAnimationFrame(loop);
+</script></body></html>
