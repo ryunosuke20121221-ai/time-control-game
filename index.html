@@ -203,7 +203,14 @@ window.buyFAll=i=>{if(s.level<funcs[i].unlock)return;const cap=abilityLevelCap()
 window.buyBAll=i=>{if(s.level<buildings[i].unlock)return;let count,total=0;if(i===0){const first=s.bl[i]===0?250:safeCost(300,1.25,s.bl[i]-1);let budget=s.admin?Infinity:s.money;if(s.bl[i]===0&&!s.admin){if(budget<250){$('log').textContent="購入資金が足りません。";return}count=1+maxGeometricCount(300,1.25,0,budget-250,9999)}else count=s.admin?10000:maxGeometricCount(300,1.25,s.bl[i]-1,budget,10000);count=Math.min(10000,count);for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{count=s.admin?10000:maxGeometricCount(buildings[i].cost,1.5,s.bl[i],s.money,10000);for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}while(!s.admin&&total>s.money&&count>0){count--;total=0;if(i===0){for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}}if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}else{$('log').textContent="購入資金が足りません。"}};
 window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&s.money>=c){if(!s.admin)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
 window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCount").value)||5;while(count<target){const c=s.admin?0:(i===0?(s.bl[i]+count===0?250:safeCost(300,1.25,s.bl[i]+count-1)):safeCost(buildings[i].cost,1.5,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
-$("tap").onclick=()=>{tapReward();render()};
+const tapButton=$("tap");
+tapButton.style.touchAction="manipulation";
+tapButton.addEventListener("click",()=>{tapReward();render()});
+tapButton.addEventListener("touchend",e=>{
+  e.preventDefault();
+  tapReward();
+  render();
+},{passive:false});
 $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0}else{last=performance.now()}render()};
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
 $("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
