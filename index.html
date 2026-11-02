@@ -1,12 +1,10 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>時間操作ゲーム 試作品 v38</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>時間操作ゲーム 試作品 v40</title>
 <style>
- html, body, button {
-  touch-action: manipulation;
-}
+html,body,button{touch-action:manipulation}
 :root{color-scheme:dark;--bg:#10131b;--panel:#1b2130;--line:#30394c;--accent:#8b9cff;--muted:#aab3c7}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f3f5fb;font:15px system-ui,sans-serif}
 main{max-width:900px;margin:auto;padding:18px}h1{font-size:1.35rem;margin:0 0 5px}p{color:var(--muted);margin:5px 0 14px}
@@ -24,9 +22,10 @@ button.primary{background:#6679df;border-color:#8a9aff}button:disabled{opacity:.
 progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;border-top:1px solid var(--line)}.item:first-of-type{border-top:0}
 .small{font-size:.88rem;color:var(--muted)}.tag{display:inline-block;border-radius:6px;background:#30394c;padding:3px 7px;font-size:.8rem}
 #log{min-height:2em;color:#bfcaff}.actions{display:flex;flex-wrap:wrap;gap:4px}
+.save-slot{border:1px solid var(--line,#3a4350);border-radius:12px;padding:12px;margin:12px 0}.save-slot input{width:100%;margin:6px 0 10px;padding:10px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.save-slot .actions{display:flex;gap:8px;flex-wrap:wrap}.save-slot .actions button{flex:1;min-width:100px}
 </style></head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
-<h1>時間操作ゲーム <span class="tag">試作品 v38</span></h1>
+<h1>時間操作ゲーム <span class="tag">試作品 v39</span></h1>
 <p>タブ切り替え・固定ステータス・カード式施設表示に対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。</p>
 <div class="view active" id="view-home"><div class="viewgrid two-col">
 <section class="panel"><h2>プレイヤー</h2>
@@ -60,8 +59,11 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 </div>
 <div class="view" id="view-rebirth"><section class="panel"><h2>転生</h2><p>レベル400で解放。転生するとレベル・XP・所持金・機能強化・施設レベルがリセットされます。転生前のレベル×0.01（最低×1）を転生倍率として設定し、XP倍率とお金倍率それぞれに乗算します。転生回数に応じて能力レベル上限も解放されます。</p><div class="stat"><span>転生倍率</span><b id="mult">×1.00</b></div><div class="stat"><span>能力レベル上限</span><b id="levelCap">50</b></div><button id="rebirthBtn" disabled>転生する（レベル400で解放）</button></section>
 </div>
-<div class="view" id="view-details"><section class="panel"><h2>セーブ・詳細</h2><p class="small">このブラウザ内に手動保存します。ブラウザの設定によってはHTMLファイルからの保存が制限される場合があります。</p><div class="actions"><button id="save">保存</button><button id="load">読み込み</button><button id="reset">最初から</button></div>
-<p class="small">「管理者ボタン」で管理者モードを切り替えられます。ONにすると能力・施設の購入費用が0になり、MPが無限になります。</p></section>
+<div class="view" id="view-details"><section class="panel"><h2>セーブ・詳細</h2><p class="small">セーブデータはこのブラウザ内に最大3つ保存できます。各スロットに名前を付けられます。ブラウザのデータを消去するとセーブも消える場合があります。</p>
+<div class="stat"><label for="adminVisibility">管理者ボタンの表示</label><select id="adminVisibility"><option value="show">表示する</option><option value="hide">表示しない</option></select></div>
+<div id="saveSlots"></div>
+<div class="actions"><button id="reset">最初から</button></div>
+<p class="small">管理者モードをONにすると能力・施設の購入費用が0になり、MPが無限になります。表示を「しない」にしても、すでにONの管理者モード自体は解除されません。</p></section>
 </div></div>
 <nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="details">📊 詳細</button></nav></main>
 <script>
@@ -203,21 +205,22 @@ window.buyFAll=i=>{if(s.level<funcs[i].unlock)return;const cap=abilityLevelCap()
 window.buyBAll=i=>{if(s.level<buildings[i].unlock)return;let count,total=0;if(i===0){const first=s.bl[i]===0?250:safeCost(300,1.25,s.bl[i]-1);let budget=s.admin?Infinity:s.money;if(s.bl[i]===0&&!s.admin){if(budget<250){$('log').textContent="購入資金が足りません。";return}count=1+maxGeometricCount(300,1.25,0,budget-250,9999)}else count=s.admin?10000:maxGeometricCount(300,1.25,s.bl[i]-1,budget,10000);count=Math.min(10000,count);for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{count=s.admin?10000:maxGeometricCount(buildings[i].cost,1.5,s.bl[i],s.money,10000);for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}while(!s.admin&&total>s.money&&count>0){count--;total=0;if(i===0){for(let k=0;k<count;k++){const lv=s.bl[i]+k;total+=lv===0?250:safeCost(300,1.25,lv-1)}}else{for(let k=0;k<count;k++)total+=safeCost(buildings[i].cost,1.5,s.bl[i]+k)}}if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}else{$('log').textContent="購入資金が足りません。"}};
 window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&s.money>=c){if(!s.admin)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
 window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCount").value)||5;while(count<target){const c=s.admin?0:(i===0?(s.bl[i]+count===0?250:safeCost(300,1.25,s.bl[i]+count-1)):safeCost(buildings[i].cost,1.5,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
-const tapButton=$("tap");
-tapButton.style.touchAction="manipulation";
-tapButton.addEventListener("click",()=>{tapReward();render()});
-tapButton.addEventListener("touchend",e=>{
-  e.preventDefault();
-  tapReward();
-  render();
-},{passive:false});
+$("tap").onclick=()=>{tapReward();render()};
 $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0}else{last=performance.now()}render()};
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
 $("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
 $("moneyBoostBtn").onclick=()=>{if(s.on){s.mpMoneyBoost=!s.mpMoneyBoost;render()}};
 $("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.01;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);s={...fresh(),rebirth:nextRebirth,rbMult:nextMult};shopDirty=true;autoTapTimer=0;$("log").textContent=`転生成功！ レベル${oldLevel}に応じた倍率+${addMult.toFixed(2)}を累計加算し、転生倍率×${nextMult.toFixed(2)}をXP倍率・お金倍率に適用しました。能力レベル上限は${abilityLevelCap()}です。`;render()}};
-$("save").onclick=()=>{try{localStorage.setItem("timeControlPrototypeV3",JSON.stringify(s));$("log").textContent="保存しました。"}catch(e){$("log").textContent="この環境では保存できませんでした。"}};
-$("load").onclick=()=>{try{let d=localStorage.getItem("timeControlPrototypeV3");if(d){s={...fresh(),...JSON.parse(d)};s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=[0,0,0,0,...(s.fl||[]).slice(4)];s.bl=[0,0,0,0,0,...(s.bl||[]).slice(5)];s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;shopDirty=true;$("log").textContent="読み込みました。";render()}else $("log").textContent="セーブデータがありません。"}catch(e){$("log").textContent="読み込みに失敗しました。"}};
+const SAVE_SLOTS_KEY="timeControlNamedSaveSlotsV1";
+function getSaveSlots(){try{const v=JSON.parse(localStorage.getItem(SAVE_SLOTS_KEY)||"[]");return Array.isArray(v)?v.slice(0,3):[]}catch(e){return []}}
+function drawSaveSlots(){const slots=getSaveSlots();const root=$("saveSlots");root.innerHTML=[0,1,2].map(i=>{const slot=slots[i]||{};return `<div class="save-slot"><b>セーブスロット ${i+1}</b><label for="saveName${i}">名前</label><input id="saveName${i}" maxlength="30" placeholder="例：メインデータ" value="${String(slot.name||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}"><div class="small">${slot.data?`保存済み：Lv ${Number(slot.data.level||1).toLocaleString("ja-JP")}`:"空きスロット"}</div><div class="actions"><button data-slot-save="${i}">この枠に保存</button><button data-slot-load="${i}" ${slot.data?"":"disabled"}>読み込み</button><button data-slot-delete="${i}" ${slot.data?"":"disabled"}>削除</button></div></div>`}).join("");
+root.querySelectorAll("[data-slot-save]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotSave),all=getSaveSlots();while(all.length<3)all.push({});const name=$("saveName"+i).value.trim()||`セーブ${i+1}`;all[i]={name,data:JSON.parse(JSON.stringify(s)),savedAt:Date.now()};try{localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));$("log").textContent=`「${name}」に保存しました。`;drawSaveSlots()}catch(e){$("log").textContent="保存できませんでした。ブラウザの保存容量を確認してください。"}});
+root.querySelectorAll("[data-slot-load]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotLoad),slot=getSaveSlots()[i];if(!slot||!slot.data)return;if(!confirm(`「${slot.name||`セーブ${i+1}`}」を読み込みますか？現在の進行状況は置き換わります。`))return;try{s={...fresh(),...slot.data};s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=[0,0,0,0,...(s.fl||[]).slice(4)];s.bl=[0,0,0,0,0,...(s.bl||[]).slice(5)];s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;shopDirty=true;autoTapTimer=0;$("log").textContent=`「${slot.name||`セーブ${i+1}`}」を読み込みました。`;render();drawSaveSlots()}catch(e){$("log").textContent="読み込みに失敗しました。"}});
+root.querySelectorAll("[data-slot-delete]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotDelete),all=getSaveSlots();if(!all[i]||!all[i].data)return;if(!confirm(`セーブスロット${i+1}を削除しますか？`))return;all[i]={};localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));$("log").textContent="セーブデータを削除しました。";drawSaveSlots()})}
+$("adminVisibility").value=localStorage.getItem("timeControlAdminButtonVisibility")||"show";
+function applyAdminVisibility(){const show=$("adminVisibility").value!=="hide";$("test1000").style.display=show?"":"none";localStorage.setItem("timeControlAdminButtonVisibility",show?"show":"hide")}
+$("adminVisibility").onchange=applyAdminVisibility;
+drawSaveSlots();applyAdminVisibility();
 $("reset").onclick=()=>{if(confirm("進行状況をすべてリセットしますか？")){s=fresh();shopDirty=true;render()}};
 let autoTapTimer=0,lastRender=0;
 $("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
