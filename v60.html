@@ -457,8 +457,11 @@ function affordableLevelCount(){
   high=next;
  }
  if(BigNum.cmp(costForSteps(high),xp)<=0)return high*step;
- for(let i=0;i<128;i++){
-  const mid=Math.floor(low+(high-low)/2);
+ // 最大プリセットのようにXPが1e100級になると、探索区間が非常に広い。
+ // 128回では区間を十分に絞れず、実際に購入可能なレベル数より大幅に少なく見積もってXPが残る。
+ // Numberの仮数精度に到達するまで最大1100回探索する（midが端点と一致したら終了）。
+ for(let i=0;i<1100;i++){
+  const mid=low+(high-low)/2;
   if(mid<=low||mid>=high)break;
   if(BigNum.cmp(costForSteps(mid),xp)<=0)low=mid;else high=mid;
  }
