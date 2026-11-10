@@ -184,7 +184,19 @@ function compactNumFmtUncached(n, decimals=2, fmtMode="jp"){
  if(!Number.isFinite(n))return n===Infinity?"∞":"0";
  if(fmtMode==="full")return Math.floor(n).toLocaleString("ja-JP");
  if(fmtMode==="sci")return n===0?"0":n.toExponential(2);
- if(fmtMode==="short"){if(n<1e3)return n.toLocaleString("ja-JP",{maximumFractionDigits:decimals});const units=["K","M","B","T","Qa","Qi"];const g=Math.min(units.length,Math.floor(Math.log10(n)/3));return (n/Math.pow(1000,g)).toFixed(decimals).replace(/\.?0+$/,"")+(units[g-1]||"e"+(g*3));}
+ if(fmtMode==="short"){
+  if(n<1e3)return n.toLocaleString("ja-JP",{maximumFractionDigits:decimals});
+  const g=Math.floor(Math.log10(n)/3);
+  const named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg"];
+  let suffix=named[g]||"";
+  if(!suffix){
+   let x=g-named.length+1,letters="";
+   while(x>0){x--;letters=String.fromCharCode(97+(x%26))+letters;x=Math.floor(x/26);}
+   suffix=letters;
+  }
+  const value=n/Math.pow(1000,g);
+  return value.toFixed(decimals).replace(/\.?0+$/,"")+suffix;
+ }
  const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極"];
  if(n>=1e4){
   const group=Math.floor(Math.log10(n)/4);
