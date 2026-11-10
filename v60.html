@@ -736,10 +736,15 @@ function buySkillNode(id){
  }
  if(!ok){$("log").textContent="SPが足りないか、前提スキルが未解放です。";return;}s.sp-=cost;render();saveAutoGame();$("log").textContent="スキルを解放しました。";
 }
+let skillTreeRenderKey="";
 function renderSkillTree(){
  const root=$("skillTreeRoot");if(!root)return;skillEnsureState();
  $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";$("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
  const route=s.skillTree.route,swarmLv=s.skillTree.swarmLv;
+ // 通常のゲーム更新ではスキルツリーのDOMを作り直さない。状態が変わった時だけ再描画する。
+ const nextKey=[route,swarmLv,s.sp,s.tp,JSON.stringify(s.skillTree.unlocked),!!s.skillTree.swarmUltimate].join("|");
+ if(nextKey===skillTreeRenderKey){renderBattleSkills();return;}
+ skillTreeRenderKey=nextKey;
  const node=(id,name,desc,cost,available=true,final=false)=>{const owned=skillHas(id)||(id==="swarmUltimate"&&s.skillTree.swarmUltimate),can=!!route&&available&&!owned&&s.sp>=cost,state=owned?"取得済み":can?"解放可能":available?"SP不足":"前提スキルが必要";return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';};
  const swarm=[{id:"chainLightning",name:"連鎖雷撃",desc:"MP12・最大3体に威力×4",cost:5},{id:"stormBurst",name:"嵐の爆発",desc:"MP35・最大5体に威力×8",cost:12,requires:"chainLightning"},{id:"timeWave",name:"時空波",desc:"MP70・最大5体に威力×16",cost:30,requires:"stormBurst",final:true},{id:"swarmUltimate",name:"連続討伐の極意",desc:"討伐報酬1.5倍。群れの拡張Lv7が必要",cost:30,final:true}];
  const boss=[{id:"timeSlash",name:"時間斬り",desc:"MP20・単体に威力×12",cost:3},{id:"dragonBane",name:"竜殺し",desc:"MP40・単体に威力×22、ボス特効",cost:8,requires:"timeSlash"},{id:"bossNova",name:"星砕き",desc:"MP60・最大3体に威力×14、ボス特効",cost:18,requires:"timeSlash"},{id:"timeCollapse",name:"時空崩壊",desc:"MP100・単体に威力×65、ボス特効",cost:30,requires:"dragonBane",final:true}];
@@ -1126,7 +1131,7 @@ battleEnsureState();render();requestAnimationFrame(loop);
  setupAdmin();
  const oldRender=render;
  window.refreshAchievementPage=()=>{if(achievementPageDirty)renderAchievements();};
- render=function(){const functionDetailStates=[...$("functions").querySelectorAll("details")].map(el=>el.open);oldRender();$("functions").querySelectorAll("details").forEach((el,i)=>{if(i<functionDetailStates.length)el.open=functionDetailStates[i];});check();if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
+ render=function(){const functionDetailStates=[...$("functions").querySelectorAll("details")].map(el=>el.open);oldRender();$("functions").querySelectorAll("details").forEach((el,i)=>{if(i<functionDetailStates.length)el.open=functionDetailStates[i];});if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
  const oldLoopSave=saveAutoGame;
  saveAutoGame=function(){ach.last=Date.now();persist();return oldLoopSave()};
  // プレイ時間と累計TPは実績用の独立データとして保存。管理者中は進捗を加算しない。
