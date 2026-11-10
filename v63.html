@@ -307,8 +307,8 @@ const MAX_PLAYER_LEVEL=Infinity;
      const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];
      if(g<names.length){let value=x.m*Math.pow(10,x.e-g*3);value=Number(value.toFixed(digits));if(value>=1000)return trimFixed(value/1000,digits)+(names[g+1]||("e"+(g+1)*3));return trimFixed(value,digits)+(names[g]||"");}
     }
-    if(x.e<4)return trimFixed(BigNum.toNumber(x),digits);
     const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
+    if(x.e<4){const rounded=Number(BigNum.toNumber(x).toFixed(digits));if(rounded<10000)return trimFixed(BigNum.toNumber(x),digits);return formatJapaneseBigNum(BigNum.from(rounded),digits,labels);}
     return formatJapaneseBigNum(x,digits,labels);
    }
   function xpProgress(){const req=needBN();if(BigNum.cmp(req,0)<=0)return 0;const ratio=BigNum.toNumber(BigNum.div(xpBN(),req));return Number.isFinite(ratio)?Math.max(0,Math.min(1,ratio)):1}
@@ -334,7 +334,7 @@ const MAX_PLAYER_LEVEL=Infinity;
    if(value>=1000)return "¥"+trimFixed(value/1000,digits)+(names[g+1]||("e"+(g+1)*3));
    return "¥"+trimFixed(value,digits)+(names[g]||("e"+g*3));
   }
-  if(x.e<4)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+  if(x.e<4){const rounded=Number(BigNum.toNumber(x).toFixed(digits));if(rounded<10000)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];return "¥"+formatJapaneseBigNum(BigNum.from(rounded),digits,labels);}
   const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
   return "¥"+formatJapaneseBigNum(x,digits,labels);
  }
@@ -389,10 +389,10 @@ function compactNumFmtUncached(n,decimals=2,mode="jp",separator="comma",signific
   if(value>=1000){g++;value=Number((value/1000).toFixed(decimals));}
   return trimFixed(value,decimals)+(names[g]||("e"+g*3));
  }
- if(n>=1e4){
+ const rounded=Number(n.toFixed(decimals));
+ if(rounded>=1e4){
   const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-  let group=Math.floor(Math.log10(n)/4),value=n/Math.pow(10,group*4);value=Number(value.toFixed(decimals));
-  if(value>=10000){group++;value=Number((value/10000).toFixed(decimals));}
+  let group=Math.floor(Math.log10(rounded)/4),value=rounded/Math.pow(10,group*4);
   return trimFixed(value,decimals)+extendedUnitLabel(labels,group-1);
  }
  return groupedNumber(n,decimals,separator);
