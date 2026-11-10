@@ -229,7 +229,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   const cfg=numberConfig("money"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0)));
   if(mode==="sci")return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
   if(mode==="full"&&x.e<=15)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
-  if(mode==="short"){const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return "¥"+(x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
+  if(mode==="short"){if(x.e<3)return "¥"+BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return "¥"+(x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
   if(x.e<4)return "¥"+BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");
   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
   if(group-1>=labels.length*100)return x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e+"円";
@@ -494,7 +494,7 @@ $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=f
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
 $("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
 $("moneyBoostBtn").onclick=()=>{if(s.on){s.mpMoneyBoost=!s.mpMoneyBoost;render()}};
-$("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.005;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);const earnedTP=Math.floor(oldLevel/100);const keepTP=(s.tp||0)+earnedTP;const keepShop={...(s.shop||{})};s={...fresh(),rebirth:nextRebirth,rbMult:nextMult,tp:keepTP,shop:keepShop};rebirthShopDirty=true;pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;addMoneyBN(shopEffect("startMoney",100)*allMoneyMult());s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${addMult.toFixed(2)}。累計倍率×${nextMult.toFixed(2)}です。`;render()}};
+$("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.005;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);const earnedTP=Math.floor(oldLevel/100);const keepTP=(s.tp||0)+earnedTP;const keepShop={...(s.shop||{})};s={...fresh(),rebirth:nextRebirth,rbMult:nextMult,tp:keepTP,shop:keepShop};rebirthShopDirty=true;pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;addMoneyBN(shopEffect("startMoney",100)*allMoneyMult());s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${addMult.toFixed(2)}。累計倍率×${nextMult.toFixed(2)}です。`;render()}};
 const SAVE_SLOTS_KEY="timeControlNamedSaveSlotsV1";
 function applyOfflineProgress(){
  const now=Date.now();
@@ -545,7 +545,7 @@ document.addEventListener("visibilitychange",()=>{
  else{applyOfflineProgress();saveAutoGame();render();}
 });
 window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
-$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
+$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
 let autoTapTimer=0,lastRender=0;
 $("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
 
