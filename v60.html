@@ -674,19 +674,20 @@ const extraSkillDefs={
 };
 function skillHas(id){return !!s.skillTree?.unlocked?.[id];}
 function skillRank(prefix){return [1,2,3].filter(n=>skillHas(prefix+n)).length;}
+function skillTierBonus(prefix){const rank=skillRank(prefix);return rank>=3?.35:rank===2?.15:rank===1?.05:0;}
 function skillDamageFactor(){
- return (1+skillRank("rebirth")*.05)*(skillHas("transcendence")?1.5:1);
+ return (1+skillTierBonus("rebirth"))*(skillHas("transcendence")?1.5:1);
 }
 function skillRewardFactor(kind="money",boss=false){
  let f=1;
- if(kind==="money"||kind==="xp")f*=1+skillRank("alchemy")*.05;
- f*=1+skillRank("fortune")*.05;
+ if(kind==="money"||kind==="xp")f*=1+skillTierBonus("alchemy");
+ f*=1+skillTierBonus("fortune");
  if(boss&&skillHas("fortune3"))f*=1.25;
  if(skillHas("transcendence"))f*=1.5;
  return f;
 }
 function skillMpCost(base){
- const reduction= Math.min(.3,skillRank("mana")*.05);
+ const reduction=skillRank("mana")>=3?.30:skillRank("mana")===2?.15:skillRank("mana")===1?.05:0;
  return Math.max(1,Math.ceil(base*(1-reduction)));
 }
 function skillMpRegenBonus(){return skillRank("mana")*.05;}
@@ -720,7 +721,7 @@ function buySkillNode(id){
   cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;
   if(ok)s.skillTree.swarmUltimate=true;
  }else if(extraSkillDefs[id]){
-  const d=extraSkillDefs[id];if(d.route!==route||skillHas(id))return;
+  const d=extraSkillDefs[id];if(skillHas(id))return;
   if(d.requires&&!skillHas(d.requires))return;
   cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
   if(ok)s.skillTree.unlocked[id]=true;
@@ -762,8 +763,7 @@ function renderSkillTree(){
   return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';
  };
  const branch=(key,title,desc,items)=>{
-  const factor=skillRouteFactor(key);
-  return '<section class="tree-branch"><h3>'+title+'</h3><p>'+desc+'</p>'+items.map(d=>node(d.id,d.name,d.desc,d.cost*factor,!d.requires||skillHas(d.requires),!!d.final)).join("")+'</section>';
+  return '<section class="tree-branch"><h3>'+title+'</h3><p>'+desc+'</p>'+items.map(d=>node(d.id,d.name,d.desc,d.cost*skillRouteFactor(key,!!d.final),!d.requires||skillHas(d.requires),!!d.final)).join("")+'</section>';
  };
  const swarmFactor=skillRouteFactor("swarm"),bossFactor=skillRouteFactor("boss");
  const swarmNodes='<div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*swarmFactor,0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*swarmFactor?'disabled':'')+'>強化</button></div>'+
@@ -867,7 +867,7 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
   const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
   const target=s.battleGroup[index],info=battleEnemyInfo(target.number);
   let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));
-  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.10:0));
+  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.05:0));
   if(critChance>0&&Math.random()<critChance)damage=BigNum.mul(damage,skillHas("critical3")?2.5:2);
   const hp=BigNum.from(target.hp);if(BigNum.cmp(damage,0)<=0)continue;
   if(BigNum.cmp(damage,hp)>=0){
