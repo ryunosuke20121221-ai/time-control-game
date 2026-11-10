@@ -30,7 +30,19 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .monster-art{position:relative;z-index:1;width:min(72%,320px);height:190px;image-rendering:pixelated;filter:drop-shadow(0 12px 12px #0009)}
 .battle-boss .monster-art{width:min(90%,390px);height:170px;filter:drop-shadow(0 0 18px #ef754b88)}
 .battle-mob-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px;width:100%;height:100%;align-items:center;align-content:stretch;position:relative;z-index:1}.battle-mob{min-width:0;text-align:center;background:#101b31bb;border:1px solid #405578;border-radius:9px;padding:4px}.battle-mob .monster-art{width:100%;height:105px;max-width:125px;display:block;margin:auto}.battle-mob.boss{grid-column:1/-1;border-color:#ff9a57;background:#321c26}.battle-mob-name{font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.boss-victory{display:none;margin:10px 0;padding:12px;text-align:center;font-weight:900;letter-spacing:.08em;color:#ffe8a1;background:linear-gradient(90deg,#4b1c25,#8b3b27,#4b1c25);border:1px solid #ffc46a;border-radius:12px;text-shadow:0 0 12px #ffbd5c;box-shadow:0 0 22px #ff853c66}.boss-victory.show{display:block;animation:bossVictory 1.8s ease both}@keyframes bossVictory{0%{opacity:0;transform:scale(.75) translateY(15px);filter:brightness(2)}18%{opacity:1;transform:scale(1.06) translateY(0)}35%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
-.tree-route-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.tree-route-pick button{min-height:54px;background:linear-gradient(145deg,#29466d,#172842);border-color:#678dbd}.tree-route-banner{margin:12px 0;padding:10px;border:1px solid #678dbd;border-radius:10px;background:#12243c;font-weight:700}.tree-columns{align-items:start}.tree-branch{position:relative;min-width:0;border:1px solid #385577;border-radius:15px;padding:12px;background:linear-gradient(180deg,#132a45,#0d182b)}.tree-branch h3{margin:0 0 4px}.tree-branch>p{font-size:.8rem;color:var(--muted);min-height:2.5em}.tree-node{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;margin:16px 0 0;padding:10px;border:1px solid #344a68;border-radius:12px;background:#101d31}.tree-node:before{content:"";position:absolute;left:26px;bottom:100%;height:17px;border-left:2px solid #526b8d}.tree-orb{width:32px;height:32px;display:grid;place-items:center;border:2px solid #667d9d;border-radius:50%;background:#253a56;color:#dceaff;font-weight:900}.tree-node-info{min-width:0}.tree-node-info b,.tree-node-info small{display:block}.tree-node-info small{font-size:.75rem;color:var(--muted);margin-top:3px}.tree-node .tree-cost{color:#f4cf75}.tree-node.owned{border-color:#4aa77b;background:#102b29}.tree-node.owned .tree-orb{background:#176b4b;border-color:#67d6a0}.tree-node.ready{border-color:#c99a43;box-shadow:0 0 12px #e9b44a22}.tree-node.ready .tree-orb{border-color:#e7bd63;color:#ffe6a4}.tree-node.locked{opacity:.72}.tree-node button{margin:0;padding:7px 9px;font-size:.78rem}.tree-node button:disabled{opacity:.38}.tree-state{font-size:.72rem;color:#82e0ad;white-space:nowrap}@media(max-width:520px){.tree-route-pick{grid-template-columns:1fr}.tree-columns{grid-template-columns:1fr}.tree-node{grid-template-columns:30px minmax(0,1fr)}.tree-node button,.tree-state{grid-column:2}.tree-node button{width:100%}}.skill-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:linear-gradient(145deg,#172842,#101a2d)}.skill-card.primary-route{border-color:#d9a441;box-shadow:0 0 12px #d9a44122}.skill-card h3{margin:0 0 6px}.skill-node{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2a3e5e}.skill-node>div{min-width:0}.skill-node button{flex-shrink:0}.skill-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.skill-balance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skill-balance>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px}.skill-balance span{display:block;color:var(--muted);font-size:.75rem}.skill-balance b{display:block;overflow-wrap:anywhere}.skill-note{font-size:.82rem;color:var(--muted)}@media(max-width:420px){.skill-route-grid{grid-template-columns:1fr}.skill-node{align-items:flex-start;flex-direction:column}.skill-node button{width:100%}}
+.tree-route-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.tree-route-pick button{min-height:54px;background:linear-gradient(145deg,#29466d,#172842);border-color:#678dbd}.tree-route-banner{margin:12px 0;padding:10px;border:1px solid #678dbd;border-radius:10px;background:#12243c;font-weight:700}.tree-columns{align-items:start}.tree-branch{position:relative;min-width:0;border:1px solid #385577;border-radius:15px;padding:12px;background:linear-gradient(180deg,#132a45,#0d182b)}.tree-branch h3{margin:0 0 4px}.tree-branch>p{font-size:.8rem;color:var(--muted);min-height:2.5em}.skill-tree-groups{display:grid;gap:10px;margin-top:12px}
+.skill-fold{border:1px solid var(--line);border-radius:12px;background:#0d192d;padding:0 11px;overflow:hidden}
+.skill-fold>summary,.battle-skill-fold>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:48px;cursor:pointer;list-style:none;font-weight:700}
+.skill-fold>summary::-webkit-details-marker,.battle-skill-fold>summary::-webkit-details-marker{display:none}
+.skill-fold>summary:after,.battle-skill-fold>summary:after{content:"＋";color:var(--accent);font-size:1.1rem}
+.skill-fold[open]>summary:after,.battle-skill-fold[open]>summary:after{content:"−"}
+.skill-fold>summary small{color:var(--muted);font-weight:500;white-space:nowrap}
+.skill-fold>p{margin:0 0 10px;font-size:.82rem}
+.battle-skill-fold{border:1px solid var(--line);border-radius:10px;background:#0d192d;padding:0 10px}
+.battle-skill-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0 0 10px}
+.battle-skill-list button{min-width:0;white-space:normal}
+@media(max-width:520px){.battle-skill-list{grid-template-columns:1fr}}
+.tree-node{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;margin:16px 0 0;padding:10px;border:1px solid #344a68;border-radius:12px;background:#101d31}.tree-node:before{content:"";position:absolute;left:26px;bottom:100%;height:17px;border-left:2px solid #526b8d}.tree-orb{width:32px;height:32px;display:grid;place-items:center;border:2px solid #667d9d;border-radius:50%;background:#253a56;color:#dceaff;font-weight:900}.tree-node-info{min-width:0}.tree-node-info b,.tree-node-info small{display:block}.tree-node-info small{font-size:.75rem;color:var(--muted);margin-top:3px}.tree-node .tree-cost{color:#f4cf75}.tree-node.owned{border-color:#4aa77b;background:#102b29}.tree-node.owned .tree-orb{background:#176b4b;border-color:#67d6a0}.tree-node.ready{border-color:#c99a43;box-shadow:0 0 12px #e9b44a22}.tree-node.ready .tree-orb{border-color:#e7bd63;color:#ffe6a4}.tree-node.locked{opacity:.72}.tree-node button{margin:0;padding:7px 9px;font-size:.78rem}.tree-node button:disabled{opacity:.38}.tree-state{font-size:.72rem;color:#82e0ad;white-space:nowrap}@media(max-width:520px){.tree-route-pick{grid-template-columns:1fr}.tree-columns{grid-template-columns:1fr}.tree-node{grid-template-columns:30px minmax(0,1fr)}.tree-node button,.tree-state{grid-column:2}.tree-node button{width:100%}}.skill-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:linear-gradient(145deg,#172842,#101a2d)}.skill-card.primary-route{border-color:#d9a441;box-shadow:0 0 12px #d9a44122}.skill-card h3{margin:0 0 6px}.skill-node{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2a3e5e}.skill-node>div{min-width:0}.skill-node button{flex-shrink:0}.skill-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.skill-balance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skill-balance>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px}.skill-balance span{display:block;color:var(--muted);font-size:.75rem}.skill-balance b{display:block;overflow-wrap:anywhere}.skill-note{font-size:.82rem;color:var(--muted)}@media(max-width:420px){.skill-route-grid{grid-template-columns:1fr}.skill-node{align-items:flex-start;flex-direction:column}.skill-node button{width:100%}}
 .battle-hp{height:15px;border-radius:99px;background:#263348;overflow:hidden;border:1px solid #526582}
 .battle-hp>span{display:block;height:100%;width:100%;background:linear-gradient(90deg,#23b86b,#a6ef76);transition:width .12s linear}
 .battle-boss .battle-hp>span{background:linear-gradient(90deg,#b92739,#ff8c52)}
@@ -654,43 +666,28 @@ function skillRouteFactor(route,final=false){
  if(!s.skillTree.route)return 1;
  return s.skillTree.route===route?1:(final?300:30);
 }
-const skillRouteNames={swarm:"連続討伐",boss:"ボス攻略",alchemy:"時間錬成",mana:"魔力制御",critical:"致命攻撃",rebirth:"転生覚醒",fortune:"幸運・報酬"};
+const skillRouteNames={swarm:"連続討伐",boss:"ボス攻略",time:"時空干渉",manaCycle:"魔力循環",tactics:"戦術解析",alchemy:"旧・時間錬成",mana:"旧・魔力制御",critical:"旧・致命攻撃",rebirth:"旧・転生覚醒",fortune:"旧・幸運報酬"};
 const extraSkillDefs={
- alchemy1:{route:"alchemy",cost:8,name:"時間蓄積 I",desc:"敵撃破時のお金・XP報酬 +5%"},
- alchemy2:{route:"alchemy",cost:20,name:"時間蓄積 II",desc:"敵撃破時のお金・XP報酬 +10%",requires:"alchemy1"},
- alchemy3:{route:"alchemy",cost:45,name:"時間錬成の極意",desc:"敵撃破時のお金・XP報酬 +20%",requires:"alchemy2",final:true},
- mana1:{route:"mana",cost:8,name:"魔力節約 I",desc:"戦闘スキルのMP消費 -5%"},
- mana2:{route:"mana",cost:20,name:"魔力節約 II",desc:"戦闘スキルのMP消費 -10%",requires:"mana1"},
- mana3:{route:"mana",cost:45,name:"魔力循環の極意",desc:"戦闘スキルのMP消費 -15%、自然回復 +15%",requires:"mana2",final:true},
- critical1:{route:"critical",cost:8,name:"急所見切り I",desc:"クリティカル率 +5%"},
- critical2:{route:"critical",cost:20,name:"急所見切り II",desc:"クリティカル率 +5%",requires:"critical1"},
- critical3:{route:"critical",cost:45,name:"致命の極意",desc:"クリティカル率 +10%、威力2.5倍",requires:"critical2",final:true},
- rebirth1:{route:"rebirth",cost:8,name:"転生の残響 I",desc:"戦闘ダメージ +5%"},
- rebirth2:{route:"rebirth",cost:20,name:"転生の残響 II",desc:"戦闘ダメージ +10%",requires:"rebirth1"},
- rebirth3:{route:"rebirth",cost:45,name:"転生覚醒の極意",desc:"戦闘ダメージ +20%",requires:"rebirth2",final:true},
- fortune1:{route:"fortune",cost:8,name:"幸運の兆し I",desc:"敵撃破報酬 +5%"},
- fortune2:{route:"fortune",cost:20,name:"幸運の兆し II",desc:"敵撃破報酬 +10%",requires:"fortune1"},
- fortune3:{route:"fortune",cost:45,name:"幸運の極意",desc:"敵撃破報酬 +20%、ボス報酬 +25%",requires:"fortune2",final:true}
+ timeEcho:{route:"time",cost:12,name:"時間反響",desc:"戦闘スキル使用時、20%の確率で威力50%の追撃が発生"},
+ timeFreeze:{route:"time",cost:28,name:"時間凍結",desc:"10回スキルを使うごとに、次のスキル攻撃が威力2倍"},
+ timeRift:{route:"time",cost:60,name:"時空裂け目",desc:"時間反響の発生率を35%にし、追撃威力を75%にする",requires:"timeEcho",final:true},
+ manaReturn:{route:"manaCycle",cost:12,name:"魔力回収",desc:"敵撃破時にMPを3回復"},
+ manaSurge:{route:"manaCycle",cost:28,name:"高魔力共鳴",desc:"MPが最大値の80%以上なら戦闘スキル威力+25%",requires:"manaReturn"},
+ manaOverload:{route:"manaCycle",cost:60,name:"魔力過負荷",desc:"MPが最大値の50%以上なら威力+50%。撃破時のMP回復が6になる",requires:"manaSurge",final:true},
+ tacticalFocus:{route:"tactics",cost:12,name:"弱点解析",desc:"同じ敵を連続攻撃するたび威力+10%、最大+50%"},
+ bossExpose:{route:"tactics",cost:28,name:"ボス看破",desc:"ボスへの最初の攻撃後、同じボスへの攻撃威力+30%",requires:"tacticalFocus"},
+ tacticalFinish:{route:"tactics",cost:60,name:"決着の一撃",desc:"敵のHPが20%以下なら与えるダメージ2倍",requires:"bossExpose",final:true}
 };
 function skillHas(id){return !!s.skillTree?.unlocked?.[id];}
 function skillRank(prefix){return [1,2,3].filter(n=>skillHas(prefix+n)).length;}
 function skillTierBonus(prefix){const rank=skillRank(prefix);return rank>=3?.35:rank===2?.15:rank===1?.05:0;}
-function skillDamageFactor(){
- return (1+skillTierBonus("rebirth"))*(skillHas("transcendence")?1.5:1);
-}
-function skillRewardFactor(kind="money",boss=false){
- let f=1;
- if(kind==="money"||kind==="xp")f*=1+skillTierBonus("alchemy");
- f*=1+skillTierBonus("fortune");
- if(boss&&skillHas("fortune3"))f*=1.25;
- if(skillHas("transcendence"))f*=1.5;
- return f;
-}
-function skillMpCost(base){
- const reduction=skillRank("mana")>=3?.30:skillRank("mana")===2?.15:skillRank("mana")===1?.05:0;
- return Math.max(1,Math.ceil(base*(1-reduction)));
-}
-function skillMpRegenBonus(){return skillRank("mana")*.05;}
+function skillDamageFactor(){return skillHas("transcendence")?1.5:1;}
+function skillRewardFactor(kind="money",boss=false){return skillHas("transcendence")?1.5:1;}
+function skillMpCost(base){return Math.max(1,Math.ceil(base));}
+function skillMpRegenBonus(){return 0;}
+function skillEchoChance(){return skillHas("timeRift")?.35:skillHas("timeEcho")?.20:0;}
+function skillEchoPower(){return skillHas("timeRift")?.75:.50;}
+function skillManaDamageFactor(){const ratio=maxMP()>0?s.mp/maxMP():0;if(skillHas("manaOverload")&&ratio>=.5)return 1.5;if(skillHas("manaSurge")&&ratio>=.8)return 1.25;return 1;}
 function exchangeSkillPoints(amount){
  skillEnsureState();
  if(amount==="max")amount=s.adminTPUnlimited?1000000000:Math.min(1000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
@@ -709,99 +706,41 @@ function chooseSkillRoute(route){
  $("log").textContent=skillRouteNames[route]+"ルートを選択しました。SPは消費しません。";
 }
 function buySkillNode(id){
- skillEnsureState();
- const route=s.skillTree.route;if(!route)return;
- let cost=0,ok=false;
- if(id==="swarmLevel"){
-  const lv=s.skillTree.swarmLv;if(lv>=7)return;
-  cost=swarmLevelCosts[lv]*skillRouteFactor("swarm");ok=s.sp>=cost;
-  if(ok)s.skillTree.swarmLv++;
- }else if(id==="swarmUltimate"){
-  if(s.skillTree.swarmLv<7||s.skillTree.swarmUltimate)return;
-  cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;
-  if(ok)s.skillTree.swarmUltimate=true;
- }else if(extraSkillDefs[id]){
-  const d=extraSkillDefs[id];if(skillHas(id))return;
-  if(d.requires&&!skillHas(d.requires))return;
-  cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
-  if(ok)s.skillTree.unlocked[id]=true;
- }else if(id==="chronoFusion"){
-  if(skillHas(id)||!skillHas("timeWave")||!skillHas("timeCollapse")||
-   !["alchemy3","mana3","critical3","rebirth3","fortune3"].every(skillHas))return;
-  cost=2500;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;
- }else if(id==="transcendence"){
-  if(skillHas(id)||!skillHas("chronoFusion"))return;
-  cost=10000;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;
- }else{
-  const defs={
-   timeSlash:{cost:3,route:"boss"},
-   dragonBane:{cost:8,route:"boss",requires:"timeSlash"},
-   bossNova:{cost:18,route:"boss",requires:"timeSlash"},
-   timeCollapse:{cost:30,route:"boss",requires:"dragonBane",final:true},
-   chainLightning:{cost:5,route:"swarm"},
-   stormBurst:{cost:12,route:"swarm",requires:"chainLightning"},
-   timeWave:{cost:30,route:"swarm",requires:"stormBurst",final:true}
-  };
-  const d=defs[id];if(!d||skillHas(id))return;
-  if(d.requires&&!skillHas(d.requires))return;
-  cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
-  if(ok)s.skillTree.unlocked[id]=true;
+ skillEnsureState();const route=s.skillTree.route;if(!route)return;let cost=0,ok=false;
+ if(id==="swarmLevel"){const lv=s.skillTree.swarmLv;if(lv>=7)return;cost=swarmLevelCosts[lv]*skillRouteFactor("swarm");ok=s.sp>=cost;if(ok)s.skillTree.swarmLv++;}
+ else if(id==="swarmUltimate"){if(s.skillTree.swarmLv<7||s.skillTree.swarmUltimate)return;cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;if(ok)s.skillTree.swarmUltimate=true;}
+ else if(extraSkillDefs[id]){const d=extraSkillDefs[id];if(skillHas(id)||(d.requires&&!skillHas(d.requires)))return;cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
+ else if(id==="chronoFusion"){if(skillHas(id)||!skillHas("timeWave")||!skillHas("timeCollapse")||!["timeRift","manaOverload","tacticalFinish"].every(skillHas))return;cost=2500;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
+ else if(id==="transcendence"){if(skillHas(id)||!skillHas("chronoFusion"))return;cost=10000;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
+ else{
+  const defs={timeSlash:{cost:3,route:"boss"},dragonBane:{cost:8,route:"boss",requires:"timeSlash"},bossNova:{cost:18,route:"boss",requires:"timeSlash"},timeCollapse:{cost:30,route:"boss",requires:"dragonBane",final:true},chainLightning:{cost:5,route:"swarm"},stormBurst:{cost:12,route:"swarm",requires:"chainLightning"},timeWave:{cost:30,route:"swarm",requires:"stormBurst",final:true}};
+  const d=defs[id];if(!d||skillHas(id)||(d.requires&&!skillHas(d.requires)))return;cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;
  }
- if(!ok){$("log").textContent="SPが足りないか、前提スキルが未解放です。";return;}
- s.sp-=cost;render();saveAutoGame();$("log").textContent="スキルを解放しました。";
+ if(!ok){$("log").textContent="SPが足りないか、前提スキルが未解放です。";return;}s.sp-=cost;render();saveAutoGame();$("log").textContent="スキルを解放しました。";
 }
 function renderSkillTree(){
- const root=$("skillTreeRoot");if(!root)return;
- skillEnsureState();
- $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";
- $("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
+ const root=$("skillTreeRoot");if(!root)return;skillEnsureState();
+ $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";$("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
  const route=s.skillTree.route,swarmLv=s.skillTree.swarmLv;
- const node=(id,name,desc,cost,available=true,final=false)=>{
-  const owned=skillHas(id)||(id==="swarmUltimate"&&s.skillTree.swarmUltimate);
-  const can=!!route&&available&&!owned&&s.sp>=cost;
-  const state=owned?"取得済み":can?"解放可能":available?"SP不足":"前提スキルが必要";
-  return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';
- };
- const branch=(key,title,desc,items)=>{
-  return '<section class="tree-branch"><h3>'+title+'</h3><p>'+desc+'</p>'+items.map(d=>node(d.id,d.name,d.desc,d.cost*skillRouteFactor(key,!!d.final),!d.requires||skillHas(d.requires),!!d.final)).join("")+'</section>';
- };
- const swarmFactor=skillRouteFactor("swarm"),bossFactor=skillRouteFactor("boss");
- const swarmNodes='<div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*swarmFactor,0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*swarmFactor?'disabled':'')+'>強化</button></div>'+
- node("chainLightning","連鎖雷撃","MP12・最大3体に威力×4",5*swarmFactor,true)+
- node("stormBurst","嵐の爆発","MP35・最大5体に威力×8",12*swarmFactor,skillHas("chainLightning"))+
- node("timeWave","時空波","MP70・最大5体に威力×16",30*skillRouteFactor("swarm",true),skillHas("stormBurst"),true)+
- node("swarmUltimate","連続討伐の極意","討伐報酬1.5倍。群れの拡張Lv7が必要。",30*skillRouteFactor("swarm",true),swarmLv>=7,true);
- const bossNodes=node("timeSlash","時間斬り","MP20・単体に威力×12",3*bossFactor,true)+
- node("dragonBane","竜殺し","MP40・単体に威力×22、ボス特効",8*bossFactor,skillHas("timeSlash"))+
- node("bossNova","星砕き","MP60・最大3体に威力×14、ボス特効",18*bossFactor,skillHas("timeSlash"))+
- node("timeCollapse","時空崩壊","MP100・単体に威力×65、ボス特効",30*skillRouteFactor("boss",true),skillHas("dragonBane"),true);
- const extraGroups=[
-  branch("alchemy","時間錬成","撃破報酬のお金とXPを伸ばす",["alchemy1","alchemy2","alchemy3"].map(id=>({id,...extraSkillDefs[id]}))),
-  branch("mana","魔力制御","MP消費を抑え、自然回復を強化する",["mana1","mana2","mana3"].map(id=>({id,...extraSkillDefs[id]}))),
-  branch("critical","致命攻撃","確率で大ダメージを与える",["critical1","critical2","critical3"].map(id=>({id,...extraSkillDefs[id]}))),
-  branch("rebirth","転生覚醒","転生の力を戦闘ダメージに変換する",["rebirth1","rebirth2","rebirth3"].map(id=>({id,...extraSkillDefs[id]}))),
-  branch("fortune","幸運・報酬","撃破報酬とボス報酬を増やす",["fortune1","fortune2","fortune3"].map(id=>({id,...extraSkillDefs[id]})))
- ];
- const comboReady=skillHas("timeWave")&&skillHas("timeCollapse")&&["alchemy3","mana3","critical3","rebirth3","fortune3"].every(skillHas);
- const special='<section class="tree-branch"><h3>✦ 隠し・超越領域</h3><p>複数ルートを極めたプレイヤー向けの高コストスキル。</p>'+
- node("chronoFusion","時空融合","全ルートの極意と両戦闘ルートの最終スキルが必要。MP150・最大5体・威力×80",2500,comboReady,true)+
- node("transcendence","超越の核","戦闘ダメージ・撃破報酬を1.5倍。時空融合が必要。",10000,skillHas("chronoFusion"),true)+'</section>';
- const routeButtons=Object.entries(skillRouteNames).map(([key,label])=>'<button data-route="'+key+'" '+(route?'disabled':'')+'>'+label+'ルートを選択</button>').join("");
- root.innerHTML='<div class="skill-note">ルート選択は無料。選択したルートは通常SPコスト、他ルートは通常30倍・最終スキル300倍。各ルートの強化は転生後も維持されます。</div>'+
- (!route?'<div class="tree-route-pick">'+routeButtons+'</div>':'<div class="tree-route-banner">選択中：'+skillRouteNames[route]+' ・ ルート変更不可</div>')+
- '<div class="skill-route-grid tree-columns"><section class="tree-branch swarm-branch"><h3>⚔️ 連続討伐</h3><p>複数の敵をまとめて攻撃する範囲スキル。</p>'+swarmNodes+'</section>'+
- '<section class="tree-branch boss-branch"><h3>👑 ボス攻略</h3><p>単体火力とボス特効を伸ばす。</p>'+bossNodes+'</section></div>'+
- '<div class="skill-route-grid tree-columns">'+extraGroups.join("")+'</div>'+special+
- '<div class="skill-card"><b>SP交換</b><div class="skill-note">1 SP = 100,000 TP。取得済みスキルは転生後も維持されます。</div></div>';
+ const node=(id,name,desc,cost,available=true,final=false)=>{const owned=skillHas(id)||(id==="swarmUltimate"&&s.skillTree.swarmUltimate),can=!!route&&available&&!owned&&s.sp>=cost,state=owned?"取得済み":can?"解放可能":available?"SP不足":"前提スキルが必要";return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';};
+ const swarm=[{id:"chainLightning",name:"連鎖雷撃",desc:"MP12・最大3体に威力×4",cost:5},{id:"stormBurst",name:"嵐の爆発",desc:"MP35・最大5体に威力×8",cost:12,requires:"chainLightning"},{id:"timeWave",name:"時空波",desc:"MP70・最大5体に威力×16",cost:30,requires:"stormBurst",final:true},{id:"swarmUltimate",name:"連続討伐の極意",desc:"討伐報酬1.5倍。群れの拡張Lv7が必要",cost:30,requires:"timeWave",final:true}];
+ const boss=[{id:"timeSlash",name:"時間斬り",desc:"MP20・単体に威力×12",cost:3},{id:"dragonBane",name:"竜殺し",desc:"MP40・単体に威力×22、ボス特効",cost:8,requires:"timeSlash"},{id:"bossNova",name:"星砕き",desc:"MP60・最大3体に威力×14、ボス特効",cost:18,requires:"timeSlash"},{id:"timeCollapse",name:"時空崩壊",desc:"MP100・単体に威力×65、ボス特効",cost:30,requires:"dragonBane",final:true}];
+ const groups=[{key:"time",title:"⏳ 時空干渉",desc:"スキル攻撃の反響と周期的な時間増幅。",ids:["timeEcho","timeFreeze","timeRift"]},{key:"manaCycle",title:"🔮 魔力循環",desc:"敵を倒してMPを回収し、高MPを火力に変える。",ids:["manaReturn","manaSurge","manaOverload"]},{key:"tactics",title:"🎯 戦術解析",desc:"同じ敵を狙い続けるほど有利になり、弱った敵を仕留める。",ids:["tacticalFocus","bossExpose","tacticalFinish"]}];
+ const fold=(title,desc,key,items,open=false)=>'<details class="skill-fold" '+(open?'open':'')+'><summary><span>'+title+'</span><small>'+items.filter(x=>skillHas(x.id)).length+'/'+items.length+' 解放</small></summary><p>'+desc+'</p>'+items.map(d=>node(d.id,d.name,d.desc,d.cost*skillRouteFactor(key,!!d.final),!d.requires||skillHas(d.requires),!!d.final)).join("")+'</details>';
+ const extra=groups.map(g=>fold(g.title,g.desc,g.key,g.ids.map(id=>({id,...extraSkillDefs[id]})),route===g.key)).join("");
+ const specialReady=skillHas("timeWave")&&skillHas("timeCollapse")&&["timeRift","manaOverload","tacticalFinish"].every(skillHas);
+ const special=[{id:"chronoFusion",name:"時空融合",desc:"MP150・最大5体・威力×80。各ルートの最終スキルが必要",cost:2500,final:true},{id:"transcendence",name:"超越の核",desc:"戦闘ダメージと撃破報酬を1.5倍。時空融合が必要",cost:10000,final:true}];
+ const routes=["swarm","boss","time","manaCycle","tactics"].map(k=>'<button data-route="'+k+'" '+(route?'disabled':'')+'>'+skillRouteNames[k]+'ルート</button>').join("");
+ const swarmBlock='<details class="skill-fold" '+(route==="swarm"?'open':'')+'><summary><span>⚔️ 連続討伐</span><small>'+swarm.filter(x=>skillHas(x.id)).length+'/4 解放</small></summary><p>複数の敵をまとめて攻撃。群れの拡張で同時出現数も増加。</p><div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*skillRouteFactor("swarm"),0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*skillRouteFactor("swarm")?'disabled':'')+'>強化</button></div>'+swarm.map(d=>node(d.id,d.name,d.desc,d.cost*skillRouteFactor("swarm",!!d.final),!d.requires||skillHas(d.requires),!!d.final)).join("")+'</details>';
+ const bossBlock='<details class="skill-fold" '+(route==="boss"?'open':'')+'><summary><span>👑 ボス攻略</span><small>'+boss.filter(x=>skillHas(x.id)).length+'/4 解放</small></summary><p>単体火力とボス特効を中心に強化。</p>'+boss.map(d=>node(d.id,d.name,d.desc,d.cost*skillRouteFactor("boss",!!d.final),!d.requires||skillHas(d.requires),!!d.final)).join("")+'</details>';
+ root.innerHTML='<div class="skill-note">ルート選択は無料。選択したルートは通常SPコスト、他ルートは通常30倍・最終スキル300倍。強化は転生後も維持。</div>'+(route?'<div class="tree-route-banner">選択中：'+(skillRouteNames[route]||route)+' ・ ルート変更不可</div>':'<div class="tree-route-pick">'+routes+'</div>')+'<div class="skill-tree-groups">'+swarmBlock+bossBlock+extra+'<details class="skill-fold"><summary><span>✦ 超越・複合スキル</span><small>'+special.filter(x=>skillHas(x.id)).length+'/2 解放</small></summary><p>複数ルートを極めた先にある高コストの特殊スキル。</p>'+special.map(d=>node(d.id,d.name,d.desc,d.cost,d.id==="chronoFusion"?specialReady:skillHas("chronoFusion"),true)).join("")+'</details></div><div class="skill-card"><b>SP交換</b><div class="skill-note">1 SP = 100,000 TP。取得済みスキルは転生後も維持。</div></div>';
  document.querySelectorAll("#view-skills [data-sp-exchange]").forEach(b=>b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange)));
- root.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>chooseSkillRoute(b.dataset.route));
- root.querySelectorAll("[data-skill-buy]").forEach(b=>b.onclick=()=>buySkillNode(b.dataset.skillBuy));
- renderBattleSkills();
+ root.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>chooseSkillRoute(b.dataset.route));root.querySelectorAll("[data-skill-buy]").forEach(b=>b.onclick=()=>buySkillNode(b.dataset.skillBuy));renderBattleSkills();
 }
 function renderBattleSkills(){
- const root=$("battleSkillActions");if(!root)return;
- skillEnsureState();
- root.innerHTML=battleSkillDefs.filter(x=>s.skillTree.unlocked[x.id]).map(x=>'<button data-battle-skill="'+x.id+'">'+x.name+'（MP '+x.mp+'）'+(x.targets>1?"・"+x.targets+"体":"")+'</button>').join("");
+ const root=$("battleSkillActions");if(!root)return;skillEnsureState();
+ const unlocked=battleSkillDefs.filter(x=>s.skillTree.unlocked[x.id]);
+ root.innerHTML='<details class="battle-skill-fold"><summary>戦闘スキル ('+unlocked.length+')</summary><div class="battle-skill-list">'+unlocked.map(x=>'<button data-battle-skill="'+x.id+'">'+x.name+'（MP '+x.mp+'）'+(x.targets>1?"・"+x.targets+"体":"")+'</button>').join("")+'</div></details>';
  root.querySelectorAll("[data-battle-skill]").forEach(b=>b.onclick=()=>battleUseSkill(b.dataset.battleSkill));
 }
 function battleUseSkill(id){
@@ -810,7 +749,10 @@ function battleUseSkill(id){
  const mpCost=skillMpCost(skill.mp);
  if(!s.admin&&s.mp<mpCost){$("battleLog").textContent="MPが足りません。";return;}
  if(!s.admin)s.mp-=mpCost;
- battleApplyDamage(skill.mult,skill.targets||1,skill.bossMult||1);
+ let castMult=skill.mult*skillManaDamageFactor();
+ if(skillHas("timeFreeze")){s.skillTree.timeCastCount=(Number(s.skillTree.timeCastCount)||0)+1;if(s.skillTree.timeCastCount%10===0)castMult*=2;}
+ battleApplyDamage(castMult,skill.targets||1,skill.bossMult||1);
+ if(skillEchoChance()>0&&Math.random()<skillEchoChance())battleApplyDamage(castMult*skillEchoPower(),skill.targets||1,skill.bossMult||1);
  $("battleLog").textContent=skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+mpCost+"消費しました。";
  render();saveAutoGame();
 }
@@ -866,17 +808,23 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
  for(const number of targets){
   const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
   const target=s.battleGroup[index],info=battleEnemyInfo(target.number);
-  let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));
-  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.05:0));
-  if(critChance>0&&Math.random()<critChance)damage=BigNum.mul(damage,skillHas("critical3")?2.5:2);
-  const hp=BigNum.from(target.hp);if(BigNum.cmp(damage,0)<=0)continue;
+  let tacticalFactor=1;
+  if(skillHas("tacticalFocus")){if(s.skillTree.focusNumber===number)s.skillTree.focusHits=Math.min(5,(Number(s.skillTree.focusHits)||0)+1);else{s.skillTree.focusNumber=number;s.skillTree.focusHits=1;}tacticalFactor+=Math.max(0,(Number(s.skillTree.focusHits)||1)-1)*.10;}
+  if(info.boss&&skillHas("bossExpose")&&s.skillTree.exposedBoss===number)tacticalFactor*=1.30;
+  const hp=BigNum.from(target.hp);
+  if(skillHas("tacticalFinish")&&BigNum.cmp(hp,BigNum.mul(battleMaxHpBN(info),.2))<=0)tacticalFactor*=2;
+  let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1)*tacticalFactor*skillDamageFactor());
+  if(BigNum.cmp(damage,0)<=0)continue;
   if(BigNum.cmp(damage,hp)>=0){
    const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
    const rewardBonus=(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("money",info.boss);
    const money=BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus);
    const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",info.boss));
-   addMoneyBN(money);gainXP(xp);s.battleKills=info.number;s.battleGroup.splice(index,1);killed=true;
-   if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";}
+   addMoneyBN(money);gainXP(xp);s.battleKills=info.number;
+   if(skillHas("manaReturn"))s.mp=Math.min(maxMP(),s.mp+(skillHas("manaOverload")?6:3));
+   if(s.skillTree.focusNumber===number){s.skillTree.focusNumber=0;s.skillTree.focusHits=0;}
+   s.battleGroup.splice(index,1);killed=true;
+   if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";if(skillHas("bossExpose"))s.skillTree.exposedBoss=info.number;}
   }else target.hp=BigNum.json(BigNum.sub(hp,damage));
  }
  if(!s.battleGroup.length)battleSpawnWave();
