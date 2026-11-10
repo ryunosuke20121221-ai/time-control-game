@@ -588,11 +588,12 @@ render();requestAnimationFrame(loop);
   if(t==="play")return ach.playSeconds;
   return 0;
  }
+ let achievementPageDirty=true;
  function check(){
   if(s.admin)return;
   let changed=false;
   for(const d of achDefs){if(!ach.earned[d[0]]&&!ach.blocked[d[0]]&&progress(d)>=d[4]){ach.earned[d[0]]=true;ach.ap+=d[5];changed=true;}}
-  if(changed){persist();$("log").textContent="🏅 実績を達成！APを獲得しました。";}
+  if(changed){achievementPageDirty=true;persist();$("log").textContent="🏅 実績を達成！APを獲得しました。";}
  }
  function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
  function renderAchievements(){
@@ -611,6 +612,7 @@ render();requestAnimationFrame(loop);
    }).join("");
    return '<details class="ach-group"><summary><b>'+esc(cat)+'</b><span class="ach-group-count">'+earned+' / '+group.length+' 達成</span></summary><div class="ach-group-content">'+cards+'</div></details>';
   }).join("");
+  achievementPageDirty=false;
  }
  function addField(parent,id,label,value){
   const el=document.createElement("label");el.textContent=label;
@@ -662,7 +664,8 @@ render();requestAnimationFrame(loop);
  $("test1000").onclick=()=>{if(s.admin)blockAdminProgress();oldAdminClick?.();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
  setupAdmin();
  const oldRender=render;
- render=function(){oldRender();check();renderAchievements();};
+ window.refreshAchievementPage=()=>{if(achievementPageDirty)renderAchievements();};
+ render=function(){oldRender();check();if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
  const oldLoopSave=saveAutoGame;
  saveAutoGame=function(){ach.last=Date.now();persist();return oldLoopSave()};
  // プレイ時間と累計TPは実績用の独立データとして保存。管理者中は進捗を加算しない。
