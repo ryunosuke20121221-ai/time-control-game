@@ -800,7 +800,8 @@ function battleApplyDamage(mult=1){
   target.hp=BigNum.json(BigNum.sub(hp,damage));s.battleEnemyHp=target.hp;
  }
 }
-window.battleManualAttack=()=>{battleApplyDamage(2);renderBattle();saveAutoGame()};
+window.battleManualAttack=()=>{battleApplyDamage(2);renderBattle();render();saveAutoGame()};
+$("battleManual").addEventListener("click",window.battleManualAttack);
 let battleRenderedEnemy="";function battleMonsterArt(kind){
  const commonStart='<svg class="monster-art" viewBox="0 0 320 220" role="img" aria-label="魔物イラスト" shape-rendering="crispEdges">';
  const ground='<ellipse cx="160" cy="196" rx="105" ry="12" fill="#0008"/>';
