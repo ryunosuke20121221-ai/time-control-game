@@ -645,6 +645,7 @@ function battleApplyDamage(mult=1){
  }
 }
 window.battleManualAttack=()=>{battleApplyDamage(3);renderBattle();saveAutoGame()};
+$("battleManual").addEventListener("click",window.battleManualAttack);
 let battleRenderedEnemy=0;
 function battleMonsterArt(kind){
  const commonStart='<svg class="monster-art" viewBox="0 0 320 220" role="img" aria-label="魔物イラスト" shape-rendering="crispEdges">';
