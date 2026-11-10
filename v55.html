@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム 試作品 v54</title>
+<title>時間操作ゲーム 試作品 v55</title>
 <style>
 html,body,button{touch-action:manipulation}
 :root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
@@ -25,7 +25,7 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .save-slot{border:1px solid var(--line,#3a4350);border-radius:12px;padding:12px;margin:12px 0}.save-slot input{width:100%;margin:6px 0 10px;padding:10px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.save-slot .actions{display:flex;gap:8px;flex-wrap:wrap}.save-slot .actions button{flex:1;min-width:100px}
 .number-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.number-setting-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.82rem}.number-setting-grid select{width:100%;min-width:0}.number-setting-row{padding:10px 0}.ap-shop-panel{margin-top:14px;border-color:#806a35}.ap-shop-panel .achievement{background:#171d2a}.ap-shop-panel .actions button{min-width:100px}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.85rem}.admin-grid input{min-width:0;width:100%;padding:9px;border-radius:8px;background:#0b1425;color:#fff;border:1px solid #526481}.admin-grid input[type=checkbox]{width:auto}.achievement{border:1px solid #574b30;border-radius:11px;padding:10px;margin:8px 0;background:#1e1d28}.achievement.done{border-color:#b18a3b;background:linear-gradient(120deg,#3a3020,#202333)}.achievement .reward{color:var(--gold);font-size:.85rem}.achievement .progress{height:5px;background:#30394c;border-radius:8px;overflow:hidden;margin-top:7px}.achievement .progress span{display:block;height:100%;background:linear-gradient(90deg,#d59c37,#ffe28b)}.achievement.locked{opacity:.78}.ach-head{display:flex;justify-content:space-between;gap:8px}.ach-cat{color:#aabbd5;font-size:.78rem}.achievement-hero h2{font-size:1.3rem;margin:5px 0}.number-settings-panel h2{color:var(--accent)}@media(max-width:420px){.admin-grid{grid-template-columns:1fr 1fr}}</style></head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
-<h1>時間操作ゲーム <span class="tag">試作品 v54</span></h1>
+<h1>時間操作ゲーム <span class="tag">試作品 v55</span></h1>
 <p>タブ切り替え・固定ステータス・カード式施設表示・転生ショップに対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。大量XPは必要量と複利報酬を一括計算。</p>
 <div class="view active" id="view-home"><div class="viewgrid two-col">
 <section class="panel"><h2>プレイヤー</h2>
