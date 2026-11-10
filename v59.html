@@ -91,9 +91,9 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
   </div>
   <div class="battle-action" style="margin-top:12px">
    <button class="primary" id="battleAutoState" disabled>自動攻撃：稼働中</button>
-   <button class="battle-manual" id="battleManual">手動攻撃 ×3</button>
+   <button class="battle-manual" id="battleManual">手動攻撃 ×2</button>
   </div>
-  <div class="small" style="margin-top:9px">時間操作中は攻撃速度×1.33、攻撃力×1.5。手動攻撃は自動攻撃の3倍の威力です。</div>
+  <div class="small" style="margin-top:9px">時間操作中は攻撃速度×1.33、攻撃力×1.5。手動攻撃は自動攻撃の2倍の威力です。</div>
   <div id="battleLog" class="battle-log" style="margin-top:10px">魔物が現れた！</div>
  </section>
  <section class="panel" style="margin-top:12px">
@@ -651,7 +651,7 @@ function battleApplyDamage(mult=1){
   s.battleEnemyHp=BigNum.json(BigNum.sub(hp,damage));
  }
 }
-window.battleManualAttack=()=>{battleApplyDamage(3);renderBattle();saveAutoGame()};
+window.battleManualAttack=()=>{battleApplyDamage(2);renderBattle();saveAutoGame()};
 $("battleManual").addEventListener("click",window.battleManualAttack);
 let battleRenderedEnemy=0;
 function battleMonsterArt(kind){
