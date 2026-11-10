@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム 試作品 v44</title>
+<title>時間操作ゲーム 試作品 v45</title>
 <style>
 html,body,button{touch-action:manipulation}
 :root{color-scheme:dark;--bg:#10131b;--panel:#1b2130;--line:#30394c;--accent:#8b9cff;--muted:#aab3c7}
@@ -25,8 +25,8 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .save-slot{border:1px solid var(--line,#3a4350);border-radius:12px;padding:12px;margin:12px 0}.save-slot input{width:100%;margin:6px 0 10px;padding:10px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.save-slot .actions{display:flex;gap:8px;flex-wrap:wrap}.save-slot .actions button{flex:1;min-width:100px}
 </style></head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
-<h1>時間操作ゲーム <span class="tag">試作品 v44</span></h1>
-<p>タブ切り替え・固定ステータス・カード式施設表示・転生ショップに対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。大量レベルアップは時間制限付きフレーム分割処理。</p>
+<h1>時間操作ゲーム <span class="tag">試作品 v45</span></h1>
+<p>タブ切り替え・固定ステータス・カード式施設表示・転生ショップに対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。大量XPは必要量と複利報酬を一括計算。</p>
 <div class="view active" id="view-home"><div class="viewgrid two-col">
 <section class="panel"><h2>プレイヤー</h2>
 <div class="stat"><span>レベル</span><b id="level">1</b></div>
@@ -185,34 +185,152 @@ function gainXP(n){
  n=Number(n);if(!Number.isFinite(n)||n<=0)return;
  s.xp=Math.min(Number.MAX_VALUE,s.xp+n*allXpMult());
 }
-// 1フレームあたり最大1000レベルだけ処理し、巨大なXP獲得で画面操作が止まらないようにする。
-function processPendingXP(maxLevels=1000,maxMs=4){
- const started=performance.now(),oldLevel=s.level;
- let ups=0;
- while(ups<maxLevels&&s.level<MAX_PLAYER_LEVEL){
-  const required=need();
-  if(s.xp<required)break;
-  s.xp-=required;s.level++;ups++;pendingLevelUps++;
-  const rewardStep=s.level>15000?2:(s.level>10000?5:(s.level>1000?2:1));
-  const milestoneStep=s.level>15000?20:(s.level>10000?50:(s.level>1000?20:10));
-  if(s.level%rewardStep!==0)continue;
-  pendingRewardedLevels++;
-  const milestone=s.level%milestoneStep===0;
-  const heldMoney=Math.max(0,s.money);
-  const incomeBonus=totalIncome()*(milestone?2.5:0.75);
-  let levelReward=(20+(s.level-2)*10)*(s.rbMult||1)*(1+shopEffect("levelReward",0.02));
-  const heldMoneyRate=s.level>15000?(milestone?0.03:0.005):(milestone?0.075:0.015);
-  const moneyBonus=heldMoney*heldMoneyRate;
-  if(milestone)levelReward*=10;
-  const totalReward=(levelReward+moneyBonus)*allMoneyMult()+incomeBonus;
-  s.money+=totalReward;pendingReward+=totalReward;
-  // 遅い端末でも1フレームのXP処理が画面操作を塞がないよう時間で区切る。
-  if((ups&31)===0&&performance.now()-started>=maxMs)break;
+// need() の累積値を周期250の床関数分解で計算する。レベルごとのwhile処理を避ける。
+const floorSq250Prefix=[0];
+for(let r=0;r<250;r++)floorSq250Prefix.push(floorSq250Prefix[r]+Math.floor(r*r/250));
+const FLOOR_SQ250_BLOCK=floorSq250Prefix[250];
+function floor100SumPrefix(n){
+ const q=Math.floor(n/100),r=n%100;
+ return 100*q*(q-1)/2+q*r;
+}
+function floorSq250SumPrefix(n){
+ const q=Math.floor(n/250),r=n%250;
+ return 62500*q*(q-1)*(2*q-1)/6+62250*q*(q-1)/2+q*FLOOR_SQ250_BLOCK+250*q*q*r+q*r*(r-1)+floorSq250Prefix[r];
+}
+function requiredXPSum(startN,count){
+ if(count<=0)return 0;
+ const endN=startN+count;
+ const sumN=count*(2*startN+count-1)/2;
+ const floor100=floor100SumPrefix(endN)-floor100SumPrefix(startN);
+ const floorSq=floorSq250SumPrefix(endN)-floorSq250SumPrefix(startN);
+ const discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;
+ return (100*count+5*sumN+floor100+floorSq)*discount;
+}
+function affordableLevelCount(){
+ const maxCount=Math.max(0,Number.MAX_SAFE_INTEGER-s.level);
+ if(maxCount<=0||s.xp<need())return 0;
+ const startN=s.level-1,xp=s.xp;
+ let low=0,high=1;
+ while(high<maxCount&&requiredXPSum(startN,high)<=xp){low=high;high=Math.min(maxCount,high*2)}
+ if(high===maxCount&&requiredXPSum(startN,high)<=xp)return high;
+ while(low+1<high){
+  const mid=Math.floor((low+high)/2);
+  if(requiredXPSum(startN,mid)<=xp)low=mid;else high=mid;
  }
- if(ups){
-  const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);
-  if(crossedUnlock)shopDirty=true;
+ return low;
+}
+function totalIncomeAtLevel(level){
+ const rb=s.rbMult||1;
+ const levelMoney=(1+(level-1)*0.025)*rb;
+ const abilityMoney=s.on?(1.5+(level-1)*0.05)*(1+s.fl[1]*0.02)*(1+shopEffect("abilityMoney",0.01)):1;
+ return (1+facilityIncome())*levelMoney*abilityMoney*(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult();
+}
+function rewardEventValues(level,milestone,lateBand){
+ const allMoney=allMoneyMult();
+ const heldRate=lateBand?(milestone?0.03:0.005):(milestone?0.075:0.015);
+ const q=1+heldRate*allMoney;
+ let baseReward=10*level*(s.rbMult||1)*(1+shopEffect("levelReward",0.02));
+ if(milestone)baseReward*=10;
+ const additive=baseReward*allMoney+totalIncomeAtLevel(level)*(milestone?2.5:0.75);
+ return {q,additive};
+}
+function matrixMultiply4(a,b){
+ const out=Array.from({length:4},()=>[0,0,0,0]);
+ for(let i=0;i<4;i++)for(let k=0;k<4;k++){
+  const av=a[i][k];if(av===0)continue;
+  for(let j=0;j<4;j++){
+   const bv=b[k][j];if(bv===0)continue;
+   const v=out[i][j]+av*bv;
+   out[i][j]=Number.isFinite(v)?Math.max(-Number.MAX_VALUE,Math.min(Number.MAX_VALUE,v)):(v>0?Number.MAX_VALUE:-Number.MAX_VALUE);
+  }
  }
+ return out;
+}
+function matrixApply4(m,v){
+ const out=[0,0,0,0];
+ for(let i=0;i<4;i++)for(let j=0;j<4;j++)if(m[i][j]!==0&&v[j]!==0){
+  const x=out[i]+m[i][j]*v[j];out[i]=Number.isFinite(x)?Math.max(-Number.MAX_VALUE,Math.min(Number.MAX_VALUE,x)):(x>0?Number.MAX_VALUE:-Number.MAX_VALUE);
+ }
+ return out;
+}
+function applyRewardCycles(money,firstLevel,rewardStep,milestoneStep,cycleCount,lateBand){
+ if(cycleCount<=0)return money;
+ const perCycle=milestoneStep/rewardStep;
+ const allMoney=allMoneyMult();
+ const normalQ=1+(lateBand?0.005:0.015)*allMoney;
+ const milestoneQ=1+(lateBand?0.03:0.075)*allMoney;
+ const Q=Math.pow(normalQ,perCycle-1)*milestoneQ;
+ // 1周期分の加算額は周期番号に関する2次式。3点から係数を復元する。
+ function cycleAdd(t){
+  let amount=0;
+  for(let j=0;j<perCycle;j++){
+   const level=firstLevel+(perCycle*t+j)*rewardStep;
+   const milestone=level%milestoneStep===0;
+   const {q,additive}=rewardEventValues(level,milestone,lateBand);
+   amount=amount*q+additive;
+  }
+  return amount;
+ }
+ const c0=cycleAdd(0),cAt1=cycleAdd(1),cAt2=cycleAdd(2);
+ const c2=(cAt2-2*cAt1+c0)/2,c1=cAt1-c0-c2;
+ if(Q>1&&cycleCount*Math.log(Q)>700)return Number.MAX_VALUE;
+ let power=[
+  [Q,c2,c1,c0],
+  [0,1,2,1],
+  [0,0,1,1],
+  [0,0,0,1]
+ ];
+ let result=[money,0,0,1],n=cycleCount;
+ while(n>0){if(n%2===1)result=matrixApply4(power,result);n=Math.floor(n/2);if(n>0)power=matrixMultiply4(power,power)}
+ return Math.max(0,Math.min(Number.MAX_VALUE,result[0]));
+}
+function processRewardRange(money,fromLevel,toLevel,rewardStep,milestoneStep,lateBand){
+ if(toLevel<fromLevel)return {money,rewarded:0};
+ const first=Math.ceil(fromLevel/rewardStep)*rewardStep;
+ const last=Math.floor(toLevel/rewardStep)*rewardStep;
+ if(last<first)return {money,rewarded:0};
+ const count=Math.floor((last-first)/rewardStep)+1;
+ const perCycle=milestoneStep/rewardStep;
+ const cycles=Math.floor(count/perCycle),remaining=count%perCycle;
+ money=applyRewardCycles(money,first,rewardStep,milestoneStep,cycles,lateBand);
+ const tailStart=first+cycles*perCycle*rewardStep;
+ for(let i=0;i<remaining;i++){
+  const level=tailStart+i*rewardStep,milestone=level%milestoneStep===0;
+  const {q,additive}=rewardEventValues(level,milestone,lateBand);
+  money=Math.min(Number.MAX_VALUE,money*q+additive);
+ }
+ return {money,rewarded:count};
+}
+function processLevelRewards(startLevel,endLevel){
+ let money=s.money,rewarded=0;
+ const bands=[
+  {from:2,to:1000,step:1,milestone:10,late:false},
+  {from:1001,to:10000,step:2,milestone:20,late:false},
+  {from:10001,to:15000,step:5,milestone:50,late:false},
+  {from:15001,to:endLevel,step:2,milestone:20,late:true}
+ ];
+ for(const band of bands){
+  const from=Math.max(startLevel,band.from),to=Math.min(endLevel,band.to);
+  if(to<from)continue;
+  const result=processRewardRange(money,from,to,band.step,band.milestone,band.late);
+  money=result.money;rewarded+=result.rewarded;
+ }
+ return {money,rewarded};
+}
+// XP必要量は二分探索で一括判定し、報酬は周期行列で元の複利計算を維持する。
+function processPendingXP(){
+ const oldLevel=s.level,ups=affordableLevelCount();
+ if(ups<=0)return 0;
+ const cost=requiredXPSum(oldLevel-1,ups);
+ s.xp=Math.max(0,s.xp-cost);
+ const newLevel=oldLevel+ups;
+ const oldMoney=s.money;
+ const rewards=processLevelRewards(oldLevel+1,newLevel);
+ s.money=rewards.money;
+ pendingLevelUps+=ups;pendingReward+=Math.max(0,s.money-oldMoney);pendingRewardedLevels+=rewards.rewarded;
+ s.level=newLevel;
+ const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);
+ if(crossedUnlock)shopDirty=true;
  if(s.xp<need()&&pendingLevelUps){
   $("log").textContent=`レベルアップ！ +${pendingLevelUps}レベル。報酬対象${pendingRewardedLevels}回、報酬 ${moneyFmt(pendingReward)} を獲得！`;
   pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;
@@ -373,10 +491,8 @@ let lastAutoSave=0,lastLoopErrorLog=0;
 function loop(now){
  try{
   const dt=Math.min((now-last)/1000,1);last=now;
-  // XP backlogが大きいときは処理枠を広げ、通常時は描画を優先する。
-  const xpBacklogRatio=s.xp/Math.max(1,need());
-  processPendingXP(xpBacklogRatio>=100000?100000:(xpBacklogRatio>=1000?50000:1000),
-                   xpBacklogRatio>=1000?10:4);
+  // XPは必要量を一括判定し、レベルアップ報酬も周期単位で集約する。
+  processPendingXP();
   if(s.on){
    autoTapTimer+=dt;
    while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}
