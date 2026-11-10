@@ -204,7 +204,11 @@ const MAX_PLAYER_LEVEL=Infinity;
   function xpBN(){return BigNum.from(s.xpBig||s.xp||0)}
   function setXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)<0)throw new RangeError("XP cannot be negative");s.xpBig=BigNum.json(x);const n=BigNum.toNumber(x);s.xp=Number.isFinite(n)?Math.max(0,n):Number.MAX_VALUE}
   function addXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)>0)setXPBN(BigNum.add(xpBN(),x))}
-  function xpBNFmt(v){
+  function extendedUnitLabel(labels,idx){
+    const label=labels[idx%labels.length],stars=Math.floor(idx/labels.length);
+    return label+(stars<=12?"*".repeat(stars):"*（星印"+BigInt(stars).toString()+"個）");
+   }
+   function xpBNFmt(v){
    const x=BigNum.from(v);if(x.m===0)return "0";
    const cfg=numberConfig("xp"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0)));
    if(mode==="sci")return x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
@@ -212,8 +216,7 @@ const MAX_PLAYER_LEVEL=Infinity;
    if(mode==="short"){const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return (x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
    if(x.e<4)return BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");
    const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-   if(group-1>=labels.length*100)return x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e;
-   const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
+   const idx=group-1,label=extendedUnitLabel(labels,idx);
    return (x.m*Math.pow(10,x.e-group*4)).toFixed(digits).replace(/\.?0+$/,"")+label;
   }
   function xpProgress(){const req=needBN();if(BigNum.cmp(req,0)<=0)return 0;const ratio=BigNum.toNumber(BigNum.div(xpBN(),req));return Number.isFinite(ratio)?Math.max(0,Math.min(1,ratio)):1}
@@ -240,8 +243,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   }
   if(x.e<4)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-  if(group-1>=labels.length*100)return "¥"+x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e;
-  const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
+  const idx=group-1,label=extendedUnitLabel(labels,idx);
   return "¥"+trim(x.m*Math.pow(10,x.e-group*4))+label;
  }
 
