@@ -77,11 +77,11 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 <h3>転生ショップ強化レベル</h3><div class="admin-grid" id="admShop"></div>
 <div class="actions"><button class="primary" id="adminApply">数値を適用</button><button id="adminMaxShop">転生ショップ全強化を最大</button><button id="adminMaxAbilities">能力を上限まで強化</button><button id="adminMaxFacilities">全施設をLv10000</button></div>
 </div>
-<div class="panel" style="margin-top:14px;border-color:#806a35"><h2 style="color:var(--gold)">実績・AP</h2><div class="stat"><span>達成数</span><b id="achCount">0 / 0</b></div><div class="stat"><span>達成率</span><b id="achRate">0%</b></div><div class="stat"><span>獲得AP</span><b id="apBalance">0 AP</b></div><div id="achievementList"></div></div>
+
 <div id="saveSlots"></div>
 <div class="actions"><button id="reset">最初から</button></div>
 <p class="small">管理者モードをONにすると能力・施設の購入費用が0になり、MPが無限になります。表示を「しない」にしても、すでにONの管理者モード自体は解除されません。</p></section>
-</div></div>
+</div><div class="view" id="view-achievements"><section class="panel"><div class="panel" style="margin-top:14px;border-color:#806a35"><h2 style="color:var(--gold)">実績・AP</h2><div class="stat"><span>達成数</span><b id="achCount">0 / 0</b></div><div class="stat"><span>達成率</span><b id="achRate">0%</b></div><div class="stat"><span>獲得AP</span><b id="apBalance">0 AP</b></div><div id="achievementList"></div></div></section></div></div>
 <nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="details">📊 詳細</button><button data-view="achievements">🏅 実績</button></nav></main>
 <style>.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.85rem}.admin-grid input{min-width:0;width:100%;padding:9px;border-radius:8px;background:#0b1425;color:#fff;border:1px solid #526481}.admin-grid input[type=checkbox]{width:auto}.achievement{border:1px solid #574b30;border-radius:11px;padding:10px;margin:8px 0;background:#1e1d28}.achievement.done{border-color:#b18a3b;background:linear-gradient(120deg,#3a3020,#202333)}.achievement .reward{color:var(--gold);font-size:.85rem}.achievement .progress{height:5px;background:#30394c;border-radius:8px;overflow:hidden;margin-top:7px}.achievement .progress span{display:block;height:100%;background:linear-gradient(90deg,#d59c37,#ffe28b)}.achievement.locked{opacity:.78}.ach-head{display:flex;justify-content:space-between;gap:8px}.ach-cat{color:#aabbd5;font-size:.78rem}@media(max-width:420px){.admin-grid{grid-template-columns:1fr 1fr}}</style><script>
 const $=id=>document.getElementById(id);
@@ -137,13 +137,13 @@ function shopCost(item){return Math.floor(item.base*Math.pow(1.35,shopLv(item.id
 function shopEffect(id,per=1){return shopLv(id)*per}
 function renderRebirthShop(){
  const root=$("rebirthShop");if(!root)return;
- root.innerHTML=rebirthUpgrades.map(group=>`<div class="item"><b>${group.cat}</b>${group.items.map(it=>{const lv=shopLv(it.id),cost=shopCost(it);return `<div class="item"><b>${it.name}</b> <span class="tag">Lv ${lv}/${it.cap}</span><div class="small">${it.desc}</div><div class="stat"><span>次の強化費用</span><b>${lv<it.cap?cost.toLocaleString("ja-JP")+" TP":"上限"}</b></div><button data-shop="${it.id}" ${lv>=it.cap||s.tp<cost?"disabled":""}>強化する</button></div>`}).join("")}</div>`).join("");
+ root.innerHTML=rebirthUpgrades.map(group=>`<div class="item"><b>${group.cat}</b>${group.items.map(it=>{const lv=shopLv(it.id),cost=shopCost(it);return `<div class="item"><b>${it.name}</b> <span class="tag">Lv ${lv}/${it.cap}</span><div class="small">${it.desc}</div><div class="stat"><span>次の強化費用</span><b>${lv<it.cap?cost.toLocaleString("ja-JP")+" TP":"上限"}</b></div><button data-shop="${it.id}" ${lv>=it.cap||(!s.adminTPUnlimited&&s.tp<cost)?"disabled":""}>強化する</button></div>`}).join("")}</div>`).join("");
  root.querySelectorAll("[data-shop]").forEach(btn=>btn.onclick=()=>buyRebirthUpgrade(btn.dataset.shop));
 }
 function buyRebirthUpgrade(id){
  const item=rebirthUpgrades.flatMap(g=>g.items).find(x=>x.id===id);if(!item)return;
- const lv=shopLv(id),cost=shopCost(item);if(lv>=item.cap||s.tp<cost)return;
- s.tp-=cost;s.shop[id]=lv+1;shopDirty=true;rebirthShopDirty=true;render();
+ const lv=shopLv(id),cost=shopCost(item);if(lv>=item.cap||(!s.adminTPUnlimited&&s.tp<cost))return;
+ if(!s.adminTPUnlimited)s.tp-=cost;s.shop[id]=lv+1;shopDirty=true;rebirthShopDirty=true;render();
 }
 const MAX_PLAYER_LEVEL=Infinity;
 const fresh=()=>({level:1,xp:0,money:100,mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,shop:{},lastSeen:Date.now(),fl:[0,0,0,0],bl:[0,0,0,0,0]});
@@ -401,27 +401,27 @@ for(let i=0;i<buildings.length;i++){
  if(xpEl)setTextIfChanged(xpEl,"+"+compactNumFmt(xpEarn)+" XP / 秒");
 }
 if(rebirthShopDirty&&$("view-rebirth").classList.contains("active")){renderRebirthShop();rebirthShopDirty=false;}
-const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],button[data-fall]");buttons.forEach(b=>{const i=Number(b.dataset.f??b.dataset.fmax??b.dataset.fall);const canBuy=s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(b.hasAttribute("data-fall")?s.admin||s.money>=fCost(i):s.money>=fCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
-const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=buildings[i].unlock&&(b.hasAttribute("data-ball")?s.admin||s.money>=bCost(i):s.money>=bCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],button[data-fall]");buttons.forEach(b=>{const i=Number(b.dataset.f??b.dataset.fmax??b.dataset.fall);const canBuy=s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(b.hasAttribute("data-fall")?s.admin||s.adminMoneyUnlimited||s.money>=fCost(i):s.money>=fCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=buildings[i].unlock&&(b.hasAttribute("data-ball")?s.admin||s.adminMoneyUnlimited||s.money>=bCost(i):s.money>=bCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
 }
-window.buyF=i=>{let c=fCost(i);if(s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&s.money>=c){if(!s.admin)s.money-=c;s.fl[i]++;shopDirty=true;render()}};
-window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;let count=0,total=0,cap=abilityLevelCap(),target=Number($("buyCount").value)||5;while(count<target&&s.fl[i]+count<cap){const c=s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(c)||(!s.admin&&total+c>s.money)||c>Number.MAX_SAFE_INTEGER)break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
+window.buyF=i=>{let c=fCost(i);if(s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(s.admin||s.adminMoneyUnlimited||s.money>=c)){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=c;s.fl[i]++;shopDirty=true;render()}};
+window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;let count=0,total=0,cap=abilityLevelCap(),target=Number($("buyCount").value)||5;while(count<target&&s.fl[i]+count<cap){const c=(s.admin||s.adminMoneyUnlimited)?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(c)||(!s.admin&&!s.adminMoneyUnlimited&&total+c>s.money)||c>Number.MAX_SAFE_INTEGER)break;total+=c;count++;}if(count){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=total;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
 
 window.buyFAll=i=>{
  if(s.level<funcs[i].unlock)return;
  const cap=abilityLevelCap(),remaining=Math.min(10000+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i]));
- let count=s.admin?remaining:maxGeometricCount(funcs[i].base,funcs[i].rate,s.fl[i],s.money,remaining),total=0;
- if(!s.admin){
+ let count=(s.admin||s.adminMoneyUnlimited)?remaining:maxGeometricCount(funcs[i].base,funcs[i].rate,s.fl[i],s.money,remaining),total=0;
+ if(!s.admin&&!s.adminMoneyUnlimited){
   for(let k=0;k<count;k++)total+=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+k);
   while(count>0&&total>s.money){count--;total-=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count)}
   while(count<remaining){const next=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(next)||total+next>s.money)break;total+=next;count++;}
  }
  if(!count){$('log').textContent="購入資金が足りないか、能力レベル上限です。";return}
- if(!s.admin)s.money=Math.max(0,s.money-total);
+ if(!s.admin&&!s.adminMoneyUnlimited)s.money=Math.max(0,s.money-total);
  s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render();
 };
 function facilityBulkCount(i,limit){
- limit=Math.max(0,Math.floor(limit));if(!limit)return 0;if(s.admin)return limit;
+ limit=Math.max(0,Math.floor(limit));if(!limit)return 0;if(s.admin||s.adminMoneyUnlimited)return limit;
  const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;
  const budget=Math.max(0,s.money);let count=0;
  if(i===0&&s.bl[i]===0){const first=Math.max(1,Math.floor(250*discount));if(budget<first)return 0;count=1+maxGeometricCount(300,1.25,0,Math.max(0,budget-first)/discount,limit-1)}
@@ -437,12 +437,12 @@ window.buyBAll=i=>{
  if(s.level<buildings[i].unlock)return;
  const limit=10000+shopEffect("bulkLimit",1000);
  const count=facilityBulkCount(i,limit);let total=0;
- if(!s.admin)for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k);
+ if(!s.admin&&!s.adminMoneyUnlimited)for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k);
  if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}
  else{$('log').textContent="購入資金が足りません。"}
 };
-window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&s.money>=c){if(!s.admin)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
-window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCountFacility").value)||5;while(count<target){const c=s.admin?0:(i===0?facilityCostAt(i,s.bl[i]+count):facilityCostAt(i,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
+window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&(s.admin||s.adminMoneyUnlimited||s.money>=c)){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
+window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCountFacility").value)||5;while(count<target){const c=s.admin?0:(i===0?facilityCostAt(i,s.bl[i]+count):facilityCostAt(i,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&!s.adminMoneyUnlimited&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
 $("tap").onclick=()=>{tapReward();render()};
 $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0}else{last=performance.now()}render()};
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
@@ -637,8 +637,14 @@ render();requestAnimationFrame(loop);
   $("adminPanel").style.display="none";
  }
  // 管理者ボタンを押した時に、管理パネルを開閉する。既存の管理者ON/OFF機能は維持。
+ function refreshAdminInputs(){
+  ["admLevel","admXp","admMoney","admMp","admTP","admAP","admRebirth","admRbMult"].forEach((id,i)=>{const vals=[s.level,s.xp,s.money,s.mp,s.tp,ach.ap,s.rebirth,s.rbMult];$(id).value=String(vals[i]??0)});
+  funcs.forEach((f,i)=>$("admFl"+i).value=s.fl[i]||0);
+  buildings.forEach((b,i)=>$("admBl"+i).value=s.bl[i]||0);
+  rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=shopLv(it.id));
+ }
  const oldAdminClick=$("test1000").onclick;
- $("test1000").onclick=()=>{oldAdminClick?.();$("adminPanel").style.display=s.admin?"block":"none";$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
+ $("test1000").onclick=()=>{oldAdminClick?.();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
  setupAdmin();
  const oldRender=render;
  render=function(){oldRender();check();renderAchievements();};
