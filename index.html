@@ -599,7 +599,7 @@ document.addEventListener("visibilitychange",()=>{
 });
 window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
 $("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
-let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0;
+let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,lastXpProcess=0;
 $("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
 
 function autoTapInterval(){return Math.max(0.1,1.5-s.fl[0]*0.05)}
@@ -620,9 +620,10 @@ function loop(now){
   const facilityXP=BigNum.mul(passiveXPIncomeBN(),dt);if(BigNum.cmp(facilityXP,0)>0)gainXP(facilityXP);
   // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
   // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
-  processPendingXP();
-  // XPバーだけは画面全体の再描画から分離し、約30fpsで軽量更新する。
-  if(now-lastXpBarUpdate>=33){lastXpBarUpdate=now;updateXPBars()}
+  // 大量XP時の二分探索・報酬計算を毎フレーム実行しない。最大10回/秒に制限する。
+  if(now-lastXpProcess>=100){lastXpProcess=now;processPendingXP()}
+  // XPバーは独立更新し、画面全体の再描画を待たない。
+  if(now-lastXpBarUpdate>=50){lastXpBarUpdate=now;updateXPBars()}
   if(now-lastRender>=500){lastRender=now;render()}
   if(now-lastAutoSave>=5000){lastAutoSave=now;saveAutoGame()}
  }catch(err){
