@@ -612,8 +612,8 @@ function battleEnemyInfo(){
  return {...e,number:n,boss:false};
 }
 function battleMaxHpBN(info=battleEnemyInfo()){
- const base=BigNum.mul(info.baseHp||info.hp,bigPowPositive(1.12,Math.max(0,info.number-1)));
- return info.boss?BigNum.mul(base,6):base;
+ const base=BigNum.mul(info.baseHp||info.hp,bigPowPositive(1.13,Math.max(0,info.number-1)));
+ return info.boss?BigNum.mul(base,5.5):base;
 }
 function battleEnsureState(){
  s.battleKills=Math.max(0,Math.floor(Number(s.battleKills)||0));
