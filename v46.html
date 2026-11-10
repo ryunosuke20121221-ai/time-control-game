@@ -665,7 +665,7 @@ render();requestAnimationFrame(loop);
  setupAdmin();
  const oldRender=render;
  window.refreshAchievementPage=()=>{if(achievementPageDirty)renderAchievements();};
- render=function(){oldRender();check();if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
+ render=function(){const functionDetailStates=[...$("functions").querySelectorAll("details")].map(el=>el.open);oldRender();$("functions").querySelectorAll("details").forEach((el,i)=>{if(i<functionDetailStates.length)el.open=functionDetailStates[i];});check();if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
  const oldLoopSave=saveAutoGame;
  saveAutoGame=function(){ach.last=Date.now();persist();return oldLoopSave()};
  // プレイ時間と累計TPは実績用の独立データとして保存。管理者中は進捗を加算しない。
