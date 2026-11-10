@@ -561,7 +561,8 @@ function updateXPBars(){
  if(topBar){topBar.max=1;topBar.value=progress}
 }
 function render(){
-$("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyFmt(moneyBN());$("topXp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("topXpbar").max=1;$("topXpbar").value=xpProgress();$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
+ renderBattle();
+ $("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyFmt(moneyBN());$("topXp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("topXpbar").max=1;$("topXpbar").value=xpProgress();$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
 $("level").textContent=formatStat("level",s.level,0);$("xp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("xpbar").max=1;$("xpbar").value=xpProgress();
 $("money").textContent=moneyFmt(moneyBN());$("income").textContent=moneyFmt(totalIncomeBN())+" / 秒";$("passiveXp").textContent="+"+xpBNFmt(BigNum.mul(passiveXPIncomeBN(),allXpMult()))+" XP / 秒";
 $("xpMult").textContent="×"+formatStat("multiplier",levelXpMult());$("moneyMult").textContent="×"+formatStat("multiplier",levelMoneyMult());$("tapXp").textContent=formatStat("xp",(.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult());$("tapMoney").textContent=moneyFmt(tapMoneyPerTap(1));
@@ -713,6 +714,7 @@ function loadAutoGame(){
   const raw=localStorage.getItem(AUTO_SAVE_KEY);if(!raw)return false;
   const data=JSON.parse(raw);if(!data||typeof data!=="object")return false;
   s={...fresh(),...data};
+  battleEnsureState();
   s.fl=Array.isArray(data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(data.fl[i])||0)):fresh().fl.slice();
   s.bl=Array.isArray(data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(data.bl[i])||0)):fresh().bl.slice();
   s.shop=data.shop&&typeof data.shop==="object"?data.shop:{};
