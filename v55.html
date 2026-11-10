@@ -427,13 +427,26 @@ function processLevelRewards(startLevel,endLevel){
 }
 // XP必要量は二分探索で一括判定し、報酬は周期行列で元の複利計算を維持する。
 function processPendingXP(){
- const oldLevel=s.level,ups=affordableLevelCount();if(ups<=0)return 0;
- const cost=requiredXPSum(oldLevel-1,ups);setXPBN(BigNum.cmp(xpBN(),cost)>0?BigNum.sub(xpBN(),cost):BigNum.from(0));
- const newLevel=oldLevel+ups,oldMoney=moneyBN(),rewards=processLevelRewards(oldLevel+1,newLevel);setMoneyBN(rewards.money);
- pendingLevelUps+=ups;pendingReward=BigNum.add(pendingReward,BigNum.sub(moneyBN(),oldMoney));pendingRewardedLevels+=rewards.rewarded;s.level=newLevel;
- const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);if(crossedUnlock)shopDirty=true;
- if(BigNum.cmp(xpBN(),needBN())<0&&pendingLevelUps){$("log").textContent=`レベルアップ！ +${pendingLevelUps}レベル。報酬対象${pendingRewardedLevels}回、報酬 ${moneyFmt(pendingReward)} を獲得！`;pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0}
- return ups;
+ let totalUps=0;
+ // 巨大数の境界ではNumberの丸めで1回の探索後にも次レベル分のXPが残ることがあるため、残量が必要量を下回るまで連続処理する。
+ for(let pass=0;pass<32;pass++){
+  const oldLevel=s.level,ups=affordableLevelCount();if(!(ups>0))break;
+  const cost=requiredXPSum(oldLevel-1,ups),currentXP=xpBN();
+  if(BigNum.cmp(currentXP,cost)<0)break;
+  const newLevel=oldLevel+ups;
+  if(!Number.isFinite(newLevel)||newLevel<=oldLevel)break;
+  setXPBN(BigNum.sub(currentXP,cost));
+  const oldMoney=moneyBN(),rewards=processLevelRewards(oldLevel+1,newLevel);setMoneyBN(rewards.money);
+  pendingLevelUps+=ups;pendingReward=BigNum.add(pendingReward,BigNum.sub(moneyBN(),oldMoney));pendingRewardedLevels+=rewards.rewarded;
+  s.level=newLevel;totalUps+=ups;
+  const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);if(crossedUnlock)shopDirty=true;
+  if(BigNum.cmp(xpBN(),needBN())<0)break;
+ }
+ if(BigNum.cmp(xpBN(),needBN())<0&&pendingLevelUps){
+  $("log").textContent=`レベルアップ！ +${pendingLevelUps}レベル。報酬対象${pendingRewardedLevels}回、報酬 ${moneyFmt(pendingReward)} を獲得！`;
+  pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;
+ }
+ return totalUps;
 }
 function tapMoneyPerTap(autoMult=1){return BigNum.mul(totalIncomeBN(),0.005*autoMult*(1+shopEffect("tapMoney",0.02)))}
 function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult()*(1+shopEffect("autoTapPower",0.01)):1;const tapXp=BigNum.mul(BigNum.mul(BigNum.add(0.5,BigNum.mul(Math.max(0,s.level-1),0.05)),bodyAdaptMult()),(s.rbMult||1)*autoMult*(1+shopEffect("tapXp",0.02))*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1));gainXP(tapXp);addMoneyBN(tapMoneyPerTap(autoMult));}
@@ -469,9 +482,9 @@ function facilityCostAt(i,level){const discount=1-Math.min(25,shopEffect("facili
 function bCostBN(i){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(s.admin)return BigNum.from(0);if(i===0&&s.bl[i]===0)return BigNum.from(Math.max(1,Math.floor(250*discount)));return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.25:1.5,i===0?s.bl[i]-1:s.bl[i],discount)}
  function bCost(i){return s.admin?0:facilityCostAt(i,s.bl[i])}
 function render(){
-$("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyBNFmt(moneyBN());$("topXp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("topXpbar").max=1;$("topXpbar").value=xpProgress();$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
+$("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyFmt(moneyBN());$("topXp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("topXpbar").max=1;$("topXpbar").value=xpProgress();$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
 $("level").textContent=formatStat("level",s.level,0);$("xp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("xpbar").max=1;$("xpbar").value=xpProgress();
-$("money").textContent=moneyBNFmt(moneyBN());$("income").textContent=moneyFmt(totalIncomeBN())+" / 秒";$("passiveXp").textContent="+"+xpBNFmt(BigNum.mul(passiveXPIncomeBN(),allXpMult()))+" XP / 秒";
+$("money").textContent=moneyFmt(moneyBN());$("income").textContent=moneyFmt(totalIncomeBN())+" / 秒";$("passiveXp").textContent="+"+xpBNFmt(BigNum.mul(passiveXPIncomeBN(),allXpMult()))+" XP / 秒";
 $("xpMult").textContent="×"+formatStat("multiplier",levelXpMult());$("moneyMult").textContent="×"+formatStat("multiplier",levelMoneyMult());$("tapXp").textContent=formatStat("xp",(.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult());$("tapMoney").textContent=moneyFmt(tapMoneyPerTap(1));
 $("rebirth").textContent=formatStat("rebirthCount",s.rebirth,0);$("abilityState").textContent=s.on?"使用中":"停止中";$("mp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("mpbar").max=s.admin?1:maxMP();$("mpbar").value=s.admin?1:s.mp;
 $("abilityXp").textContent="+"+formatStat("xp",(1+s.fl[0]*.02+shopEffect("abilityXp",0.02))*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult())+" / 秒";$("continuousTime").textContent=formatStat("time",Math.floor(s.continuousUseSeconds||0),0)+"秒";$("continuousBonus").textContent=continuousBonusText();$("continuousRate").textContent=(continuousGrowthRate()===0?"停止中":"×"+formatStat("multiplier",continuousGrowthRate()));$("autoTapInterval").textContent=formatStat("time",autoTapInterval())+"秒";$("abilityMoney").textContent="×"+formatStat("multiplier",abilityMoneyMult());$("autoTapMult").textContent="×"+formatStat("multiplier",localAutoTapMult(),0);$("boostStatus").textContent=(s.mpXpBoost?"XP ":"")+(s.mpMoneyBoost?"収入":"")||"なし";$("toggle").textContent=s.on?"能力を停止":"能力を使う";$("xpBoostBtn").textContent="XPブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpXpBoost?"ON":"OFF");$("moneyBoostBtn").textContent="収入ブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpMoneyBoost?"ON":"OFF");const boostSel=$("boostSelect");const maxBoost=boostMaxMultiplier();if(Number(boostSel.dataset.maxBoost||0)!==maxBoost){const opts=[];for(let v=1.5;v<=maxBoost+1e-8;v+=0.1)opts.push(Number(v.toFixed(1)));if(!opts.some(v=>Math.abs(v-boostMultiplier())<1e-6))opts.push(boostMultiplier());opts.sort((a,b)=>a-b);boostSel.innerHTML=opts.map(v=>`<option value="${v.toFixed(1)}">×${v.toFixed(1)}</option>`).join("");boostSel.dataset.maxBoost=String(maxBoost);}boostSel.value=boostMultiplier().toFixed(1);$("xpBoostBtn").disabled=!s.on&&!s.mpXpBoost;$("moneyBoostBtn").disabled=!s.on&&!s.mpMoneyBoost;
