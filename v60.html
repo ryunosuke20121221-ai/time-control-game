@@ -638,12 +638,13 @@ const battleSkillDefs=[
  {id:"chainLightning",name:"連鎖雷撃",mp:12,mult:4,bossMult:1,targets:3,desc:"MP12。最大3体に連鎖する攻撃。"},
  {id:"stormBurst",name:"嵐の爆発",mp:35,mult:8,bossMult:1,targets:5,desc:"MP35。最大5体をまとめて攻撃。"},
  {id:"timeWave",name:"時空波",mp:70,mult:16,bossMult:1,targets:5,desc:"MP70。最大5体に大ダメージ。"},
- {id:"bossNova",name:"星砕き",mp:60,mult:14,bossMult:1.8,targets:3,desc:"MP60。最大3体を攻撃し、ボスには威力1.8倍。"}
+ {id:"bossNova",name:"星砕き",mp:60,mult:14,bossMult:1.8,targets:3,desc:"MP60。最大3体を攻撃し、ボスには威力1.8倍。"},
+ {id:"chronoFusion",name:"時空融合",mp:150,mult:80,bossMult:2,targets:5,desc:"MP150。最大5体を攻撃する隠し複合スキル。"}
 ];
 function skillEnsureState(){
  if(!Number.isFinite(Number(s.sp))||Number(s.sp)<0)s.sp=0;
  if(!s.skillTree||typeof s.skillTree!=="object")s.skillTree={};
- s.skillTree.route=["swarm","boss"].includes(s.skillTree.route)?s.skillTree.route:"";
+ s.skillTree.route=["swarm","boss","alchemy","mana","critical","rebirth","fortune"].includes(s.skillTree.route)?s.skillTree.route:"";
  s.skillTree.swarmLv=Math.max(0,Math.min(7,Math.floor(Number(s.skillTree.swarmLv)||0)));
  s.skillTree.unlocked=s.skillTree.unlocked&&typeof s.skillTree.unlocked==="object"?s.skillTree.unlocked:{};
  s.skillTree.unlocked.magicBolt=true;
@@ -651,9 +652,44 @@ function skillEnsureState(){
 }
 function skillRouteFactor(route,final=false){
  if(!s.skillTree.route)return 1;
- const primary=s.skillTree.route===route;
- return primary?1:(final?300:30);
+ return s.skillTree.route===route?1:(final?300:30);
 }
+const skillRouteNames={swarm:"連続討伐",boss:"ボス攻略",alchemy:"時間錬成",mana:"魔力制御",critical:"致命攻撃",rebirth:"転生覚醒",fortune:"幸運・報酬"};
+const extraSkillDefs={
+ alchemy1:{route:"alchemy",cost:8,name:"時間蓄積 I",desc:"敵撃破時のお金・XP報酬 +5%"},
+ alchemy2:{route:"alchemy",cost:20,name:"時間蓄積 II",desc:"敵撃破時のお金・XP報酬 +10%",requires:"alchemy1"},
+ alchemy3:{route:"alchemy",cost:45,name:"時間錬成の極意",desc:"敵撃破時のお金・XP報酬 +20%",requires:"alchemy2",final:true},
+ mana1:{route:"mana",cost:8,name:"魔力節約 I",desc:"戦闘スキルのMP消費 -5%"},
+ mana2:{route:"mana",cost:20,name:"魔力節約 II",desc:"戦闘スキルのMP消費 -10%",requires:"mana1"},
+ mana3:{route:"mana",cost:45,name:"魔力循環の極意",desc:"戦闘スキルのMP消費 -15%、自然回復 +15%",requires:"mana2",final:true},
+ critical1:{route:"critical",cost:8,name:"急所見切り I",desc:"クリティカル率 +5%"},
+ critical2:{route:"critical",cost:20,name:"急所見切り II",desc:"クリティカル率 +5%",requires:"critical1"},
+ critical3:{route:"critical",cost:45,name:"致命の極意",desc:"クリティカル率 +10%、威力2.5倍",requires:"critical2",final:true},
+ rebirth1:{route:"rebirth",cost:8,name:"転生の残響 I",desc:"戦闘ダメージ +5%"},
+ rebirth2:{route:"rebirth",cost:20,name:"転生の残響 II",desc:"戦闘ダメージ +10%",requires:"rebirth1"},
+ rebirth3:{route:"rebirth",cost:45,name:"転生覚醒の極意",desc:"戦闘ダメージ +20%",requires:"rebirth2",final:true},
+ fortune1:{route:"fortune",cost:8,name:"幸運の兆し I",desc:"敵撃破報酬 +5%"},
+ fortune2:{route:"fortune",cost:20,name:"幸運の兆し II",desc:"敵撃破報酬 +10%",requires:"fortune1"},
+ fortune3:{route:"fortune",cost:45,name:"幸運の極意",desc:"敵撃破報酬 +20%、ボス報酬 +25%",requires:"fortune2",final:true}
+};
+function skillHas(id){return !!s.skillTree?.unlocked?.[id];}
+function skillRank(prefix){return [1,2,3].filter(n=>skillHas(prefix+n)).length;}
+function skillDamageFactor(){
+ return (1+skillRank("rebirth")*.05)*(skillHas("transcendence")?1.5:1);
+}
+function skillRewardFactor(kind="money",boss=false){
+ let f=1;
+ if(kind==="money"||kind==="xp")f*=1+skillRank("alchemy")*.05;
+ f*=1+skillRank("fortune")*.05;
+ if(boss&&skillHas("fortune3"))f*=1.25;
+ if(skillHas("transcendence"))f*=1.5;
+ return f;
+}
+function skillMpCost(base){
+ const reduction= Math.min(.3,skillRank("mana")*.05);
+ return Math.max(1,Math.ceil(base*(1-reduction)));
+}
+function skillMpRegenBonus(){return skillRank("mana")*.05;}
 function exchangeSkillPoints(amount){
  skillEnsureState();
  if(amount==="max")amount=s.adminTPUnlimited?1000000000:Math.min(1000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
@@ -667,9 +703,9 @@ function exchangeSkillPoints(amount){
 }
 function chooseSkillRoute(route){
  skillEnsureState();
- if(s.skillTree.route||!["swarm","boss"].includes(route))return;
+ if(s.skillTree.route||!Object.prototype.hasOwnProperty.call(skillRouteNames,route))return;
  s.skillTree.route=route;render();saveAutoGame();
- $("log").textContent=(route==="swarm"?"連続討伐":"ボス攻略")+"ルートを選択しました。SPは消費しません。";
+ $("log").textContent=skillRouteNames[route]+"ルートを選択しました。SPは消費しません。";
 }
 function buySkillNode(id){
  skillEnsureState();
@@ -683,6 +719,18 @@ function buySkillNode(id){
   if(s.skillTree.swarmLv<7||s.skillTree.swarmUltimate)return;
   cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;
   if(ok)s.skillTree.swarmUltimate=true;
+ }else if(extraSkillDefs[id]){
+  const d=extraSkillDefs[id];if(d.route!==route||skillHas(id))return;
+  if(d.requires&&!skillHas(d.requires))return;
+  cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
+  if(ok)s.skillTree.unlocked[id]=true;
+ }else if(id==="chronoFusion"){
+  if(skillHas(id)||!skillHas("timeWave")||!skillHas("timeCollapse")||
+   !["alchemy3","mana3","critical3","rebirth3","fortune3"].every(skillHas))return;
+  cost=2500;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;
+ }else if(id==="transcendence"){
+  if(skillHas(id)||!skillHas("chronoFusion"))return;
+  cost=10000;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;
  }else{
   const defs={
    timeSlash:{cost:3,route:"boss"},
@@ -693,8 +741,8 @@ function buySkillNode(id){
    stormBurst:{cost:12,route:"swarm",requires:"chainLightning"},
    timeWave:{cost:30,route:"swarm",requires:"stormBurst",final:true}
   };
-  const d=defs[id];if(!d||s.skillTree.unlocked[id])return;
-  if(d.requires&&!s.skillTree.unlocked[d.requires])return;
+  const d=defs[id];if(!d||skillHas(id))return;
+  if(d.requires&&!skillHas(d.requires))return;
   cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
   if(ok)s.skillTree.unlocked[id]=true;
  }
@@ -706,30 +754,44 @@ function renderSkillTree(){
  skillEnsureState();
  $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";
  $("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
- const route=s.skillTree.route;
- const swarmLv=s.skillTree.swarmLv,swarmAvg=swarmLv===0?1:2+(swarmLv-1)*.5;
- const node=(id,name,desc,cost,available,final=false)=>{
-  const owned=!!s.skillTree.unlocked[id]||(id==="swarmUltimate"&&s.skillTree.swarmUltimate);
+ const route=s.skillTree.route,swarmLv=s.skillTree.swarmLv;
+ const node=(id,name,desc,cost,available=true,final=false)=>{
+  const owned=skillHas(id)||(id==="swarmUltimate"&&s.skillTree.swarmUltimate);
   const can=!!route&&available&&!owned&&s.sp>=cost;
-  const state=owned?"取得済み":can?"解放可能":available?"SP不足":"ロック中";
+  const state=owned?"取得済み":can?"解放可能":available?"SP不足":"前提スキルが必要";
   return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';
  };
+ const branch=(key,title,desc,items)=>{
+  const factor=skillRouteFactor(key);
+  return '<section class="tree-branch"><h3>'+title+'</h3><p>'+desc+'</p>'+items.map(d=>node(d.id,d.name,d.desc,d.cost*factor,!d.requires||skillHas(d.requires),!!d.final)).join("")+'</section>';
+ };
  const swarmFactor=skillRouteFactor("swarm"),bossFactor=skillRouteFactor("boss");
- const swarmNodes=
-  '<div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。現在 '+swarmAvg.toFixed(1)+'体、最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*swarmFactor,0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*swarmFactor?'disabled':'')+'>強化</button></div>'+
-  node("chainLightning","連鎖雷撃","MP12・最大3体に威力×4",5*swarmFactor,true)+
-  node("stormBurst","嵐の爆発","MP35・最大5体に威力×8",12*swarmFactor,!!s.skillTree.unlocked.chainLightning)+
-  node("timeWave","時空波","MP70・最大5体に威力×16",30*skillRouteFactor("swarm",true),!!s.skillTree.unlocked.stormBurst,true)+
-  '<div class="tree-node '+(s.skillTree.swarmUltimate?"owned":"locked")+'"><div class="tree-orb">'+(s.skillTree.swarmUltimate?"✓":"★")+'</div><div class="tree-node-info"><b>連続討伐の極意</b><small>討伐報酬が1.5倍。群れの拡張Lv7が必要。</small><small class="tree-cost">'+(s.skillTree.swarmUltimate?"取得済み":formatStat("tp",30*skillRouteFactor("swarm",true),0)+" SP")+'</small></div><button data-skill-buy="swarmUltimate" '+(!route||swarmLv<7||s.skillTree.swarmUltimate||s.sp<30*skillRouteFactor("swarm",true)?"disabled":"")+'>'+ (s.skillTree.swarmUltimate?"取得済み":"解放")+'</button></div>';
- const bossNodes=
-  node("timeSlash","時間斬り","MP20・単体に威力×12",3*bossFactor,true)+
-  node("dragonBane","竜殺し","MP40・単体に威力×22、ボスには2.5倍",8*bossFactor,!!s.skillTree.unlocked.timeSlash)+
-  node("bossNova","星砕き","MP60・最大3体に威力×14、ボスには1.8倍",18*bossFactor,!!s.skillTree.unlocked.timeSlash)+
-  node("timeCollapse","時空崩壊","MP100・単体に威力×65、ボスには3倍",30*skillRouteFactor("boss",true),!!s.skillTree.unlocked.dragonBane,true);
- const routeLabel=route==="swarm"?"連続討伐":route==="boss"?"ボス攻略":"未選択";
- root.innerHTML='<div class="skill-note">ルート選択は無料。選択後も反対ルートを取得できますが、反対側の通常スキルは30倍、最終スキルは300倍のSPが必要です。</div>'+
- (!route?'<div class="tree-route-pick"><button data-route="swarm">⚔️ 連続討伐ルートを選択</button><button data-route="boss">👑 ボス攻略ルートを選択</button></div>':'<div class="tree-route-banner">選択中：'+routeLabel+' ・ ルート変更はできません</div>')+
- '<div class="skill-route-grid tree-columns"><section class="tree-branch swarm-branch"><h3>⚔️ 連続討伐</h3><p>複数の敵をまとめて攻撃する範囲スキルのルート</p>'+swarmNodes+'</section><section class="tree-branch boss-branch"><h3>👑 ボス攻略</h3><p>単体火力とボス特効を伸ばすルート</p>'+bossNodes+'</section></div>'+
+ const swarmNodes='<div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*swarmFactor,0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*swarmFactor?'disabled':'')+'>強化</button></div>'+
+ node("chainLightning","連鎖雷撃","MP12・最大3体に威力×4",5*swarmFactor,true)+
+ node("stormBurst","嵐の爆発","MP35・最大5体に威力×8",12*swarmFactor,skillHas("chainLightning"))+
+ node("timeWave","時空波","MP70・最大5体に威力×16",30*skillRouteFactor("swarm",true),skillHas("stormBurst"),true)+
+ node("swarmUltimate","連続討伐の極意","討伐報酬1.5倍。群れの拡張Lv7が必要。",30*skillRouteFactor("swarm",true),swarmLv>=7,true);
+ const bossNodes=node("timeSlash","時間斬り","MP20・単体に威力×12",3*bossFactor,true)+
+ node("dragonBane","竜殺し","MP40・単体に威力×22、ボス特効",8*bossFactor,skillHas("timeSlash"))+
+ node("bossNova","星砕き","MP60・最大3体に威力×14、ボス特効",18*bossFactor,skillHas("timeSlash"))+
+ node("timeCollapse","時空崩壊","MP100・単体に威力×65、ボス特効",30*skillRouteFactor("boss",true),skillHas("dragonBane"),true);
+ const extraGroups=[
+  branch("alchemy","時間錬成","撃破報酬のお金とXPを伸ばす",["alchemy1","alchemy2","alchemy3"].map(id=>({id,...extraSkillDefs[id]}))),
+  branch("mana","魔力制御","MP消費を抑え、自然回復を強化する",["mana1","mana2","mana3"].map(id=>({id,...extraSkillDefs[id]}))),
+  branch("critical","致命攻撃","確率で大ダメージを与える",["critical1","critical2","critical3"].map(id=>({id,...extraSkillDefs[id]}))),
+  branch("rebirth","転生覚醒","転生の力を戦闘ダメージに変換する",["rebirth1","rebirth2","rebirth3"].map(id=>({id,...extraSkillDefs[id]}))),
+  branch("fortune","幸運・報酬","撃破報酬とボス報酬を増やす",["fortune1","fortune2","fortune3"].map(id=>({id,...extraSkillDefs[id]})))
+ ];
+ const comboReady=skillHas("timeWave")&&skillHas("timeCollapse")&&["alchemy3","mana3","critical3","rebirth3","fortune3"].every(skillHas);
+ const special='<section class="tree-branch"><h3>✦ 隠し・超越領域</h3><p>複数ルートを極めたプレイヤー向けの高コストスキル。</p>'+
+ node("chronoFusion","時空融合","全ルートの極意と両戦闘ルートの最終スキルが必要。MP150・最大5体・威力×80",2500,comboReady,true)+
+ node("transcendence","超越の核","戦闘ダメージ・撃破報酬を1.5倍。時空融合が必要。",10000,skillHas("chronoFusion"),true)+'</section>';
+ const routeButtons=Object.entries(skillRouteNames).map(([key,label])=>'<button data-route="'+key+'" '+(route?'disabled':'')+'>'+label+'ルートを選択</button>').join("");
+ root.innerHTML='<div class="skill-note">ルート選択は無料。選択したルートは通常SPコスト、他ルートは通常30倍・最終スキル300倍。各ルートの強化は転生後も維持されます。</div>'+
+ (!route?'<div class="tree-route-pick">'+routeButtons+'</div>':'<div class="tree-route-banner">選択中：'+skillRouteNames[route]+' ・ ルート変更不可</div>')+
+ '<div class="skill-route-grid tree-columns"><section class="tree-branch swarm-branch"><h3>⚔️ 連続討伐</h3><p>複数の敵をまとめて攻撃する範囲スキル。</p>'+swarmNodes+'</section>'+
+ '<section class="tree-branch boss-branch"><h3>👑 ボス攻略</h3><p>単体火力とボス特効を伸ばす。</p>'+bossNodes+'</section></div>'+
+ '<div class="skill-route-grid tree-columns">'+extraGroups.join("")+'</div>'+special+
  '<div class="skill-card"><b>SP交換</b><div class="skill-note">1 SP = 100,000 TP。取得済みスキルは転生後も維持されます。</div></div>';
  document.querySelectorAll("#view-skills [data-sp-exchange]").forEach(b=>b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange)));
  root.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>chooseSkillRoute(b.dataset.route));
@@ -788,7 +850,7 @@ function battleBaseDamage(){
  const lv=Math.max(1,Number(s.level)||1);
  let base=BigNum.add(10,BigNum.mul(Math.max(0,lv-1),2));
  base=BigNum.mul(base,BigNum.mul(s.rbMult||1,1+Math.max(0,Number(s.fl?.[2])||0)*0.05));
- return s.on?BigNum.mul(base,1.5):base;
+ base=BigNum.mul(base,skillDamageFactor());\n return s.on?BigNum.mul(base,1.5):base;
 }
 function showBossVictory(info){
  const el=$("bossVictory");if(!el)return;
@@ -802,7 +864,7 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
  for(const number of targets){
   const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
   const target=s.battleGroup[index],info=battleEnemyInfo(target.number);
-  const damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));
+  let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));\n  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.10:0));\n  if(critChance>0&&Math.random()<critChance)damage=BigNum.mul(damage,skillHas("critical3")?2.5:2);
   const hp=BigNum.from(target.hp);if(BigNum.cmp(damage,0)<=0)continue;
   if(BigNum.cmp(damage,hp)>=0){
    const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
@@ -945,7 +1007,7 @@ function loop(now){
    if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();
    gainXP(BigNum.mul(abilityXPPerSecondBN(),dt));
    if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
-  }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(1+shopEffect("mpRegen",0.05)))}
+  }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(1+shopEffect("mpRegen",0.05)+skillMpRegenBonus()))}
   if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
   try{battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
    addMoneyBN(BigNum.mul(totalIncomeBN(),dt));
