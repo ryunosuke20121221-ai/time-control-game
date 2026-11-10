@@ -156,7 +156,8 @@ const AUTO_SAVE_KEY="timeControlAutoSaveV1";
 let pendingLevelUps=0,pendingReward=0,pendingRewardedLevels=0;
 function allXpMult(){return 1+shopEffect("allXp",0.01)}
 function allMoneyMult(){return 1+shopEffect("allMoney",0.01)}
-function need(){const n=Math.max(0,s.level-1);return Math.max(1,(100+n*5+Math.floor(n/100)+Math.floor(n*n/250))*(1-Math.min(25,shopEffect("needDiscount",0.5))/100))}
+function levelRepresentationStep(){return Math.max(1,Math.ceil(Math.abs(s.level)*Number.EPSILON))}
+function need(){const n=Math.max(0,s.level-1),step=levelRepresentationStep(),discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;return step>1?requiredXPSum(n,step):Math.max(1,(100+n*5+Math.floor(n/100)+Math.floor(n*n/250))*discount)}
 function levelXpMult(){return (1+(s.level-1)*.05)*(s.rbMult||1)}
 function levelMoneyMult(){return (1+(s.level-1)*.025)*(s.rbMult||1)}
 function maxMP(){return 10+Math.floor(Math.max(0,s.fl[3]||0)/50)*5+shopEffect("mpCapacity",5)}
@@ -238,7 +239,7 @@ function affordableLevelCount(){
  const maxCount=Math.max(0,Number.MAX_VALUE-s.level);
  if(maxCount<=0||s.xp<need())return 0;
  const startN=s.level-1,xp=s.xp;
- const minStep=Math.max(1,Math.ceil(Math.abs(s.level)*Number.EPSILON));
+ const minStep=levelRepresentationStep();
  let low=0,high=Math.min(maxCount,minStep);
  if(requiredXPSum(startN,high)>xp)return 0;
  low=high;
@@ -254,7 +255,7 @@ function affordableLevelCount(){
   if(mid<=low||mid>=high)break;
   if(requiredXPSum(startN,mid)<=xp)low=mid;else high=mid;
  }
- return low;
+ return Math.floor(low);
 }
 function totalIncomeAtLevel(level){
  const rb=s.rbMult||1;
