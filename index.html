@@ -204,9 +204,22 @@ const MAX_PLAYER_LEVEL=Infinity;
   function xpBN(){return BigNum.from(s.xpBig||s.xp||0)}
   function setXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)<0)throw new RangeError("XP cannot be negative");s.xpBig=BigNum.json(x);const n=BigNum.toNumber(x);s.xp=Number.isFinite(n)?Math.max(0,n):Number.MAX_VALUE}
   function addXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)>0)setXPBN(BigNum.add(xpBN(),x))}
-  function extendedUnitLabel(labels,idx){
+  function formatStarCount(labels,value){
+    let n=BigInt(value);if(n<=0n)return "0";
+    const parts=[];let group=0;
+    while(n>0n){
+     const chunk=Number(n%10000n);
+     if(chunk){
+      const unit=group===0?"":labels[(group-1)%labels.length]+"*".repeat(Math.floor((group-1)/labels.length));
+      parts.unshift(String(chunk)+unit);
+     }
+     n/=10000n;group++;
+    }
+    return parts.join("");
+   }
+   function extendedUnitLabel(labels,idx){
     const label=labels[idx%labels.length],stars=Math.floor(idx/labels.length);
-    return label+(stars<=12?"*".repeat(stars):"*（星印"+BigInt(stars).toString()+"個）");
+    return label+(stars<=12?"*".repeat(stars):"*"+formatStarCount(labels,BigInt(stars)));
    }
    function xpBNFmt(v){
    const x=BigNum.from(v);if(x.m===0)return "0";
