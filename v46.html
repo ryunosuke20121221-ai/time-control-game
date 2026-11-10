@@ -507,7 +507,7 @@ document.addEventListener("visibilitychange",()=>{
  else{applyOfflineProgress();saveAutoGame();render();}
 });
 window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
-$("reset").onclick=()=>{if(confirm("進行状況をすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;saveAutoGame();shopDirty=true;rebirthShopDirty=true;render()}};
+$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
 let autoTapTimer=0,lastRender=0;
 $("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
 
