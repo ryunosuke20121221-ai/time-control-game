@@ -187,13 +187,9 @@ function compactNumFmtUncached(n, decimals=2, fmtMode="jp"){
  if(fmtMode==="short"){
   if(n<1e3)return n.toLocaleString("ja-JP",{maximumFractionDigits:decimals});
   const g=Math.floor(Math.log10(n)/3);
-  const named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg"];
-  let suffix=named[g]||"";
-  if(!suffix){
-   let x=g-named.length+1,letters="";
-   while(x>0){x--;letters=String.fromCharCode(97+(x%26))+letters;x=Math.floor(x/26);}
-   suffix=letters;
-  }
+  const named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
+  // Common short-scale suffixes through trigintillion; beyond that, show the exponent group.
+  const suffix=named[g]||("e"+(g*3));
   const value=n/Math.pow(1000,g);
   return value.toFixed(decimals).replace(/\.?0+$/,"")+suffix;
  }
