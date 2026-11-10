@@ -30,7 +30,7 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .monster-art{position:relative;z-index:1;width:min(72%,320px);height:190px;image-rendering:pixelated;filter:drop-shadow(0 12px 12px #0009)}
 .battle-boss .monster-art{width:min(90%,390px);height:220px;filter:drop-shadow(0 0 18px #ef754b88)}
 .battle-mob-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:5px;width:100%;align-items:center;position:relative;z-index:1}.battle-mob{min-width:0;text-align:center;background:#101b31bb;border:1px solid #405578;border-radius:9px;padding:4px}.battle-mob .monster-art{width:100%;height:105px;max-width:125px;display:block;margin:auto}.battle-mob.boss{grid-column:1/-1;border-color:#ff9a57;background:#321c26}.battle-mob-name{font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.boss-victory{display:none;margin:10px 0;padding:12px;text-align:center;font-weight:900;letter-spacing:.08em;color:#ffe8a1;background:linear-gradient(90deg,#4b1c25,#8b3b27,#4b1c25);border:1px solid #ffc46a;border-radius:12px;text-shadow:0 0 12px #ffbd5c;box-shadow:0 0 22px #ff853c66}.boss-victory.show{display:block;animation:bossVictory 1.8s ease both}@keyframes bossVictory{0%{opacity:0;transform:scale(.75) translateY(15px);filter:brightness(2)}18%{opacity:1;transform:scale(1.06) translateY(0)}35%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
-.skill-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:linear-gradient(145deg,#172842,#101a2d)}.skill-card.primary-route{border-color:#d9a441;box-shadow:0 0 12px #d9a44122}.skill-card h3{margin:0 0 6px}.skill-node{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2a3e5e}.skill-node>div{min-width:0}.skill-node button{flex-shrink:0}.skill-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.skill-balance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skill-balance>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px}.skill-balance span{display:block;color:var(--muted);font-size:.75rem}.skill-balance b{display:block;overflow-wrap:anywhere}.skill-note{font-size:.82rem;color:var(--muted)}@media(max-width:420px){.skill-route-grid{grid-template-columns:1fr}.skill-node{align-items:flex-start;flex-direction:column}.skill-node button{width:100%}}
+.tree-route-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.tree-route-pick button{min-height:54px;background:linear-gradient(145deg,#29466d,#172842);border-color:#678dbd}.tree-route-banner{margin:12px 0;padding:10px;border:1px solid #678dbd;border-radius:10px;background:#12243c;font-weight:700}.tree-columns{align-items:start}.tree-branch{position:relative;min-width:0;border:1px solid #385577;border-radius:15px;padding:12px;background:linear-gradient(180deg,#132a45,#0d182b)}.tree-branch h3{margin:0 0 4px}.tree-branch>p{font-size:.8rem;color:var(--muted);min-height:2.5em}.tree-node{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;margin:16px 0 0;padding:10px;border:1px solid #344a68;border-radius:12px;background:#101d31}.tree-node:before{content:"";position:absolute;left:26px;bottom:100%;height:17px;border-left:2px solid #526b8d}.tree-orb{width:32px;height:32px;display:grid;place-items:center;border:2px solid #667d9d;border-radius:50%;background:#253a56;color:#dceaff;font-weight:900}.tree-node-info{min-width:0}.tree-node-info b,.tree-node-info small{display:block}.tree-node-info small{font-size:.75rem;color:var(--muted);margin-top:3px}.tree-node .tree-cost{color:#f4cf75}.tree-node.owned{border-color:#4aa77b;background:#102b29}.tree-node.owned .tree-orb{background:#176b4b;border-color:#67d6a0}.tree-node.ready{border-color:#c99a43;box-shadow:0 0 12px #e9b44a22}.tree-node.ready .tree-orb{border-color:#e7bd63;color:#ffe6a4}.tree-node.locked{opacity:.72}.tree-node button{margin:0;padding:7px 9px;font-size:.78rem}.tree-node button:disabled{opacity:.38}.tree-state{font-size:.72rem;color:#82e0ad;white-space:nowrap}@media(max-width:520px){.tree-route-pick{grid-template-columns:1fr}.tree-columns{grid-template-columns:1fr}.tree-node{grid-template-columns:30px minmax(0,1fr)}.tree-node button,.tree-state{grid-column:2}.tree-node button{width:100%}}.skill-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:linear-gradient(145deg,#172842,#101a2d)}.skill-card.primary-route{border-color:#d9a441;box-shadow:0 0 12px #d9a44122}.skill-card h3{margin:0 0 6px}.skill-node{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2a3e5e}.skill-node>div{min-width:0}.skill-node button{flex-shrink:0}.skill-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.skill-balance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skill-balance>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px}.skill-balance span{display:block;color:var(--muted);font-size:.75rem}.skill-balance b{display:block;overflow-wrap:anywhere}.skill-note{font-size:.82rem;color:var(--muted)}@media(max-width:420px){.skill-route-grid{grid-template-columns:1fr}.skill-node{align-items:flex-start;flex-direction:column}.skill-node button{width:100%}}
 .battle-hp{height:15px;border-radius:99px;background:#263348;overflow:hidden;border:1px solid #526582}
 .battle-hp>span{display:block;height:100%;width:100%;background:linear-gradient(90deg,#23b86b,#a6ef76);transition:width .12s linear}
 .battle-boss .battle-hp>span{background:linear-gradient(90deg,#b92739,#ff8c52)}
@@ -634,7 +634,11 @@ const battleSkillDefs=[
  {id:"magicBolt",name:"魔力弾",mp:2,mult:3,bossMult:1,desc:"MP消費2で敵1体に威力×3の魔法攻撃。最初から所持。"},
  {id:"timeSlash",name:"時間斬り",mp:20,mult:12,bossMult:1.5,desc:"敵1体に強力な斬撃。"},
  {id:"dragonBane",name:"竜殺し",mp:40,mult:22,bossMult:2.5,desc:"ボスに特に強い攻撃。"},
- {id:"timeCollapse",name:"時空崩壊",mp:100,mult:65,bossMult:3,desc:"大量のMPを消費する最終攻撃。"}
+ {id:"timeCollapse",name:"時空崩壊",mp:100,mult:65,bossMult:3,desc:"大量のMPを消費する最終攻撃。"},
+ {id:"chainLightning",name:"連鎖雷撃",mp:12,mult:4,bossMult:1,targets:3,desc:"MP12。最大3体に連鎖する攻撃。"},
+ {id:"stormBurst",name:"嵐の爆発",mp:35,mult:8,bossMult:1,targets:5,desc:"MP35。最大5体をまとめて攻撃。"},
+ {id:"timeWave",name:"時空波",mp:70,mult:16,bossMult:1,targets:5,desc:"MP70。最大5体に大ダメージ。"},
+ {id:"bossNova",name:"星砕き",mp:60,mult:14,bossMult:1.8,targets:3,desc:"MP60。最大3体を攻撃し、ボスには威力1.8倍。"}
 ];
 function skillEnsureState(){
  if(!Number.isFinite(Number(s.sp))||Number(s.sp)<0)s.sp=0;
@@ -663,9 +667,9 @@ function exchangeSkillPoints(amount){
 }
 function chooseSkillRoute(route){
  skillEnsureState();
- if(s.skillTree.route||!["swarm","boss"].includes(route)||s.sp<1)return;
- s.sp-=1;s.skillTree.route=route;render();saveAutoGame();
- $("log").textContent=(route==="swarm"?"連続討伐":"ボス攻略")+"ルートを選択しました。";
+ if(s.skillTree.route||!["swarm","boss"].includes(route))return;
+ s.skillTree.route=route;render();saveAutoGame();
+ $("log").textContent=(route==="swarm"?"連続討伐":"ボス攻略")+"ルートを選択しました。SPは消費しません。";
 }
 function buySkillNode(id){
  skillEnsureState();
@@ -680,10 +684,18 @@ function buySkillNode(id){
   cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;
   if(ok)s.skillTree.swarmUltimate=true;
  }else{
-  const defs={timeSlash:{cost:3,requires:null},dragonBane:{cost:8,requires:"timeSlash"},timeCollapse:{cost:30,requires:"dragonBane",final:true}};
+  const defs={
+   timeSlash:{cost:3,route:"boss"},
+   dragonBane:{cost:8,route:"boss",requires:"timeSlash"},
+   bossNova:{cost:18,route:"boss",requires:"timeSlash"},
+   timeCollapse:{cost:30,route:"boss",requires:"dragonBane",final:true},
+   chainLightning:{cost:5,route:"swarm"},
+   stormBurst:{cost:12,route:"swarm",requires:"chainLightning"},
+   timeWave:{cost:30,route:"swarm",requires:"stormBurst",final:true}
+  };
   const d=defs[id];if(!d||s.skillTree.unlocked[id])return;
   if(d.requires&&!s.skillTree.unlocked[d.requires])return;
-  cost=d.cost*skillRouteFactor("boss",!!d.final);ok=s.sp>=cost;
+  cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;
   if(ok)s.skillTree.unlocked[id]=true;
  }
  if(!ok){$("log").textContent="SPが足りないか、前提スキルが未解放です。";return;}
@@ -695,24 +707,30 @@ function renderSkillTree(){
  $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";
  $("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
  const route=s.skillTree.route;
- const swarmFactor=skillRouteFactor("swarm"),bossFactor=skillRouteFactor("boss");
  const swarmLv=s.skillTree.swarmLv,swarmAvg=swarmLv===0?1:2+(swarmLv-1)*.5;
- const nextSwarm=swarmLv<7?swarmLevelCosts[swarmLv]*swarmFactor:null;
- const swarmFinal=30*skillRouteFactor("swarm",true);
- const bossNodes=[
-  {id:"timeSlash",name:"時間斬り",cost:3*bossFactor,desc:"MP20を消費して通常攻撃の12倍。",requires:true},
-  {id:"dragonBane",name:"竜殺し",cost:8*bossFactor,desc:"MP40を消費。ボスへの威力がさらに2.5倍。",requires:!!s.skillTree.unlocked.timeSlash},
-  {id:"timeCollapse",name:"時空崩壊",cost:30*skillRouteFactor("boss",true),desc:"MP100を消費。ボスに特大ダメージ。",requires:!!s.skillTree.unlocked.dragonBane}
- ];
+ const node=(id,name,desc,cost,available,final=false)=>{
+  const owned=!!s.skillTree.unlocked[id]||(id==="swarmUltimate"&&s.skillTree.swarmUltimate);
+  const can=!!route&&available&&!owned&&s.sp>=cost;
+  const state=owned?"取得済み":can?"解放可能":available?"SP不足":"ロック中";
+  return '<div class="tree-node '+(owned?"owned":can?"ready":"locked")+'"><div class="tree-orb">'+(owned?"✓":final?"★":"◆")+'</div><div class="tree-node-info"><b>'+name+'</b><small>'+desc+'</small><small class="tree-cost">'+(owned?"取得済み":formatStat("tp",cost,0)+" SP ・ "+state)+'</small></div>'+(owned?'<span class="tree-state">取得済み</span>':'<button data-skill-buy="'+id+'" '+(!can?'disabled':'')+'>解放</button>')+'</div>';
+ };
+ const swarmFactor=skillRouteFactor("swarm"),bossFactor=skillRouteFactor("boss");
+ const swarmNodes=
+  '<div class="tree-node '+(swarmLv>0?"owned":"ready")+'"><div class="tree-orb">'+(swarmLv>0?"✓":"◆")+'</div><div class="tree-node-info"><b>群れの拡張 Lv '+swarmLv+'/7</b><small>同時出現する敵の平均数を増加。現在 '+swarmAvg.toFixed(1)+'体、最大5体。</small><small class="tree-cost">'+(swarmLv>=7?"最大レベル":formatStat("tp",swarmLevelCosts[swarmLv]*swarmFactor,0)+" SP")+'</small></div><button data-skill-buy="swarmLevel" '+(!route||swarmLv>=7||s.sp<swarmLevelCosts[swarmLv]*swarmFactor?'disabled':'')+'>強化</button></div>'+
+  node("chainLightning","連鎖雷撃","MP12・最大3体に威力×4",5*swarmFactor,true)+
+  node("stormBurst","嵐の爆発","MP35・最大5体に威力×8",12*swarmFactor,!!s.skillTree.unlocked.chainLightning)+
+  node("timeWave","時空波","MP70・最大5体に威力×16",30*skillRouteFactor("swarm",true),!!s.skillTree.unlocked.stormBurst,true)+
+  '<div class="tree-node '+(s.skillTree.swarmUltimate?"owned":"locked")+'"><div class="tree-orb">'+(s.skillTree.swarmUltimate?"✓":"★")+'</div><div class="tree-node-info"><b>連続討伐の極意</b><small>討伐報酬が1.5倍。群れの拡張Lv7が必要。</small><small class="tree-cost">'+(s.skillTree.swarmUltimate?"取得済み":formatStat("tp",30*skillRouteFactor("swarm",true),0)+" SP")+'</small></div><button data-skill-buy="swarmUltimate" '+(!route||swarmLv<7||s.skillTree.swarmUltimate||s.sp<30*skillRouteFactor("swarm",true)?"disabled":"")+'>'+ (s.skillTree.swarmUltimate?"取得済み":"解放")+'</button></div>';
+ const bossNodes=
+  node("timeSlash","時間斬り","MP20・単体に威力×12",3*bossFactor,true)+
+  node("dragonBane","竜殺し","MP40・単体に威力×22、ボスには2.5倍",8*bossFactor,!!s.skillTree.unlocked.timeSlash)+
+  node("bossNova","星砕き","MP60・最大3体に威力×14、ボスには1.8倍",18*bossFactor,!!s.skillTree.unlocked.timeSlash)+
+  node("timeCollapse","時空崩壊","MP100・単体に威力×65、ボスには3倍",30*skillRouteFactor("boss",true),!!s.skillTree.unlocked.dragonBane,true);
  const routeLabel=route==="swarm"?"連続討伐":route==="boss"?"ボス攻略":"未選択";
- const nodeButton=(id,label,cost,disabled)=>'<button data-skill-buy="'+id+'" '+(disabled?'disabled':'')+'>'+label+'（'+formatStat("tp",cost,0)+' SP）</button>';
- root.innerHTML='<div class="skill-note">選択ルート：<b>'+routeLabel+'</b>。主ルートは通常価格、反対ルートは通常ノード30倍、最終スキル300倍のSPが必要です。</div>'+
- '<div class="skill-route-grid">'+
- '<div class="skill-card '+(route==="swarm"?"primary-route":"")+'"><h3>⚔️ 連続討伐ルート</h3><div class="skill-note">同時に出現する雑魚敵を増やし、数で押し切るルート。</div><div class="skill-node"><div><b>同時出現数強化 Lv '+swarmLv+'/7</b><div class="skill-note">現在の平均出現数：'+swarmAvg.toFixed(1)+'体。最大5体。</div></div>'+(swarmLv<7?nodeButton("swarmLevel","レベル強化",nextSwarm,!route||s.sp<nextSwarm):'<span class="tag">最大</span>')+'</div><div class="skill-node"><div><b>連続討伐の極意</b><div class="skill-note">討伐報酬に追加ボーナスを付与する最終スキル。</div></div>'+nodeButton("swarmUltimate","解放",swarmFinal,!route||swarmLv<7||s.skillTree.swarmUltimate||s.sp<swarmFinal)+'</div></div>'+
- '<div class="skill-card '+(route==="boss"?"primary-route":"")+'"><h3>⏳ ボス攻略ルート</h3><div class="skill-note">MPを消費する専用攻撃スキルを増やすルート。魔力弾は最初から使用可能。</div>'+
- bossNodes.map(n=>'<div class="skill-node"><div><b>'+n.name+(s.skillTree.unlocked[n.id]?' ✓':'')+'</b><div class="skill-note">'+n.desc+'</div></div>'+(s.skillTree.unlocked[n.id]?'<span class="tag">取得済み</span>':nodeButton(n.id,"解放",n.cost,!route||!n.requires||s.sp<n.cost))+'</div>').join("")+'</div></div>'+
- (!route?'<div class="skill-card"><h3>最初のルート選択</h3><div class="skill-note">選択には1 SP必要です。選択後も反対ルートを取得できますが、必要SPが大幅に増えます。</div><div class="actions"><button data-route="swarm" '+(s.sp<1?'disabled':'')+'>連続討伐を選ぶ（1 SP）</button><button data-route="boss" '+(s.sp<1?'disabled':'')+'>ボス攻略を選ぶ（1 SP）</button></div></div>':'')+
- '<div class="skill-card"><h3>SP交換について</h3><div class="skill-note">1 SPにつき100,000 TP。反対ルートの最終スキルは主ルートの300倍のSPが必要です。スキルは転生後も維持されます。</div></div>';
+ root.innerHTML='<div class="skill-note">ルート選択は無料。選択後も反対ルートを取得できますが、反対側の通常スキルは30倍、最終スキルは300倍のSPが必要です。</div>'+
+ (!route?'<div class="tree-route-pick"><button data-route="swarm">⚔️ 連続討伐ルートを選択</button><button data-route="boss">👑 ボス攻略ルートを選択</button></div>':'<div class="tree-route-banner">選択中：'+routeLabel+' ・ ルート変更はできません</div>')+
+ '<div class="skill-route-grid tree-columns"><section class="tree-branch swarm-branch"><h3>⚔️ 連続討伐</h3><p>複数の敵をまとめて攻撃する範囲スキルのルート</p>'+swarmNodes+'</section><section class="tree-branch boss-branch"><h3>👑 ボス攻略</h3><p>単体火力とボス特効を伸ばすルート</p>'+bossNodes+'</section></div>'+
+ '<div class="skill-card"><b>SP交換</b><div class="skill-note">1 SP = 100,000 TP。取得済みスキルは転生後も維持されます。</div></div>';
  document.querySelectorAll("#view-skills [data-sp-exchange]").forEach(b=>b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange)));
  root.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>chooseSkillRoute(b.dataset.route));
  root.querySelectorAll("[data-skill-buy]").forEach(b=>b.onclick=()=>buySkillNode(b.dataset.skillBuy));
@@ -721,12 +739,19 @@ function renderSkillTree(){
 function renderBattleSkills(){
  const root=$("battleSkillActions");if(!root)return;
  skillEnsureState();
- root.innerHTML=battleSkillDefs.filter(x=>s.skillTree.unlocked[x.id]).map(x=>'<button data-battle-skill="'+x.id+'">'+x.name+'（MP '+x.mp+'）</button>').join("");
+ root.innerHTML=battleSkillDefs.filter(x=>s.skillTree.unlocked[x.id]).map(x=>'<button data-battle-skill="'+x.id+'">'+x.name+'（MP '+x.mp+'）'+(x.targets>1?"・"+x.targets+"体":"")+'</button>').join("");
  root.querySelectorAll("[data-battle-skill]").forEach(b=>b.onclick=()=>battleUseSkill(b.dataset.battleSkill));
 }
 function battleUseSkill(id){
  skillEnsureState();
  const skill=battleSkillDefs.find(x=>x.id===id);if(!skill||!s.skillTree.unlocked[id])return;
+ if(!s.admin&&s.mp<skill.mp){$("battleLog").textContent="MPが足りません。";return;}
+ if(!s.admin)s.mp-=skill.mp;
+ battleApplyDamage(skill.mult,skill.targets||1,skill.bossMult||1);
+ $("battleLog").textContent=skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+skill.mp+"消費しました。";
+ render();saveAutoGame();
+}
+[id])return;
  if(!s.admin&&s.mp<skill.mp){$("battleLog").textContent="MPが足りません。";return;}
  if(!s.admin)s.mp-=skill.mp;
  const target=s.battleGroup?.[0],info=target?battleEnemyInfo(target.number):battleEnemyInfo();
@@ -778,27 +803,28 @@ function showBossVictory(info){
  el.textContent="🏆 "+info.name+" 討伐成功！";
  el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
 }
-function battleApplyDamage(mult=1){
+function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
  battleEnsureState();
- const target=s.battleGroup[0];if(!target)return;
- const info=battleEnemyInfo(target.number);
- const damage=BigNum.mul(battleBaseDamage(),mult);
- const hp=BigNum.from(target.hp);
- if(BigNum.cmp(damage,0)<=0)return;
- if(BigNum.cmp(damage,hp)>=0){
-  const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
-  const rewardBonus=s.skillTree?.swarmUltimate?1.5:1;
-  const money=BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus);
-  const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),rewardBonus);
-  addMoneyBN(money);gainXP(xp);s.battleKills=info.number;s.battleGroup.shift();
-  if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";}
-  else $("battleLog").textContent="魔物を撃破！ "+moneyFmt(money)+" と "+xpBNFmt(BigNum.mul(xp,allXpMult()))+" XPを獲得。";
-  if(!s.battleGroup.length)battleSpawnWave();
-  s.battleEnemyHp=s.battleGroup[0]?.hp||BigNum.json(0);
-  battleRenderedEnemy="";
- }else{
-  target.hp=BigNum.json(BigNum.sub(hp,damage));s.battleEnemyHp=target.hp;
+ const targets=(s.battleGroup||[]).slice(0,Math.max(1,Math.floor(Number(targetCount)||1))).map(x=>x.number);
+ let killed=false;
+ for(const number of targets){
+  const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
+  const target=s.battleGroup[index],info=battleEnemyInfo(target.number);
+  const damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));
+  const hp=BigNum.from(target.hp);if(BigNum.cmp(damage,0)<=0)continue;
+  if(BigNum.cmp(damage,hp)>=0){
+   const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
+   const rewardBonus=s.skillTree?.swarmUltimate?1.5:1;
+   const money=BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus);
+   const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),rewardBonus);
+   addMoneyBN(money);gainXP(xp);s.battleKills=info.number;s.battleGroup.splice(index,1);killed=true;
+   if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";}
+  }else target.hp=BigNum.json(BigNum.sub(hp,damage));
  }
+ if(!s.battleGroup.length)battleSpawnWave();
+ s.battleEnemyHp=s.battleGroup[0]?.hp||BigNum.json(0);
+ if(killed)battleRenderedEnemy="";
+ if(!killed){const first=s.battleGroup[0];if(first){const info=battleEnemyInfo(first.number);$("battleLog").textContent="魔物に "+xpBNFmt(BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1)))+" ダメージ！";}}
 }
 window.battleManualAttack=()=>{battleApplyDamage(2);renderBattle();render();saveAutoGame()};
 // 描画更新後も手動攻撃ボタンの操作を確実に受け取る。
