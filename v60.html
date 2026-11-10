@@ -305,9 +305,10 @@ const MAX_PLAYER_LEVEL=Infinity;
    if(mode==="full"&&x.e<=15)return groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
    if(mode==="short"){const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return (x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
    if(x.e<4)return BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");
-   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-   const idx=group-1,label=extendedUnitLabel(labels,idx);
-   return (x.m*Math.pow(10,x.e-group*4)).toFixed(digits).replace(/\.?0+$/,"")+label;
+   const {group,label}=japaneseUnitParts(x.e);
+   const scaled=Number((x.m*Math.pow(10,x.e-group*4)).toFixed(digits));
+   if(scaled>=10000)return trimFixed(scaled/10000,digits)+japaneseUnitParts((group+1)*4).label;
+   return trimFixed(scaled,digits)+label;
   }
   function xpProgress(){const req=needBN();if(BigNum.cmp(req,0)<=0)return 0;const ratio=BigNum.toNumber(BigNum.div(xpBN(),req));return Number.isFinite(ratio)?Math.max(0,Math.min(1,ratio)):1}
 
@@ -332,9 +333,10 @@ const MAX_PLAYER_LEVEL=Infinity;
    return "¥"+trim(val)+(names[g]||("e"+g*3));
   }
   if(x.e<4)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
-  const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-  const idx=group-1,label=extendedUnitLabel(labels,idx);
-  return "¥"+trim(x.m*Math.pow(10,x.e-group*4))+label;
+  const {group,label}=japaneseUnitParts(x.e);
+  const scaled=Number(trim(x.m*Math.pow(10,x.e-group*4)));
+  if(scaled>=10000)return "¥"+trim(scaled/10000)+japaneseUnitParts((group+1)*4).label;
+  return "¥"+trim(scaled)+label;
  }
 
 const fresh=()=>({level:1,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,sp:0,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false},shop:{},lastSeen:Date.now(),battleKills:0,battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
@@ -375,6 +377,12 @@ function groupedNumber(n,decimals,separator){
  if(separator==="space")out=out.replace(/\u202f/g," ").replace(/\u00a0/g," ");
  return out;
 }
+function japaneseUnitParts(exponent){
+ const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
+ const group=Math.floor(exponent/4),idx=group-1;
+ return {group,label:labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length))};
+}
+function trimFixed(value,decimals){return value.toFixed(decimals).replace(/\.?0+$/,"");}
 function compactNumFmtUncached(n,decimals=2,mode="jp",separator="comma",significant=3){
  n=Math.max(0,Number(n)||0);if(!Number.isFinite(n))return n===Infinity?"∞":"0";
  decimals=Math.max(0,Math.min(6,Math.floor(Number(decimals)||0)));
@@ -383,11 +391,16 @@ function compactNumFmtUncached(n,decimals=2,mode="jp",separator="comma",signific
  if(mode==="short"){
   if(n<1e3)return groupedNumber(n,decimals,separator);
   const g=Math.floor(Math.log10(n)/3),named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
-  return (n/Math.pow(1000,g)).toFixed(decimals).replace(/\.?0+$/,"")+(named[g]||("e"+g*3));
+  return trimFixed(n/Math.pow(1000,g),decimals)+(named[g]||("e"+g*3));
  }
- const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
- if(n>=1e4){const group=Math.floor(Math.log10(n)/4),idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length)),unit=Math.pow(10,group*4),scale=Math.pow(10,decimals);return (Math.floor(n/unit*scale)/scale).toFixed(decimals).replace(/\.?0+$/,'')+label}
- return groupedNumber(n,decimals,separator);
+ if(n<1e4)return groupedNumber(n,decimals,separator);
+ let exponent=Math.floor(Math.log10(n));
+ while(n<Math.pow(10,exponent))exponent--;
+ while(n>=Math.pow(10,exponent+1))exponent++;
+ const {group,label}=japaneseUnitParts(exponent),unit=Math.pow(10,group*4);
+ const rounded=Number(trimFixed(n/unit,decimals));
+ if(rounded>=10000)return trimFixed(rounded/10000,decimals)+japaneseUnitParts((group+1)*4).label;
+ return trimFixed(rounded,decimals)+label;
 }
 function formatStat(key,n,defaultDecimals=2){
  const c=numberConfig(key),d=c.decimals==null?defaultDecimals:c.decimals;n=Math.max(0,Number(n)||0);
