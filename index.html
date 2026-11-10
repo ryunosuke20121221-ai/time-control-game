@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム 試作品 v46</title>
+<title>時間操作ゲーム 試作品 v58</title>
 <style>
 html,body,button{touch-action:manipulation}
 :root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
@@ -25,7 +25,7 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .save-slot{border:1px solid var(--line,#3a4350);border-radius:12px;padding:12px;margin:12px 0}.save-slot input{width:100%;margin:6px 0 10px;padding:10px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.save-slot .actions{display:flex;gap:8px;flex-wrap:wrap}.save-slot .actions button{flex:1;min-width:100px}
 .number-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.number-setting-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.82rem}.number-setting-grid select{width:100%;min-width:0}.number-setting-row{padding:10px 0}.ap-shop-panel{margin-top:14px;border-color:#806a35}.ap-shop-panel .achievement{background:#171d2a}.ap-shop-panel .actions button{min-width:100px}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.85rem}.admin-grid input{min-width:0;width:100%;padding:9px;border-radius:8px;background:#0b1425;color:#fff;border:1px solid #526481}.admin-grid input[type=checkbox]{width:auto}.achievement{border:1px solid #574b30;border-radius:11px;padding:10px;margin:8px 0;background:#1e1d28}.achievement.done{border-color:#b18a3b;background:linear-gradient(120deg,#3a3020,#202333)}.achievement .reward{color:var(--gold);font-size:.85rem}.achievement .progress{height:5px;background:#30394c;border-radius:8px;overflow:hidden;margin-top:7px}.achievement .progress span{display:block;height:100%;background:linear-gradient(90deg,#d59c37,#ffe28b)}.achievement.locked{opacity:.78}.ach-head{display:flex;justify-content:space-between;gap:8px}.ach-cat{color:#aabbd5;font-size:.78rem}.achievement-hero h2{font-size:1.3rem;margin:5px 0}.number-settings-panel h2{color:var(--accent)}@media(max-width:420px){.admin-grid{grid-template-columns:1fr 1fr}}</style></head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
-<h1>時間操作ゲーム <span class="tag">試作品 v46</span></h1>
+<h1>時間操作ゲーム <span class="tag">試作品 v56</span></h1>
 <p>タブ切り替え・固定ステータス・カード式施設表示・転生ショップに対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。大量XPは必要量と複利報酬を一括計算。</p>
 <div class="view active" id="view-home"><div class="viewgrid two-col">
 <section class="panel"><h2>プレイヤー</h2>
@@ -150,15 +150,114 @@ function buyRebirthUpgrade(id){
  if(!s.adminTPUnlimited)s.tp-=cost;s.shop[id]=lv+1;shopDirty=true;rebirthShopDirty=true;render();
 }
 const MAX_PLAYER_LEVEL=Infinity;
-const fresh=()=>({level:1,xp:0,money:100,mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,shop:{},lastSeen:Date.now(),fl:[0,0,0,0],bl:[0,0,0,0,0]});
+
+ // BigNum基盤 v1: 10進仮数・指数型。現段階ではゲーム本体の値には未接続。
+ const BigNum=(()=>{
+  const norm=(m,e=0)=>{
+   m=Number(m);e=Math.trunc(Number(e)||0);
+   if(!Number.isFinite(m))throw new RangeError("BigNum mantissa must be finite");
+   if(m===0)return {m:0,e:0};
+   while(Math.abs(m)>=10){m/=10;e++}
+   while(Math.abs(m)<1){m*=10;e--}
+   m=Number(m.toPrecision(15));
+   if(Math.abs(m)>=10){m/=10;e++}
+   return {m,e};
+  };
+  const from=v=>{
+   if(v&&typeof v==="object"&&Number.isFinite(v.m)&&Number.isFinite(v.e))return norm(v.m,v.e);
+   if(typeof v==="string"){
+    const match=v.trim().match(/^([+-]?(?:\d+\.?\d*|\.\d+))(?:e([+-]?\d+))?$/i);
+    if(!match)throw new TypeError("Invalid BigNum: "+v);
+    return norm(Number(match[1]),Number(match[2]||0));
+   }
+   const n=Number(v);if(!Number.isFinite(n))throw new RangeError("BigNum input must be finite");
+   if(n===0)return norm(0);
+   const e=Math.floor(Math.log10(Math.abs(n)));
+   return norm(n/Math.pow(10,e),e);
+  };
+  const cmp=(a,b)=>{
+   a=from(a);b=from(b);
+   if(a.m===0||b.m===0)return Math.sign(a.m)-Math.sign(b.m);
+   if(Math.sign(a.m)!==Math.sign(b.m))return Math.sign(a.m)-Math.sign(b.m);
+   if(a.e!==b.e)return (a.e>b.e?1:-1)*Math.sign(a.m);
+   return a.m===b.m?0:a.m>b.m?1:-1;
+  };
+  const add=(a,b)=>{
+   a=from(a);b=from(b);if(a.m===0)return b;if(b.m===0)return a;
+   if(a.e<b.e){const t=a;a=b;b=t}
+   const d=a.e-b.e;if(d>16)return a;
+   return norm(a.m+b.m*Math.pow(10,-d),a.e);
+  };
+  const sub=(a,b)=>{b=from(b);return add(a,{m:-b.m,e:b.e})};
+  const mul=(a,b)=>{a=from(a);b=from(b);return norm(a.m*b.m,a.e+b.e)};
+  const div=(a,b)=>{a=from(a);b=from(b);if(!b.m)throw new RangeError("Division by zero");return norm(a.m/b.m,a.e-b.e)};
+  const toNumber=a=>{a=from(a);if(!a.m)return 0;if(a.e>308)return a.m>0?Infinity:-Infinity;if(a.e< -324)return 0;return a.m*Math.pow(10,a.e)};
+  const toString=(a,places=6)=>{a=from(a);if(!a.m)return "0";return a.m.toFixed(Math.max(0,Math.min(12,places))).replace(/\.?0+$/,"")+"e"+a.e};
+  const json=a=>{a=from(a);return {m:a.m,e:a.e}};
+  return Object.freeze({from,cmp,add,sub,mul,div,toNumber,toString,json});
+ })();
+
+
+ // 所持金BigNum移行・第1段階。収入の加算、表示、保存を巨大数対応にする。
+ 
+  // XPをBigNumで保持し、s.xpは既存UI・互換用のNumberミラーとして残す。
+  function xpBN(){return BigNum.from(s.xpBig||s.xp||0)}
+  function setXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)<0)throw new RangeError("XP cannot be negative");s.xpBig=BigNum.json(x);const n=BigNum.toNumber(x);s.xp=Number.isFinite(n)?Math.max(0,n):Number.MAX_VALUE}
+  function addXPBN(v){const x=BigNum.from(v);if(BigNum.cmp(x,0)>0)setXPBN(BigNum.add(xpBN(),x))}
+  function xpBNFmt(v){
+   const x=BigNum.from(v);if(x.m===0)return "0";
+   const cfg=numberConfig("xp"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0)));
+   if(mode==="sci")return x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
+   if(mode==="full"&&x.e<=15)return groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+   if(mode==="short"){const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return (x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
+   if(x.e<4)return BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");
+   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
+   if(group-1>=labels.length*100)return x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e;
+   const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
+   return (x.m*Math.pow(10,x.e-group*4)).toFixed(digits).replace(/\.?0+$/,"")+label;
+  }
+  function xpProgress(){const req=needBN();if(BigNum.cmp(req,0)<=0)return 0;const ratio=BigNum.toNumber(BigNum.div(xpBN(),req));return Number.isFinite(ratio)?Math.max(0,Math.min(1,ratio)):1}
+
+  function moneyBN(){return BigNum.from(s.moneyBig||s.money||0)}
+ function moneyBNNumber(){const n=BigNum.toNumber(moneyBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
+ function setMoneyBN(v){s.moneyBig=BigNum.json(v);const n=BigNum.toNumber(v);s.money=Number.isFinite(n)?Math.max(0,n):Number.MAX_VALUE}
+ function addMoneyBN(v){let x;try{x=BigNum.from(v)}catch(e){return}if(BigNum.cmp(x,0)<=0)return;setMoneyBN(BigNum.add(moneyBN(),x))}
+ function spendMoneyBN(v){let cost;try{cost=BigNum.from(v)}catch(e){return false}if(BigNum.cmp(cost,0)<=0)return true;const cur=moneyBN();if(BigNum.cmp(cur,cost)<0)return false;setMoneyBN(BigNum.sub(cur,cost));return true}
+ function canAffordMoney(v){try{return BigNum.cmp(moneyBN(),BigNum.from(v))>=0}catch(e){return false}}
+ function moneyBNFmt(v){
+  const x=BigNum.from(v);if(x.m===0)return "¥0";
+  const cfg=numberConfig("money"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0))),trim=n=>n.toFixed(digits).replace(/\.?0+$/,"");
+  if(mode==="sci")return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
+  if(mode==="full"){
+   if(x.e<=15)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+   return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
+  }
+  if(mode==="short"){
+   if(x.e<3)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+   const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
+   const val=x.m*Math.pow(10,x.e-g*3);
+   return "¥"+trim(val)+(names[g]||("e"+g*3));
+  }
+  if(x.e<4)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+  const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
+  if(group-1>=labels.length*100)return "¥"+x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e;
+  const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
+  return "¥"+trim(x.m*Math.pow(10,x.e-group*4))+label;
+ }
+
+const fresh=()=>({level:1,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,shop:{},lastSeen:Date.now(),fl:[0,0,0,0],bl:[0,0,0,0,0]});
 let s=fresh(),last=performance.now(),shopDirty=true,rebirthShopDirty=true;
 const AUTO_SAVE_KEY="timeControlAutoSaveV1";
-let pendingLevelUps=0,pendingReward=0,pendingRewardedLevels=0;
+let pendingLevelUps=0,pendingReward=BigNum.from(0),pendingRewardedLevels=0;
 function allXpMult(){return 1+shopEffect("allXp",0.01)}
 function allMoneyMult(){return 1+shopEffect("allMoney",0.01)}
-function need(){const n=Math.max(0,s.level-1);return Math.max(1,(100+n*5+Math.floor(n/100)+Math.floor(n*n/250))*(1-Math.min(25,shopEffect("needDiscount",0.5))/100))}
-function levelXpMult(){return (1+(s.level-1)*.05)*(s.rbMult||1)}
-function levelMoneyMult(){return (1+(s.level-1)*.025)*(s.rbMult||1)}
+function levelRepresentationStep(){const x=Math.abs(s.level);return x<1?1:Math.max(1,Math.pow(2,Math.floor(Math.log2(x))-52))}
+function needBN(){const n=Math.max(0,s.level-1),step=levelRepresentationStep();return requiredXPSum(n,step)}
+function need(){const n=BigNum.toNumber(needBN());return Number.isFinite(n)?Math.max(1,n):Number.MAX_VALUE}
+function levelXpMultBN(level=s.level){return BigNum.mul(BigNum.add(1,BigNum.mul(Math.max(0,level-1),0.05)),s.rbMult||1)}
+function levelMoneyMultBN(level=s.level){return BigNum.mul(BigNum.add(1,BigNum.mul(Math.max(0,level-1),0.025)),s.rbMult||1)}
+function levelXpMult(){const n=BigNum.toNumber(levelXpMultBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
+function levelMoneyMult(){const n=BigNum.toNumber(levelMoneyMultBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function maxMP(){return 10+Math.floor(Math.max(0,s.fl[3]||0)/50)*5+shopEffect("mpCapacity",5)}
 function localAutoTapMult(){return Math.max(1,2*Math.floor(Math.max(0,s.fl[0]||0)/50))}
 function precisionRegen(){return Math.floor(Math.max(0,s.fl[3]||0)/10)*0.001}
@@ -194,7 +293,7 @@ function compactNumFmtUncached(n,decimals=2,mode="jp",separator="comma",signific
   const g=Math.floor(Math.log10(n)/3),named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
   return (n/Math.pow(1000,g)).toFixed(decimals).replace(/\.?0+$/,"")+(named[g]||("e"+g*3));
  }
- const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極"];
+ const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
  if(n>=1e4){const group=Math.floor(Math.log10(n)/4),idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length)),unit=Math.pow(10,group*4),scale=Math.pow(10,decimals);return (Math.floor(n/unit*scale)/scale).toFixed(decimals).replace(/\.?0+$/,'')+label}
  return groupedNumber(n,decimals,separator);
 }
@@ -203,14 +302,8 @@ function formatStat(key,n,defaultDecimals=2){
  return cachedFormat("stat:"+key+":"+n+":"+c.mode+":"+d+":"+c.separator+":"+c.significant,()=>compactNumFmtUncached(n,d,c.mode,c.separator,c.significant));
 }
 function compactNumFmt(n,decimals=2){return formatStat("xp",n,decimals)}
-function moneyFmt(n){
- n=Math.max(0,Number(n)||0);if(!Number.isFinite(n))return n===Infinity?"∞円":"¥0";
- return cachedFormat("money:"+n+":"+JSON.stringify(numberConfig("money")),()=>n>=1e4?formatStat("money",n,2)+"円":"¥"+formatStat("money",n,2));
-}
-function gainXP(n){
- n=Number(n);if(!Number.isFinite(n)||n<=0)return;
- s.xp=Math.min(Number.MAX_VALUE,s.xp+n*allXpMult());
-}
+function moneyFmt(n){return moneyBNFmt(n);}
+function gainXP(n){let x;try{x=BigNum.from(n)}catch(e){return}if(BigNum.cmp(x,0)<=0)return;addXPBN(BigNum.mul(x,allXpMult()))}
 // need() の累積値を周期250の床関数分解で計算する。レベルごとのwhile処理を避ける。
 const floorSq250Prefix=[0];
 for(let r=0;r<250;r++)floorSq250Prefix.push(floorSq250Prefix[r]+Math.floor(r*r/250));
@@ -224,94 +317,85 @@ function floorSq250SumPrefix(n){
  return 62500*q*(q-1)*(2*q-1)/6+62250*q*(q-1)/2+q*FLOOR_SQ250_BLOCK+250*q*q*r+q*r*(r-1)+floorSq250Prefix[r];
 }
 function requiredXPSum(startN,count){
- if(count<=0)return 0;
- const endN=startN+count;
- const sumN=count*(2*startN+count-1)/2;
- const floor100=floor100SumPrefix(endN)-floor100SumPrefix(startN);
- const floorSq=floorSq250SumPrefix(endN)-floorSq250SumPrefix(startN);
+ if(!(count>0))return BigNum.from(0);
  const discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;
- return (100*count+5*sumN+floor100+floorSq)*discount;
+ if(Math.abs(startN)<=1e8&&Math.abs(startN+count)<=1e8&&count<=1e8){
+  const endN=startN+count,sumN=count*(2*startN+count-1)/2;
+  const floor100=floor100SumPrefix(endN)-floor100SumPrefix(startN),floorSq=floorSq250SumPrefix(endN)-floorSq250SumPrefix(startN);
+  return BigNum.mul(Math.max(0,100*count+5*sumN+floor100+floorSq),discount);
+ }
+ const B=BigNum,st=B.from(startN),ct=B.from(count),one=B.from(1),m=B.sub(ct,one);
+ const sumN=B.div(B.mul(ct,B.sub(B.add(B.mul(2,st),ct),one)),2);
+ const sumSquares=B.add(B.add(B.mul(ct,B.mul(st,st)),B.mul(B.mul(st,ct),m)),B.div(B.mul(B.mul(ct,m),B.sub(B.mul(2,ct),one)),6));
+ let total=B.add(B.mul(100,ct),B.mul(5,sumN));total=B.add(total,B.div(sumN,100));total=B.add(total,B.div(sumSquares,250));
+ return B.mul(total,discount);
 }
 function affordableLevelCount(){
- const maxCount=Math.max(0,Number.MAX_SAFE_INTEGER-s.level);
- if(maxCount<=0||s.xp<need())return 0;
- const startN=s.level-1,xp=s.xp;
- let low=0,high=1;
- while(high<maxCount&&requiredXPSum(startN,high)<=xp){low=high;high=Math.min(maxCount,high*2)}
- if(high===maxCount&&requiredXPSum(startN,high)<=xp)return high;
- while(low+1<high){
-  const mid=Math.floor((low+high)/2);
-  if(requiredXPSum(startN,mid)<=xp)low=mid;else high=mid;
+ const xp=xpBN();if(BigNum.cmp(xp,needBN())<0)return 0;
+ const startN=s.level-1,step=levelRepresentationStep(),maxSteps=Math.max(0,Math.floor((Number.MAX_VALUE/4-s.level)/step));
+ if(maxSteps<1)return 0;
+ let low=0,high=1;const costForSteps=k=>requiredXPSum(startN,k*step);
+ // 管理者モードで極端なXPを設定した場合も、1フレーム内で探索し続けないよう上限を設ける。
+ // 上限に達した場合は見つかった範囲だけ進め、次のフレームで続きを処理する。
+ for(let bracket=0;bracket<1024&&high<maxSteps&&BigNum.cmp(costForSteps(high),xp)<=0;bracket++){
+  low=high;const next=Math.min(maxSteps,high*2);
+  if(next<=high)break;
+  high=next;
  }
- return low;
+ if(BigNum.cmp(costForSteps(high),xp)<=0)return high*step;
+ // Numberの大きな整数では low+1===low になる。相対精度で二分探索し、midが端点に丸められたら終了する。
+ for(let i=0;i<128;i++){
+  const mid=low+(high-low)/2;
+  if(mid<=low||mid>=high)break;
+  if(BigNum.cmp(costForSteps(mid),xp)<=0)low=mid;else high=mid;
+ }
+ return low*step;
 }
-function totalIncomeAtLevel(level){
- const rb=s.rbMult||1;
- const levelMoney=(1+(level-1)*0.025)*rb;
- const abilityMoney=s.on?(1.5+(level-1)*0.05)*(1+s.fl[1]*0.02)*(1+shopEffect("abilityMoney",0.01)):1;
- return (1+facilityIncome())*levelMoney*abilityMoney*(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult();
+function totalIncomeAtLevelBN(level){
+ const levelMoney=levelMoneyMultBN(level);
+ const abilityMoney=s.on?BigNum.mul(BigNum.mul(BigNum.add(1.5,BigNum.mul(Math.max(0,level-1),0.05)),1+(s.fl[1]||0)*0.02),1+shopEffect("abilityMoney",0.01)):BigNum.from(1);
+ return BigNum.mul(BigNum.mul(BigNum.add(1,facilityIncomeBN()),levelMoney),BigNum.mul(abilityMoney,(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()));
 }
+function totalIncomeAtLevel(level){const n=BigNum.toNumber(totalIncomeAtLevelBN(level));return Number.isFinite(n)?n:Number.MAX_VALUE}
 function rewardEventValues(level,milestone,lateBand){
  const allMoney=allMoneyMult();
  const heldRate=lateBand?(milestone?0.03:0.005):(milestone?0.075:0.015);
  const q=1+heldRate*allMoney;
- let baseReward=10*level*(s.rbMult||1)*(1+shopEffect("levelReward",0.02));
- if(milestone)baseReward*=10;
- const additive=baseReward*allMoney+totalIncomeAtLevel(level)*(milestone?2.5:0.75);
+ let baseReward=BigNum.mul(BigNum.mul(10,level),BigNum.mul(s.rbMult||1,1+shopEffect("levelReward",0.02)));
+ if(milestone)baseReward=BigNum.mul(baseReward,10);
+ const additive=BigNum.add(BigNum.mul(baseReward,allMoney),BigNum.mul(totalIncomeAtLevelBN(level),milestone?2.5:0.75));
  return {q,additive};
 }
+
 function matrixMultiply4(a,b){
- const out=Array.from({length:4},()=>[0,0,0,0]);
- for(let i=0;i<4;i++)for(let k=0;k<4;k++){
-  const av=a[i][k];if(av===0)continue;
-  for(let j=0;j<4;j++){
-   const bv=b[k][j];if(bv===0)continue;
-   const v=out[i][j]+av*bv;
-   out[i][j]=Number.isFinite(v)?Math.max(-Number.MAX_VALUE,Math.min(Number.MAX_VALUE,v)):(v>0?Number.MAX_VALUE:-Number.MAX_VALUE);
-  }
- }
+ const z=()=>BigNum.from(0),out=Array.from({length:4},()=>Array.from({length:4},z));
+ for(let i=0;i<4;i++)for(let k=0;k<4;k++){const av=a[i][k];if(BigNum.cmp(av,0)===0)continue;for(let j=0;j<4;j++){const bv=b[k][j];if(BigNum.cmp(bv,0)!==0)out[i][j]=BigNum.add(out[i][j],BigNum.mul(av,bv))}}
  return out;
 }
 function matrixApply4(m,v){
- const out=[0,0,0,0];
- for(let i=0;i<4;i++)for(let j=0;j<4;j++)if(m[i][j]!==0&&v[j]!==0){
-  const x=out[i]+m[i][j]*v[j];out[i]=Number.isFinite(x)?Math.max(-Number.MAX_VALUE,Math.min(Number.MAX_VALUE,x)):(x>0?Number.MAX_VALUE:-Number.MAX_VALUE);
- }
+ const out=Array.from({length:4},()=>BigNum.from(0));
+ for(let i=0;i<4;i++)for(let j=0;j<4;j++)if(BigNum.cmp(m[i][j],0)!==0&&BigNum.cmp(v[j],0)!==0)out[i]=BigNum.add(out[i],BigNum.mul(m[i][j],v[j]));
  return out;
 }
 function applyRewardCycles(money,firstLevel,rewardStep,milestoneStep,cycleCount,lateBand){
- if(cycleCount<=0)return money;
- const perCycle=milestoneStep/rewardStep;
- const allMoney=allMoneyMult();
- const normalQ=1+(lateBand?0.005:0.015)*allMoney;
- const milestoneQ=1+(lateBand?0.03:0.075)*allMoney;
- const Q=Math.pow(normalQ,perCycle-1)*milestoneQ;
- // 1周期分の加算額は周期番号に関する2次式。3点から係数を復元する。
+ money=BigNum.from(money);if(cycleCount<=0)return money;
+ const perCycle=milestoneStep/rewardStep,allMoney=allMoneyMult();
+ const normalQ=1+(lateBand?0.005:0.015)*allMoney,milestoneQ=1+(lateBand?0.03:0.075)*allMoney,Q=Math.pow(normalQ,perCycle-1)*milestoneQ;
  function cycleAdd(t){
-  let amount=0;
-  for(let j=0;j<perCycle;j++){
-   const level=firstLevel+(perCycle*t+j)*rewardStep;
-   const milestone=level%milestoneStep===0;
-   const {q,additive}=rewardEventValues(level,milestone,lateBand);
-   amount=amount*q+additive;
-  }
+  let amount=BigNum.from(0);
+  for(let j=0;j<perCycle;j++){const level=firstLevel+(perCycle*t+j)*rewardStep,milestone=level%milestoneStep===0;const {q,additive}=rewardEventValues(level,milestone,lateBand);amount=BigNum.add(BigNum.mul(amount,q),additive)}
   return amount;
  }
  const c0=cycleAdd(0),cAt1=cycleAdd(1),cAt2=cycleAdd(2);
- const c2=(cAt2-2*cAt1+c0)/2,c1=cAt1-c0-c2;
- if(Q>1&&cycleCount*Math.log(Q)>700)return Number.MAX_VALUE;
- let power=[
-  [Q,c2,c1,c0],
-  [0,1,2,1],
-  [0,0,1,1],
-  [0,0,0,1]
- ];
- let result=[money,0,0,1],n=cycleCount;
+ const c2=BigNum.div(BigNum.add(BigNum.sub(cAt2,BigNum.mul(2,cAt1)),c0),2);
+ const c1=BigNum.sub(BigNum.sub(cAt1,c0),c2),z=()=>BigNum.from(0),o=()=>BigNum.from(1);
+ let power=[[BigNum.from(Q),c2,c1,c0],[z(),o(),BigNum.from(2),o()],[z(),z(),o(),o()],[z(),z(),z(),o()]];
+ let result=[money,z(),z(),o()],n=cycleCount;
  while(n>0){if(n%2===1)result=matrixApply4(power,result);n=Math.floor(n/2);if(n>0)power=matrixMultiply4(power,power)}
- return Math.max(0,Math.min(Number.MAX_VALUE,result[0]));
+ return BigNum.cmp(result[0],0)<0?z():result[0];
 }
 function processRewardRange(money,fromLevel,toLevel,rewardStep,milestoneStep,lateBand){
- if(toLevel<fromLevel)return {money,rewarded:0};
+ money=BigNum.from(money);if(toLevel<fromLevel)return {money,rewarded:0};
  const first=Math.ceil(fromLevel/rewardStep)*rewardStep;
  const last=Math.floor(toLevel/rewardStep)*rewardStep;
  if(last<first)return {money,rewarded:0};
@@ -323,12 +407,12 @@ function processRewardRange(money,fromLevel,toLevel,rewardStep,milestoneStep,lat
  for(let i=0;i<remaining;i++){
   const level=tailStart+i*rewardStep,milestone=level%milestoneStep===0;
   const {q,additive}=rewardEventValues(level,milestone,lateBand);
-  money=Math.min(Number.MAX_VALUE,money*q+additive);
+  money=BigNum.add(BigNum.mul(money,q),additive);
  }
  return {money,rewarded:count};
 }
 function processLevelRewards(startLevel,endLevel){
- let money=s.money,rewarded=0;
+ let money=moneyBN(),rewarded=0;
  const bands=[
   {from:2,to:1000,step:1,milestone:10,late:false},
   {from:1001,to:10000,step:2,milestone:20,late:false},
@@ -345,119 +429,104 @@ function processLevelRewards(startLevel,endLevel){
 }
 // XP必要量は二分探索で一括判定し、報酬は周期行列で元の複利計算を維持する。
 function processPendingXP(){
- const oldLevel=s.level,ups=affordableLevelCount();
- if(ups<=0)return 0;
- const cost=requiredXPSum(oldLevel-1,ups);
- s.xp=Math.max(0,s.xp-cost);
- const newLevel=oldLevel+ups;
- const oldMoney=s.money;
- const rewards=processLevelRewards(oldLevel+1,newLevel);
- s.money=rewards.money;
- pendingLevelUps+=ups;pendingReward+=Math.max(0,s.money-oldMoney);pendingRewardedLevels+=rewards.rewarded;
- s.level=newLevel;
- const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);
- if(crossedUnlock)shopDirty=true;
- if(s.xp<need()&&pendingLevelUps){
-  $("log").textContent=`レベルアップ！ +${pendingLevelUps}レベル。報酬対象${pendingRewardedLevels}回、報酬 ${moneyFmt(pendingReward)} を獲得！`;
-  pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;
+ let totalUps=0;
+ // 巨大数の境界ではNumberの丸めで1回の探索後にも次レベル分のXPが残ることがあるため、残量が必要量を下回るまで連続処理する。
+ // 1フレームあたり最大2回に制限し、残りのXPは次フレームへ分散する。
+ for(let pass=0;pass<2;pass++){
+  const oldLevel=s.level,ups=affordableLevelCount();if(!(ups>0))break;
+  const cost=requiredXPSum(oldLevel-1,ups),currentXP=xpBN();
+  if(BigNum.cmp(currentXP,cost)<0)break;
+  const newLevel=oldLevel+ups;
+  if(!Number.isFinite(newLevel)||newLevel<=oldLevel)break;
+  setXPBN(BigNum.sub(currentXP,cost));
+  const oldMoney=moneyBN(),rewards=processLevelRewards(oldLevel+1,newLevel);setMoneyBN(rewards.money);
+  pendingLevelUps+=ups;pendingReward=BigNum.add(pendingReward,BigNum.sub(moneyBN(),oldMoney));pendingRewardedLevels+=rewards.rewarded;
+  s.level=newLevel;totalUps+=ups;
+  const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);if(crossedUnlock)shopDirty=true;
+  if(BigNum.cmp(xpBN(),needBN())<0)break;
  }
- return ups;
+ if(BigNum.cmp(xpBN(),needBN())<0&&pendingLevelUps){
+  $("log").textContent=`レベルアップ！ +${pendingLevelUps}レベル。報酬対象${pendingRewardedLevels}回、報酬 ${moneyFmt(pendingReward)} を獲得！`;
+  pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;
+ }
+ return totalUps;
 }
-function tapMoneyPerTap(autoMult=1){return totalIncome()*0.005*autoMult*(1+shopEffect("tapMoney",0.02))}
-function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult()*(1+shopEffect("autoTapPower",0.01)):1;gainXP((.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)*autoMult*(1+shopEffect("tapXp",0.02))*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1));s.money+=tapMoneyPerTap(autoMult);}
-let facilityMoneyCacheKey="",facilityMoneyCache=0,facilityXpCacheKey="",facilityXpCache=0;
-function facilityIncome(){const key=s.bl.join(",")+"|"+(s.fl[1]||0)+"|"+shopLv("facilityMoney");if(key!==facilityMoneyCacheKey){facilityMoneyCache=buildings.reduce((a,b,i)=>a+(s.bl[i]>0?Math.max(1,s.bl[i]*b.income/2):0),0)*(1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02));facilityMoneyCacheKey=key}return facilityMoneyCache}
+function tapMoneyPerTap(autoMult=1){return BigNum.mul(totalIncomeBN(),0.005*autoMult*(1+shopEffect("tapMoney",0.02)))}
+function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult()*(1+shopEffect("autoTapPower",0.01)):1;const tapXp=BigNum.mul(BigNum.mul(BigNum.add(0.5,BigNum.mul(Math.max(0,s.level-1),0.05)),bodyAdaptMult()),(s.rbMult||1)*autoMult*(1+shopEffect("tapXp",0.02))*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1));gainXP(tapXp);addMoneyBN(tapMoneyPerTap(autoMult));}
+let facilityMoneyCacheKey="",facilityMoneyCacheBN=BigNum.from(0),facilityXpCacheKey="",facilityXpCache=0,facilityXpCacheBN=BigNum.from(0);
+function facilityIncomeBN(){const key=s.bl.join(",")+"|"+(s.fl[1]||0)+"|"+shopLv("facilityMoney");if(key!==facilityMoneyCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=Math.max(0,s.bl[i]||0);if(lv>0)total=BigNum.add(total,BigNum.mul(Math.max(1,b.income/2),lv))});facilityMoneyCacheBN=BigNum.mul(total,(1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02)));facilityMoneyCacheKey=key}return facilityMoneyCacheBN}
+function facilityIncome(){const n=BigNum.toNumber(facilityIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function facilityXPEffectiveLevel(level){
  level=Math.max(0,Number(level)||0);
  // Lv1〜1000は通常成長、1001〜10000は増加分80%、10000超は増加分60%。
  return Math.min(level,1000)+Math.max(0,Math.min(level-1000,9000))*0.80+Math.max(0,level-10000)*0.60;
 }
-function facilityXPBase(){const key=s.bl.join(",");if(key!==facilityXpCacheKey){facilityXpCache=buildings.reduce((sum,b,i)=>{const lv=Math.max(0,s.bl[i]||0);return sum+facilityXPEffectiveLevel(lv)*b.xpIncome/2*Math.max(0.75,1-lv/200000)},0);facilityXpCacheKey=key}return facilityXpCache}
+function facilityXPBaseBN(){const key=s.bl.join(",");if(key!==facilityXpCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=BigNum.from(Math.max(0,s.bl[i]||0));if(BigNum.cmp(lv,0)<=0)return;const eff=BigNum.add(BigNum.add(BigNum.from(Math.min(BigNum.toNumber(lv),1000)),BigNum.mul(Math.max(0,Math.min(BigNum.toNumber(lv)-1000,9000)),0.80)),BigNum.mul(Math.max(0,BigNum.toNumber(lv)-10000),0.60));const decay=BigNum.toNumber(lv)>50000?0.75:Math.max(0.75,1-BigNum.toNumber(lv)/200000);total=BigNum.add(total,BigNum.mul(BigNum.mul(eff,b.xpIncome/2),decay))});facilityXpCache=BigNum.toNumber(total);facilityXpCacheBN=total;facilityXpCacheKey=key}return facilityXpCacheBN}
+function facilityXPBase(){const n=BigNum.toNumber(facilityXPBaseBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function localSlowXpMult(){return 1+Math.max(0,s.fl[1]||0)*0.002}
 // 施設ごとのレベル減衰をキャッシュ可能な基礎値に含める。プレイヤー倍率は都度反映。
 function facilityXPLevelMultiplier(level){const lv=Math.max(0,Number(level)||0);return levelXpMult()*Math.max(0.75,1-lv/200000)}
-function passiveXPIncome(){return facilityXPBase()*levelXpMult()*localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)}
+function passiveXPIncomeBN(){return BigNum.mul(facilityXPBaseBN(),BigNum.mul(levelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)))}
+function passiveXPIncome(){const n=BigNum.toNumber(passiveXPIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function abilityMoneyMult(){return s.on?(1.5+(s.level-1)*.05)*(1+s.fl[1]*.02)*(1+shopEffect("abilityMoney",0.01)):1}
-function totalIncome(){return (1+facilityIncome())*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()}
+function abilityMoneyMultBN(level=s.level){return s.on?BigNum.mul(BigNum.mul(BigNum.add(1.5,BigNum.mul(Math.max(0,level-1),0.05)),1+(s.fl[1]||0)*0.02),1+shopEffect("abilityMoney",0.01)):BigNum.from(1)}
+function facilityMoneyEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);return BigNum.mul(BigNum.mul(Math.max(1,buildings[i].income/2),lv),BigNum.mul((1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02)),BigNum.mul(levelMoneyMultBN(),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))))}
+function facilityXPEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);const effective=BigNum.add(BigNum.add(Math.min(lv,1000),Math.max(0,Math.min(lv-1000,9000))*0.8),Math.max(0,lv-10000)*0.6);const decay=lv>50000?0.75:Math.max(0.75,1-lv/200000);return BigNum.mul(BigNum.mul(effective,buildings[i].xpIncome/2*decay),BigNum.mul(levelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult()))}
+function totalIncomeBN(){return BigNum.mul(BigNum.mul(BigNum.add(1,facilityIncomeBN()),levelMoneyMultBN()),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))}
+function totalIncome(){const n=BigNum.toNumber(totalIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function safeCost(base,rate,level){const exponent=Math.log(base)+level*Math.log(rate);if(!Number.isFinite(exponent)||exponent>700)return Number.MAX_SAFE_INTEGER;return Math.max(1,Math.min(Number.MAX_SAFE_INTEGER,Math.floor(Math.exp(exponent))))}
 // 等比数列の合計から購入可能数を二分探索。個別価格を1件ずつ試す旧方式を避ける。
 function estimatedCostSum(base,rate,startLevel,count){if(count<=0)return 0;const firstExp=Math.log(base)+startLevel*Math.log(rate);const lastExp=firstExp+(count-1)*Math.log(rate);if(lastExp>700)return Infinity;const first=Math.exp(firstExp);if(Math.abs(rate-1)<1e-12)return first*count;const sum=first*Math.expm1(count*Math.log(rate))/(rate-1);return Number.isFinite(sum)?sum:Infinity}
 function maxGeometricCount(base,rate,startLevel,budget,limit){let lo=0,hi=Math.max(0,Math.floor(limit));while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(estimatedCostSum(base,rate,startLevel,mid)<=budget)lo=mid;else hi=mid-1}return lo}
-function fCost(i){return s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i])}
+function geometricCostBN(base,rate,level,discount=1){if(level<0)return BigNum.from(0);const log=Math.log(base)+level*Math.log(rate)+Math.log(Math.max(1e-12,discount));if(!Number.isFinite(log))return BigNum.from("1e1000000000");const e=Math.floor(log/Math.LN10);return BigNum.from({m:Math.exp(log-e*Math.LN10),e})}
+ function fCostBN(i){return s.admin?BigNum.from(0):geometricCostBN(funcs[i].base,funcs[i].rate,s.fl[i])}
+ function fCost(i){return s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i])}
 function facilityCostAt(i,level){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(i===0)return level===0?Math.max(1,Math.floor(250*discount)):Math.max(1,Math.floor(safeCost(300,1.25,level-1)*discount));return Math.max(1,Math.floor(safeCost(buildings[i].cost,1.5,level)*discount))}
-function bCost(i){return s.admin?0:facilityCostAt(i,s.bl[i])}
+function bCostBN(i){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(s.admin)return BigNum.from(0);if(i===0&&s.bl[i]===0)return BigNum.from(Math.max(1,Math.floor(250*discount)));return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.25:1.5,i===0?s.bl[i]-1:s.bl[i],discount)}
+ function bCost(i){return s.admin?0:facilityCostAt(i,s.bl[i])}
 function render(){
-$("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyFmt(s.money);$("topXp").textContent=formatStat("xp",Math.floor(s.xp))+" / "+formatStat("xp",need());$("topXpbar").max=need();$("topXpbar").value=s.xp;$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
-$("level").textContent=formatStat("level",s.level,0);$("xp").textContent=formatStat("xp",Math.floor(s.xp))+" / "+formatStat("xp",need());$("xpbar").max=need();$("xpbar").value=s.xp;
-$("money").textContent=moneyFmt(s.money);$("income").textContent=moneyFmt(totalIncome())+" / 秒";$("passiveXp").textContent="+"+formatStat("xp",passiveXPIncome()*allXpMult())+" XP / 秒";
+$("topLevel").textContent=formatStat("level",s.level,0);$("topMoney").textContent=moneyFmt(moneyBN());$("topXp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("topXpbar").max=1;$("topXpbar").value=xpProgress();$("topMp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("topMpbar").max=s.admin?1:maxMP();$("topMpbar").value=s.admin?1:s.mp;
+$("level").textContent=formatStat("level",s.level,0);$("xp").textContent=xpBNFmt(xpBN())+" / "+xpBNFmt(needBN());$("xpbar").max=1;$("xpbar").value=xpProgress();
+$("money").textContent=moneyFmt(moneyBN());$("income").textContent=moneyFmt(totalIncomeBN())+" / 秒";$("passiveXp").textContent="+"+xpBNFmt(BigNum.mul(passiveXPIncomeBN(),allXpMult()))+" XP / 秒";
 $("xpMult").textContent="×"+formatStat("multiplier",levelXpMult());$("moneyMult").textContent="×"+formatStat("multiplier",levelMoneyMult());$("tapXp").textContent=formatStat("xp",(.5+(s.level-1)*.05)*bodyAdaptMult()*(s.rbMult||1)*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult());$("tapMoney").textContent=moneyFmt(tapMoneyPerTap(1));
 $("rebirth").textContent=formatStat("rebirthCount",s.rebirth,0);$("abilityState").textContent=s.on?"使用中":"停止中";$("mp").textContent=s.admin?"∞ / ∞":formatStat("mp",s.mp,1)+" / "+formatStat("mp",maxMP(),1);$("mpbar").max=s.admin?1:maxMP();$("mpbar").value=s.admin?1:s.mp;
-$("abilityXp").textContent="+"+formatStat("xp",(1+s.fl[0]*.02+shopEffect("abilityXp",0.02))*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult())+" / 秒";$("continuousTime").textContent=formatStat("time",Math.floor(s.continuousUseSeconds||0),0)+"秒";$("continuousBonus").textContent=continuousBonusText();$("continuousRate").textContent=(continuousGrowthRate()===0?"停止中":"×"+formatStat("multiplier",continuousGrowthRate()));$("autoTapInterval").textContent=formatStat("time",autoTapInterval())+"秒";$("abilityMoney").textContent="×"+formatStat("multiplier",abilityMoneyMult());$("autoTapMult").textContent="×"+formatStat("multiplier",localAutoTapMult(),0);$("boostStatus").textContent=(s.mpXpBoost?"XP ":"")+(s.mpMoneyBoost?"収入":"")||"なし";$("toggle").textContent=s.on?"能力を停止":"能力を使う";$("xpBoostBtn").textContent="XPブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpXpBoost?"ON":"OFF");$("moneyBoostBtn").textContent="収入ブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpMoneyBoost?"ON":"OFF");const boostSel=$("boostSelect");const maxBoost=boostMaxMultiplier();if(Number(boostSel.dataset.maxBoost||0)!==maxBoost){const opts=[];for(let v=1.5;v<=maxBoost+1e-8;v+=0.1)opts.push(Number(v.toFixed(1)));if(!opts.some(v=>Math.abs(v-boostMultiplier())<1e-6))opts.push(boostMultiplier());opts.sort((a,b)=>a-b);boostSel.innerHTML=opts.map(v=>`<option value="${v.toFixed(1)}">×${v.toFixed(1)}</option>`).join("");boostSel.dataset.maxBoost=String(maxBoost);}boostSel.value=boostMultiplier().toFixed(1);$("xpBoostBtn").disabled=!s.on&&!s.mpXpBoost;$("moneyBoostBtn").disabled=!s.on&&!s.mpMoneyBoost;
+$("abilityXp").textContent="+"+formatStat("xp",(1+s.fl[0]*.02+shopEffect("abilityXp",0.02))*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult())+" / 秒";$("continuousTime").textContent=formatStat("time",Math.floor(s.continuousUseSeconds||0),0)+"秒";$("continuousBonus").textContent=continuousBonusText();$("continuousRate").textContent=(continuousGrowthRate()===0?"停止中":"×"+formatStat("multiplier",continuousGrowthRate()));$("autoTapInterval").textContent=formatStat("time",autoTapInterval())+"秒";$("abilityMoney").textContent="×"+formatStat("multiplier",abilityMoneyMult());$("autoTapMult").textContent="×"+formatStat("multiplier",localAutoTapMult(),0);$("boostStatus").textContent=(s.mpXpBoost?"XP ":"")+(s.mpMoneyBoost?"収入":"")||"なし";$("toggle").textContent=s.on?"能力を停止":"能力を使う";$("xpBoostBtn").textContent="XPブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpXpBoost?"ON":"OFF");$("moneyBoostBtn").textContent="収入ブースト ×"+formatStat("multiplier",boostMultiplier())+"："+(s.mpMoneyBoost?"ON":"OFF");const boostSel=$("boostSelect");const maxBoostRaw=boostMaxMultiplier();const maxBoost=Number.isFinite(maxBoostRaw)?Math.max(1.5,maxBoostRaw):Number.MAX_SAFE_INTEGER;const currentBoost=Math.min(maxBoost,Math.max(1.5,boostMultiplier()));if(Number(boostSel.dataset.maxBoost||0)!==maxBoost){const minBoost=1.5;const count=Math.min(100,Math.max(2,Math.ceil((maxBoost-minBoost)*10)+1));const step=(maxBoost-minBoost)/(count-1);const optionValues=new Set();for(let i=0;i<count;i++)optionValues.add(i===count-1?maxBoost:minBoost+step*i);optionValues.add(currentBoost);const opts=Array.from(optionValues).sort((a,b)=>a-b);boostSel.innerHTML=opts.map(v=>{const value=String(Number(v.toPrecision(12)));return `<option value="${value}">×${formatStat("multiplier",v)}</option>`}).join("");boostSel.dataset.maxBoost=String(maxBoost);}boostSel.value=String(Number(currentBoost.toPrecision(12)));$("xpBoostBtn").disabled=!s.on&&!s.mpXpBoost;$("moneyBoostBtn").disabled=!s.on&&!s.mpMoneyBoost;
 $("mult").textContent="×"+formatStat("multiplier",s.rbMult||1);$("rebirthPoints").textContent=formatStat("tp",Math.floor(s.tp||0),0);$("levelCap").textContent=formatStat("abilityLevel",abilityLevelCap(),0);$("rebirthBtn").disabled=s.level<400;$("test1000").textContent=s.admin?"管理者モード：ON（解除）":"管理者ボタン（ON）";
 if(shopDirty){
 $("functions").innerHTML=funcs.map((f,i)=>{let cap=abilityLevelCap(),lv=s.fl[i],un=s.level>=f.unlock;return `<div class="item"><b>${f.name}</b> <span class="tag">Lv ${formatStat("abilityLevel",lv,0)}/${formatStat("abilityLevel",cap,0)}</span><div class="small">${un?`強化効果：${f.name}の性能が上昇します。<details><summary>能力の詳細</summary><div class="detail-copy">${f.desc}${i===2?`<br>現在の身体適応倍率：×${bodyAdaptMult().toFixed(2)} / 自動XP：×${bodyAutoXpMult().toFixed(2)}`:""}</div></details>`:`レベル${f.unlock}で解放`}</div><div class="stat"><span>次の強化費用</span><b>${un&&lv<cap?moneyFmt(fCost(i)):"—"}</b></div><button data-f="${i}" onclick="buyF(${i})">強化する</button><button data-fmax="${i}" onclick="buyFMax(${i})">選択数まとめて買う</button><button data-fall="${i}" onclick="buyFAll(${i})">所持金で最大10000Lv買う</button></div>`}).join("");
-$("facilities").innerHTML=buildings.map((b,i)=>{let un=s.level>=b.unlock;const lv=Math.max(0,s.bl[i]||0);const moneyEarn=lv>0?Math.max(1,lv*b.income/2)*(1+Math.max(0,s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02))*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult():0;const xpEarn=facilityXPEffectiveLevel(lv)*b.xpIncome/2*facilityXPLevelMultiplier(lv)*localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult();return `<div class="item"><b>${b.name}</b> <span class="tag">Lv ${formatStat("facilityLevel",lv,0)}</span><div class="small">${un?`お金収入：<span class="facility-money" data-i="${i}">+${formatStat("facilityIncome",moneyEarn)}円 / 秒</span><br>XP収入：<span class="facility-xp" data-i="${i}">+${formatStat("xp",xpEarn)} XP / 秒</span><details><summary>成長・倍率の詳細</summary><div class="detail-copy">施設Lv1000超〜Lv10000の増加分80%、Lv10000超の増加分60%。施設XP倍率は施設Lvに応じて100%から減衰し、Lv50000で75%（以降75%固定）。局所減速・ブースト反映。</div></details>`:`レベル${b.unlock}で解放`}</div><div class="stat"><span>次の購入費用</span><b>${un?moneyFmt(bCost(i)):"—"}</b></div><button data-b="${i}" onclick="buyB(${i})">購入・強化</button><button data-bmax="${i}" onclick="buyBMax(${i})">選択数まとめて買う</button><button data-ball="${i}" onclick="buyBAll(${i})">所持金で最大10000Lv買う</button></div>`}).join("");
+$("facilities").innerHTML=buildings.map((b,i)=>{let un=s.level>=b.unlock;const lv=Math.max(0,s.bl[i]||0);const moneyEarn=facilityMoneyEarnBN(i);const xpEarn=facilityXPEarnBN(i);return `<div class="item"><b>${b.name}</b> <span class="tag">Lv ${formatStat("facilityLevel",lv,0)}</span><div class="small">${un?`お金収入：<span class="facility-money" data-i="${i}">+${moneyFmt(moneyEarn)}円 / 秒</span><br>XP収入：<span class="facility-xp" data-i="${i}">+${xpBNFmt(xpEarn)} XP / 秒</span><details><summary>成長・倍率の詳細</summary><div class="detail-copy">施設Lv1000超〜Lv10000の増加分80%、Lv10000超の増加分60%。施設XP倍率は施設Lvに応じて100%から減衰し、Lv50000で75%（以降75%固定）。局所減速・ブースト反映。</div></details>`:`レベル${b.unlock}で解放`}</div><div class="stat"><span>次の購入費用</span><b>${un?moneyFmt(bCost(i)):"—"}</b></div><button data-b="${i}" onclick="buyB(${i})">購入・強化</button><button data-bmax="${i}" onclick="buyBMax(${i})">選択数まとめて買う</button><button data-ball="${i}" onclick="buyBAll(${i})">所持金で最大10000Lv買う</button></div>`}).join("");
 shopDirty=false;
 }
 // 施設ごとの表示収入は、レベル・倍率・ブースト変化に合わせて毎回更新する。
 for(let i=0;i<buildings.length;i++){
  const lv=Math.max(0,s.bl[i]||0);
- const moneyEarn=lv>0?Math.max(1,lv*buildings[i].income/2)*(1+Math.max(0,s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02))*levelMoneyMult()*abilityMoneyMult()*(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult():0;
- const xpEarn=facilityXPEffectiveLevel(lv)*buildings[i].xpIncome/2*facilityXPLevelMultiplier(lv)*localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult();
+ const moneyEarn=facilityMoneyEarnBN(i);
+ const xpEarn=facilityXPEarnBN(i);
  const moneyEl=$("facilities").querySelector(`.facility-money[data-i="${i}"]`);
  const xpEl=$("facilities").querySelector(`.facility-xp[data-i="${i}"]`);
  if(moneyEl)setTextIfChanged(moneyEl,"+"+moneyFmt(moneyEarn)+" / 秒");
- if(xpEl)setTextIfChanged(xpEl,"+"+compactNumFmt(xpEarn)+" XP / 秒");
+ if(xpEl)setTextIfChanged(xpEl,"+"+xpBNFmt(xpEarn)+" XP / 秒");
 }
 if(rebirthShopDirty&&$("view-rebirth").classList.contains("active")){renderRebirthShop();rebirthShopDirty=false;}
-const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],button[data-fall]");buttons.forEach(b=>{const i=Number(b.dataset.f??b.dataset.fmax??b.dataset.fall);const canBuy=s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(b.hasAttribute("data-fall")?s.admin||s.adminMoneyUnlimited||s.money>=fCost(i):s.money>=fCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
-const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=buildings[i].unlock&&(b.hasAttribute("data-ball")?s.admin||s.adminMoneyUnlimited||s.money>=bCost(i):s.money>=bCost(i));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],button[data-fall]");buttons.forEach(b=>{const i=Number(b.dataset.f??b.dataset.fmax??b.dataset.fall);const canBuy=s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(b.hasAttribute("data-fall")?s.admin||s.adminMoneyUnlimited||canAffordMoney(fCost(i)):canAffordMoney(fCost(i)));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
+const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=buildings[i].unlock&&(b.hasAttribute("data-ball")?s.admin||s.adminMoneyUnlimited||canAffordMoney(bCost(i)):canAffordMoney(bCost(i)));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
 }
-window.buyF=i=>{let c=fCost(i);if(s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(s.admin||s.adminMoneyUnlimited||s.money>=c)){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=c;s.fl[i]++;shopDirty=true;render()}};
-window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;let count=0,total=0,cap=abilityLevelCap(),target=Number($("buyCount").value)||5;while(count<target&&s.fl[i]+count<cap){const c=(s.admin||s.adminMoneyUnlimited)?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(c)||(!s.admin&&!s.adminMoneyUnlimited&&total+c>s.money)||c>Number.MAX_SAFE_INTEGER)break;total+=c;count++;}if(count){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=total;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
-
-window.buyFAll=i=>{
- if(s.level<funcs[i].unlock)return;
- const cap=abilityLevelCap(),remaining=Math.min((window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i]));
- let count=(s.admin||s.adminMoneyUnlimited)?remaining:maxGeometricCount(funcs[i].base,funcs[i].rate,s.fl[i],s.money,remaining),total=0;
- if(!s.admin&&!s.adminMoneyUnlimited){
-  for(let k=0;k<count;k++)total+=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+k);
-  while(count>0&&total>s.money){count--;total-=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count)}
-  while(count<remaining){const next=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+count);if(!Number.isFinite(next)||total+next>s.money)break;total+=next;count++;}
- }
- if(!count){$('log').textContent="購入資金が足りないか、能力レベル上限です。";return}
- if(!s.admin&&!s.adminMoneyUnlimited)s.money=Math.max(0,s.money-total);
- s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render();
-};
-function facilityBulkCount(i,limit){
- limit=Math.max(0,Math.floor(limit));if(!limit)return 0;if(s.admin||s.adminMoneyUnlimited)return limit;
- const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;
- const budget=Math.max(0,s.money);let count=0;
- if(i===0&&s.bl[i]===0){const first=Math.max(1,Math.floor(250*discount));if(budget<first)return 0;count=1+maxGeometricCount(300,1.25,0,Math.max(0,budget-first)/discount,limit-1)}
- else if(i===0)count=maxGeometricCount(300,1.25,s.bl[i]-1,budget/discount,limit);
- else count=maxGeometricCount(buildings[i].cost,1.5,s.bl[i],budget/discount,limit);
- let total=0;for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k);
- // 端数切り捨て分も使えるよう、次の価格を確認する。
- while(count<limit){const next=facilityCostAt(i,s.bl[i]+count);if(total+next>budget)break;total+=next;count++;}
- while(count>0&&total>budget){count--;total=0;for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k)}
- return count;
-}
-window.buyBAll=i=>{
- if(s.level<buildings[i].unlock)return;
- const limit=(window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000);
- const count=facilityBulkCount(i,limit);let total=0;
- if(!s.admin&&!s.adminMoneyUnlimited)for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k);
- if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}
- else{$('log').textContent="購入資金が足りません。"}
-};
-window.buyB=i=>{let c=bCost(i);if(s.level>=buildings[i].unlock&&(s.admin||s.adminMoneyUnlimited||s.money>=c)){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=c;s.bl[i]++;shopDirty=true;render()}};
-window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;let count=0,total=0,target=Number($("buyCountFacility").value)||5;while(count<target){const c=s.admin?0:(i===0?facilityCostAt(i,s.bl[i]+count):facilityCostAt(i,s.bl[i]+count));if(!Number.isFinite(c)||c>Number.MAX_SAFE_INTEGER||(!s.admin&&!s.adminMoneyUnlimited&&total+c>s.money))break;total+=c;count++;}if(count){if(!s.admin&&!s.adminMoneyUnlimited)s.money-=total;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
+window.buyF=i=>{let c=fCostBN(i);if(s.level>=funcs[i].unlock&&s.fl[i]<abilityLevelCap()&&(s.admin||s.adminMoneyUnlimited||canAffordMoney(c))){if(!s.admin&&!s.adminMoneyUnlimited)spendMoneyBN(c);s.fl[i]++;shopDirty=true;render()}};
+function bigPowPositive(base,power){if(power<=0)return BigNum.from(1);const log=Math.log10(base)*power;if(!Number.isFinite(log))return BigNum.from("1e1000000000");const e=Math.floor(log);return BigNum.from({m:Math.pow(10,log-e),e})}
+function geometricCostSumBN(base,rate,startLevel,count,discount=1){if(count<=0)return BigNum.from(0);const first=geometricCostBN(base,rate,startLevel,discount);if(Math.abs(rate-1)<1e-12)return BigNum.mul(first,count);return BigNum.div(BigNum.mul(first,BigNum.sub(bigPowPositive(rate,count),1)),rate-1)}
+function maxGeometricCountBN(base,rate,startLevel,budget,limit,discount=1){let lo=0,hi=Math.max(0,Math.floor(limit));while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(BigNum.cmp(geometricCostSumBN(base,rate,startLevel,mid,discount),budget)<=0)lo=mid;else hi=mid-1}return lo}
+window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;const cap=abilityLevelCap(),target=Math.min(Number($("buyCount").value)||5,Math.max(0,cap-s.fl[i])),free=s.admin||s.adminMoneyUnlimited,count=free?target:maxGeometricCountBN(funcs[i].base,funcs[i].rate,s.fl[i],moneyBN(),target);if(count){const total=free?BigNum.from(0):geometricCostSumBN(funcs[i].base,funcs[i].rate,s.fl[i],count);if(!free&&!spendMoneyBN(total))return;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
+window.buyFAll=i=>{if(s.level<funcs[i].unlock)return;const cap=abilityLevelCap(),limit=Math.min((window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i])),free=s.admin||s.adminMoneyUnlimited,count=free?limit:maxGeometricCountBN(funcs[i].base,funcs[i].rate,s.fl[i],moneyBN(),limit);if(!count){$('log').textContent="購入資金が足りないか、能力レベル上限です。";return}const total=free?BigNum.from(0):geometricCostSumBN(funcs[i].base,funcs[i].rate,s.fl[i],count);if(!free&&!spendMoneyBN(total))return;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()};
+function facilityBulkCostBN(i,start,count){if(count<=0)return BigNum.from(0);const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;let total=BigNum.from(0),offset=0;if(i===0&&start===0){total=BigNum.from(Math.max(1,Math.floor(250*discount)));offset=1;if(count===1)return total}return BigNum.add(total,geometricCostSumBN(i===0?300:buildings[i].cost,i===0?1.25:1.5,i===0?Math.max(0,start-1):start,count-offset,discount))}
+function facilityBulkCount(i,limit){limit=Math.max(0,Math.floor(limit));if(!limit)return 0;if(s.admin||s.adminMoneyUnlimited)return limit;let lo=0,hi=limit;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(BigNum.cmp(facilityBulkCostBN(i,s.bl[i],mid),moneyBN())<=0)lo=mid;else hi=mid-1}return lo}
+window.buyBAll=i=>{if(s.level<buildings[i].unlock)return;const limit=(window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),count=facilityBulkCount(i,limit),free=s.admin||s.adminMoneyUnlimited;if(!count){$('log').textContent="購入資金が足りません。";return}const total=free?BigNum.from(0):facilityBulkCostBN(i,s.bl[i],count);if(!free&&!spendMoneyBN(total))return;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()};
+window.buyBMax=i=>{if(s.level<buildings[i].unlock)return;const target=Number($("buyCountFacility").value)||5,free=s.admin||s.adminMoneyUnlimited;let lo=0,hi=target;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(free||BigNum.cmp(facilityBulkCostBN(i,s.bl[i],mid),moneyBN())<=0)lo=mid;else hi=mid-1}const count=lo;if(count){const total=free?BigNum.from(0):facilityBulkCostBN(i,s.bl[i],count);if(!free&&!spendMoneyBN(total))return;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベルまとめて購入しました。`;render()}else{$('log').textContent="購入資金が足りません。"}};
 $("tap").onclick=()=>{tapReward();render()};
 $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0}else{last=performance.now()}render()};
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
 $("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
 $("moneyBoostBtn").onclick=()=>{if(s.on){s.mpMoneyBoost=!s.mpMoneyBoost;render()}};
-$("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.005;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);const earnedTP=Math.floor(oldLevel/100);const keepTP=(s.tp||0)+earnedTP;const keepShop={...(s.shop||{})};s={...fresh(),rebirth:nextRebirth,rbMult:nextMult,tp:keepTP,shop:keepShop};rebirthShopDirty=true;pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;s.money+=shopEffect("startMoney",100)*allMoneyMult();s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${addMult.toFixed(2)}。累計倍率×${nextMult.toFixed(2)}です。`;render()}};
+$("rebirthBtn").onclick=()=>{if(s.level>=400){const oldLevel=s.level;const nextRebirth=s.rebirth+1;const addMult=oldLevel*0.005;const nextMult=s.rebirth>0?(s.rbMult||1)+addMult:Math.max(1,addMult);const earnedTP=Math.floor(oldLevel/100);const keepTP=(s.tp||0)+earnedTP;const keepShop={...(s.shop||{})};s={...fresh(),rebirth:nextRebirth,rbMult:nextMult,tp:keepTP,shop:keepShop};rebirthShopDirty=true;pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;addMoneyBN(shopEffect("startMoney",100)*allMoneyMult());s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${addMult.toFixed(2)}。累計倍率×${nextMult.toFixed(2)}です。`;render()}};
 const SAVE_SLOTS_KEY="timeControlNamedSaveSlotsV1";
 function applyOfflineProgress(){
  const now=Date.now();
@@ -466,10 +535,10 @@ function applyOfflineProgress(){
  if(elapsed<5)return;
  const moneyRate=Math.min(1,shopEffect("offlineMoney",0.05));
  const xpRate=Math.min(1,shopEffect("offlineXp",0.05));
- const earnedMoney=totalIncome()*elapsed*moneyRate;
- const earnedXp=passiveXPIncome()*elapsed*xpRate;
- s.money+=earnedMoney;if(earnedXp>0)gainXP(earnedXp);
- $("log").textContent=`オフライン報酬：${moneyFmt(earnedMoney)}、${compactNumFmt(earnedXp*allXpMult())} XP（${Math.floor(elapsed/60)}分）`;
+ const earnedMoney=BigNum.mul(totalIncomeBN(),elapsed*moneyRate);
+ const earnedXp=BigNum.mul(passiveXPIncomeBN(),elapsed*xpRate);
+ addMoneyBN(earnedMoney);if(BigNum.cmp(earnedXp,0)>0)gainXP(earnedXp);
+ $("log").textContent=`オフライン報酬：${moneyFmt(earnedMoney)}、${xpBNFmt(BigNum.mul(earnedXp,allXpMult()))} XP（${Math.floor(elapsed/60)}分）`;
 }
 function saveAutoGame(){
  try{s.lastSeen=Date.now();localStorage.setItem(AUTO_SAVE_KEY,JSON.stringify(s));return true}
@@ -484,7 +553,7 @@ function loadAutoGame(){
   s.bl=Array.isArray(data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(data.bl[i])||0)):fresh().bl.slice();
   s.shop=data.shop&&typeof data.shop==="object"?data.shop:{};
   s.tp=Math.max(0,Number(data.tp)||0);s.rebirth=Math.max(0,Number(data.rebirth)||0);
-  s.level=Math.max(1,Number(data.level)||1);s.xp=Math.max(0,Number(data.xp)||0);s.money=Math.max(0,Number(data.money)||0);
+  s.level=Math.max(1,Number(data.level)||1);s.xp=Math.max(0,Number(data.xp)||0);setXPBN(data.xpBig||s.xp);s.money=Math.max(0,Number(data.money)||0);s.moneyBig=data.moneyBig||BigNum.json(s.money);setMoneyBN(s.moneyBig);
   s.rbMult=Math.max(1,Number(data.rbMult)||1);s.boostTarget=Number(data.boostTarget)||1.5;
   s.mp=Math.min(maxMP(),Math.max(0,Number(data.mp)||0));s.on=!!data.on;s.admin=!!data.admin;
   s.mpXpBoost=!!data.mpXpBoost;s.mpMoneyBoost=!!data.mpMoneyBoost;
@@ -495,7 +564,7 @@ function loadAutoGame(){
 function getSaveSlots(){try{const v=JSON.parse(localStorage.getItem(SAVE_SLOTS_KEY)||"[]");return Array.isArray(v)?v.slice(0,(window.getApSaveSlotCount?window.getApSaveSlotCount():3)):[]}catch(e){return []}}
 function drawSaveSlots(){const slots=getSaveSlots();const root=$("saveSlots");const slotCount=window.getApSaveSlotCount?window.getApSaveSlotCount():3;root.innerHTML=Array.from({length:slotCount},(_,i)=>i).map(i=>{const slot=slots[i]||{};return `<div class="save-slot"><b>セーブスロット ${i+1}</b><label for="saveName${i}">名前</label><input id="saveName${i}" maxlength="30" placeholder="例：メインデータ" value="${String(slot.name||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}"><div class="small">${slot.data?`保存済み：Lv ${formatStat("level",Number(slot.data.level||1),0)}`:"空きスロット"}</div><div class="actions"><button data-slot-save="${i}">この枠に保存</button><button data-slot-load="${i}" ${slot.data?"":"disabled"}>読み込み</button><button data-slot-delete="${i}" ${slot.data?"":"disabled"}>削除</button></div></div>`}).join("");
 root.querySelectorAll("[data-slot-save]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotSave),all=getSaveSlots();while(all.length<(window.getApSaveSlotCount?window.getApSaveSlotCount():3))all.push({});const name=$("saveName"+i).value.trim()||`セーブ${i+1}`;s.lastSeen=Date.now();all[i]={name,data:JSON.parse(JSON.stringify(s)),savedAt:Date.now()};try{localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));saveAutoGame();$("log").textContent=`「${name}」に保存しました。`;drawSaveSlots()}catch(e){$("log").textContent="保存できませんでした。ブラウザの保存容量を確認してください。"}});
-root.querySelectorAll("[data-slot-load]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotLoad),slot=getSaveSlots()[i];if(!slot||!slot.data)return;if(!confirm(`「${slot.name||`セーブ${i+1}`}」を読み込みますか？現在の進行状況は置き換わります。`))return;try{s={...fresh(),...slot.data};s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=Array.isArray(slot.data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(slot.data.fl[i])||0)):fresh().fl.slice();s.bl=Array.isArray(slot.data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(slot.data.bl[i])||0)):fresh().bl.slice();s.tp=Math.max(0,Number(slot.data.tp)||0);s.shop=slot.data.shop&&typeof slot.data.shop==="object"?slot.data.shop:{};s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;applyOfflineProgress();saveAutoGame();shopDirty=true;rebirthShopDirty=true;autoTapTimer=0;$("log").textContent=`「${slot.name||`セーブ${i+1}`}」を読み込みました。`;render();drawSaveSlots()}catch(e){$("log").textContent="読み込みに失敗しました。"}});
+root.querySelectorAll("[data-slot-load]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotLoad),slot=getSaveSlots()[i];if(!slot||!slot.data)return;if(!confirm(`「${slot.name||`セーブ${i+1}`}」を読み込みますか？現在の進行状況は置き換わります。`))return;try{s={...fresh(),...slot.data};setXPBN(slot.data.xpBig||slot.data.xp||0);s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=Array.isArray(slot.data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(slot.data.fl[i])||0)):fresh().fl.slice();s.bl=Array.isArray(slot.data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(slot.data.bl[i])||0)):fresh().bl.slice();s.tp=Math.max(0,Number(slot.data.tp)||0);s.shop=slot.data.shop&&typeof slot.data.shop==="object"?slot.data.shop:{};s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;applyOfflineProgress();saveAutoGame();shopDirty=true;rebirthShopDirty=true;autoTapTimer=0;$("log").textContent=`「${slot.name||`セーブ${i+1}`}」を読み込みました。`;render();drawSaveSlots()}catch(e){$("log").textContent="読み込みに失敗しました。"}});
 root.querySelectorAll("[data-slot-delete]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotDelete),all=getSaveSlots();if(!all[i]||!all[i].data)return;if(!confirm(`セーブスロット${i+1}を削除しますか？`))return;all[i]={};localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));$("log").textContent="セーブデータを削除しました。";drawSaveSlots()})}
 $("adminVisibility").value=localStorage.getItem("timeControlAdminButtonVisibility")||"show";
 function applyAdminVisibility(){const show=$("adminVisibility").value!=="hide";$("test1000").style.display=show?"":"none";localStorage.setItem("timeControlAdminButtonVisibility",show?"show":"hide")}
@@ -508,7 +577,7 @@ document.addEventListener("visibilitychange",()=>{
  else{applyOfflineProgress();saveAutoGame();render();}
 });
 window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
-$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=0;pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
+$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0;pendingReward=BigNum.from(0);pendingRewardedLevels=0;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
 let autoTapTimer=0,lastRender=0;
 $("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
 
@@ -517,19 +586,20 @@ let lastAutoSave=0,lastLoopErrorLog=0;
 function loop(now){
  try{
   const dt=Math.min((now-last)/1000,1);last=now;
-  // XPは必要量を一括判定し、レベルアップ報酬も周期単位で集約する。
-  processPendingXP();
   if(s.on){
    autoTapTimer+=dt;
    while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}
    if(!s.admin){const drain=.1*(1-Math.min(80,s.fl[3]*2)/100)*(1-Math.min(25,shopEffect("mpCost",0.5))/100)+mpBoostDrain()-precisionRegen();s.mp-=drain*dt;s.mp=Math.min(maxMP(),s.mp)}
    if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();
-   gainXP(dt*(1+s.fl[0]*.02+shopEffect("abilityXp",0.02))*bodyAutoXpMult()*levelXpMult()*localSlowXpMult()*continuousBonus()*(s.mpXpBoost?boostMultiplier():1));
+   gainXP(BigNum.mul(BigNum.mul(1+s.fl[0]*.02+shopEffect("abilityXp",0.02),bodyAutoXpMult()),BigNum.mul(levelXpMultBN(),dt*localSlowXpMult()*continuousBonus()*(s.mpXpBoost?boostMultiplier():1))));
    if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
   }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(1+shopEffect("mpRegen",0.05)))}
   if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
-  s.money+=totalIncome()*dt;
-  const facilityXP=passiveXPIncome()*dt;if(facilityXP>0)gainXP(facilityXP);
+  addMoneyBN(BigNum.mul(totalIncomeBN(),dt));
+  const facilityXP=BigNum.mul(passiveXPIncomeBN(),dt);if(BigNum.cmp(facilityXP,0)>0)gainXP(facilityXP);
+  // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
+  // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
+  processPendingXP();
   if(now-lastRender>=500){lastRender=now;render()}
   if(now-lastAutoSave>=5000){lastAutoSave=now;saveAutoGame()}
  }catch(err){
@@ -628,7 +698,7 @@ render();requestAnimationFrame(loop);
   $("adminApply").onclick=()=>{
    if(!s.admin){$("log").textContent="管理者モードをONにしてから適用してください。";return;}
    const num=id=>Math.max(0,Number($(id).value)||0);
-   s.level=Math.max(1,Math.floor(num("admLevel")));s.xp=num("admXp");s.money=num("admMoney");s.mp=Math.min(maxMP(),num("admMp"));s.tp=num("admTP");ach.ap=Math.floor(num("admAP"));s.rebirth=Math.floor(num("admRebirth"));s.rbMult=Math.max(1,num("admRbMult"));
+   s.level=Math.max(1,Math.floor(num("admLevel")));setXPBN(num("admXp"));s.money=num("admMoney");setMoneyBN(s.money);s.mp=Math.min(maxMP(),num("admMp"));s.tp=num("admTP");ach.ap=Math.floor(num("admAP"));s.rebirth=Math.floor(num("admRebirth"));s.rbMult=Math.max(1,num("admRbMult"));
    s.fl=funcs.map((_,i)=>Math.floor(num("admFl"+i)));s.bl=buildings.map((_,i)=>Math.floor(num("admBl"+i)));
    for(const it of rebirthUpgrades.flatMap(g=>g.items))s.shop[it.id]=Math.min(it.cap,Math.floor(num("admShop_"+it.id)));
    persist();shopDirty=true;rebirthShopDirty=true;render();saveAutoGame();$("log").textContent="管理者設定を適用しました。";
@@ -651,7 +721,7 @@ render();requestAnimationFrame(loop);
  // 管理者ボタンを押した時に、管理パネルを開閉する。既存の管理者ON/OFF機能は維持。
  function blockAdminProgress(){ for(const d of achDefs){if(!ach.earned[d[0]]&&progress(d)>=d[4])ach.blocked[d[0]]=true;} persist(); }
  function refreshAdminInputs(){
-  ["admLevel","admXp","admMoney","admMp","admTP","admAP","admRebirth","admRbMult"].forEach((id,i)=>{const vals=[s.level,s.xp,s.money,s.mp,s.tp,ach.ap,s.rebirth,s.rbMult];$(id).value=String(vals[i]??0)});
+  ["admLevel","admXp","admMoney","admMp","admTP","admAP","admRebirth","admRbMult"].forEach((id,i)=>{const vals=[s.level,BigNum.toNumber(xpBN()),s.money,s.mp,s.tp,ach.ap,s.rebirth,s.rbMult];$(id).value=String(vals[i]??0)});
   funcs.forEach((f,i)=>$("admFl"+i).value=s.fl[i]||0);
   buildings.forEach((b,i)=>$("admBl"+i).value=s.bl[i]||0);
   rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=shopLv(it.id));
@@ -749,7 +819,7 @@ render();requestAnimationFrame(loop);
   document.querySelectorAll("[data-ap-bulk='2']").forEach(e=>e.hidden=!owned("bulk2"));
   if(owned("maxbuy"))document.querySelectorAll("[data-fall],[data-ball]").forEach(b=>b.textContent="所持金で最大50,000Lv買う");
   $("apStatsExtra").innerHTML=owned("stats")?'<h3>詳細統計</h3><div class="stat"><span>累計TP獲得</span><b>'+formatStat("tp",Math.floor(Number(window.apTotalTP||0)),0)+'</b></div><div class="stat"><span>累計プレイ時間</span><b>'+formatStat("time",Math.floor(Number(window.apPlaySeconds||0)/3600),0)+'時間</b></div><div class="stat"><span>現在の転生倍率</span><b>×'+Number(s.rbMult||1).toFixed(2)+'</b></div><div class="stat"><span>能力合計レベル</span><b>'+formatStat("abilityLevel",s.fl.reduce((a,b)=>a+b,0),0)+'</b></div>':'';
-  $("apIncomeExtra").innerHTML=owned("income")?'<h3>収入分析</h3><div class="stat"><span>施設の基礎収入</span><b>'+moneyFmt(facilityIncome())+'</b></div><div class="stat"><span>総収入</span><b>'+moneyFmt(totalIncome())+'</b></div><div class="stat"><span>施設収入構成比（参考）</span><b>'+((facilityIncome()/(1+facilityIncome()))*100).toFixed(1)+'%</b></div>':'';
+  $("apIncomeExtra").innerHTML=owned("income")?'<h3>収入分析</h3><div class="stat"><span>施設の基礎収入</span><b>'+moneyFmt(facilityIncomeBN())+'</b></div><div class="stat"><span>総収入</span><b>'+moneyFmt(totalIncomeBN())+'</b></div><div class="stat"><span>施設収入構成比（参考）</span><b>'+(BigNum.toNumber(BigNum.div(facilityIncomeBN(),BigNum.add(1,facilityIncomeBN())))*100).toFixed(1)+'%</b></div>':'';
  }
  function setTitle(id){shop.activeTitle=id;write();$("apTitleSelect").value=id;$("apTitlePreview").textContent="現在の称号："+products.find(p=>p.id===id).name}
  function buy(id){
