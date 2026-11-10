@@ -562,8 +562,8 @@ render();requestAnimationFrame(loop);
   ["noRebirth1k","未転生の挑戦者","隠し","転生せずにレベル1,000到達",1000,15,"noRebirth"],
   ["facilityAll100","巨大研究施設","隠し","全施設をLv100以上にする",100,20,"facilityAll100"]
  ];
- let ach={earned:{},ap:0,totalTP:0,playSeconds:0,last:Date.now(),prevTP:Number(s.tp)||0,prevLevel:s.level,prevRebirth:s.rebirth};
- try{const saved=JSON.parse(localStorage.getItem(ACH_KEY)||"null");if(saved&&typeof saved==="object")ach={...ach,...saved,earned:saved.earned||{}}}catch(e){}
+ let ach={earned:{},blocked:{},ap:0,totalTP:0,playSeconds:0,last:Date.now(),prevTP:Number(s.tp)||0,prevLevel:s.level,prevRebirth:s.rebirth};
+ try{const saved=JSON.parse(localStorage.getItem(ACH_KEY)||"null");if(saved&&typeof saved==="object")ach={...ach,...saved,earned:saved.earned||{},blocked:saved.blocked||{}}}catch(e){}
  function persist(){try{localStorage.setItem(ACH_KEY,JSON.stringify(ach))}catch(e){}}
  function progress(d){
   const t=d[6];
@@ -583,7 +583,7 @@ render();requestAnimationFrame(loop);
  function check(){
   if(s.admin)return;
   let changed=false;
-  for(const d of achDefs){if(!ach.earned[d[0]]&&progress(d)>=d[4]){ach.earned[d[0]]=true;ach.ap+=d[5];changed=true;}}
+  for(const d of achDefs){if(!ach.earned[d[0]]&&!ach.blocked[d[0]]&&progress(d)>=d[4]){ach.earned[d[0]]=true;ach.ap+=d[5];changed=true;}}
   if(changed){persist();$("log").textContent="🏅 実績を達成！APを獲得しました。";}
  }
  function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -610,7 +610,7 @@ render();requestAnimationFrame(loop);
   rebirthUpgrades.flatMap(g=>g.items).forEach(it=>addField(shop,"admShop_"+it.id,it.name,shopLv(it.id)));
   $("adminPanel").style.display="block";
   $("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;
-  $("adminModeBtn").onclick=()=>{s.admin=!s.admin;render();saveAutoGame()};
+  $("adminModeBtn").onclick=()=>{s.admin=!s.admin;if(!s.admin)blockAdminProgress();render();saveAutoGame()};
   $("adminMoneyInf").onchange=e=>{s.adminMoneyUnlimited=e.target.checked;saveAutoGame()};
   $("adminTPInf").onchange=e=>{s.adminTPUnlimited=e.target.checked;saveAutoGame()};
   $("adminAPInf").onchange=e=>{s.adminAPUnlimited=e.target.checked;saveAutoGame()};
@@ -637,6 +637,7 @@ render();requestAnimationFrame(loop);
   $("adminPanel").style.display="none";
  }
  // 管理者ボタンを押した時に、管理パネルを開閉する。既存の管理者ON/OFF機能は維持。
+ function blockAdminProgress(){ for(const d of achDefs){if(!ach.earned[d[0]]&&progress(d)>=d[4])ach.blocked[d[0]]=true;} persist(); }
  function refreshAdminInputs(){
   ["admLevel","admXp","admMoney","admMp","admTP","admAP","admRebirth","admRbMult"].forEach((id,i)=>{const vals=[s.level,s.xp,s.money,s.mp,s.tp,ach.ap,s.rebirth,s.rbMult];$(id).value=String(vals[i]??0)});
   funcs.forEach((f,i)=>$("admFl"+i).value=s.fl[i]||0);
@@ -644,7 +645,7 @@ render();requestAnimationFrame(loop);
   rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=shopLv(it.id));
  }
  const oldAdminClick=$("test1000").onclick;
- $("test1000").onclick=()=>{oldAdminClick?.();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
+ $("test1000").onclick=()=>{oldAdminClick?.();if(!s.admin)blockAdminProgress();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
  setupAdmin();
  const oldRender=render;
  render=function(){oldRender();check();renderAchievements();};
