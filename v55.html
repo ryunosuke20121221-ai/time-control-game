@@ -226,11 +226,16 @@ const MAX_PLAYER_LEVEL=Infinity;
  function canAffordMoney(v){try{return BigNum.cmp(moneyBN(),BigNum.from(v))>=0}catch(e){return false}}
  function moneyBNFmt(v){
   const x=BigNum.from(v);if(x.m===0)return "¥0";
-  if(x.e<4)return "¥"+BigNum.toNumber(x).toFixed(2).replace(/\.00$/,"");
+  const cfg=numberConfig("money"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0)));
+  if(mode==="sci")return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\\.?0+$/,"")+"e"+x.e;
+  if(mode==="full"&&x.e<=15)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+  if(mode==="short"){const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return "¥"+(x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\\.?0+$/,"")+(names[g]||"")}
+  if(x.e<4)return "¥"+BigNum.toNumber(x).toFixed(digits).replace(/\\.?0+$/,"");
   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-  const idx=group-1,label=(labels[idx%labels.length]||"無量大数")+"*".repeat(Math.floor(idx/labels.length));
+  if(group-1>=labels.length*100)return x.m.toFixed(digits).replace(/\\.?0+$/,"")+"×10^"+x.e+"円";
+  const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
   const scaled=x.m*Math.pow(10,x.e-group*4);
-  return scaled.toFixed(2).replace(/\.00$/,"")+label+"円";
+  return scaled.toFixed(digits).replace(/\\.?0+$/,"")+label+"円";
  }
 
 const fresh=()=>({level:1,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,shop:{},lastSeen:Date.now(),fl:[0,0,0,0],bl:[0,0,0,0,0]});
