@@ -762,7 +762,7 @@ function loop(now){
    if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
   }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(1+shopEffect("mpRegen",0.05)))}
   if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
-  battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}
+  try{battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
    addMoneyBN(BigNum.mul(totalIncomeBN(),dt));
   const facilityXP=BigNum.mul(passiveXPIncomeBN(),dt);if(BigNum.cmp(facilityXP,0)>0)gainXP(facilityXP);
   // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
