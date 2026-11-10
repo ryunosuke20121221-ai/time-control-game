@@ -414,7 +414,7 @@ window.buyFMax=i=>{if(s.level<funcs[i].unlock)return;let count=0,total=0,cap=abi
 
 window.buyFAll=i=>{
  if(s.level<funcs[i].unlock)return;
- const cap=abilityLevelCap(),remaining=Math.min(10000+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i]));
+ const cap=abilityLevelCap(),remaining=Math.min((window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i]));
  let count=(s.admin||s.adminMoneyUnlimited)?remaining:maxGeometricCount(funcs[i].base,funcs[i].rate,s.fl[i],s.money,remaining),total=0;
  if(!s.admin&&!s.adminMoneyUnlimited){
   for(let k=0;k<count;k++)total+=safeCost(funcs[i].base,funcs[i].rate,s.fl[i]+k);
@@ -440,7 +440,7 @@ function facilityBulkCount(i,limit){
 }
 window.buyBAll=i=>{
  if(s.level<buildings[i].unlock)return;
- const limit=10000+shopEffect("bulkLimit",1000);
+ const limit=(window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000);
  const count=facilityBulkCount(i,limit);let total=0;
  if(!s.admin&&!s.adminMoneyUnlimited)for(let k=0;k<count;k++)total+=facilityCostAt(i,s.bl[i]+k);
  if(count){if(!s.admin)s.money=Math.max(0,s.money-total);s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()}
@@ -597,7 +597,7 @@ render();requestAnimationFrame(loop);
   window.apTotalTP=ach.totalTP;window.apPlaySeconds=ach.playSeconds;const done=achDefs.filter(d=>ach.earned[d[0]]).length;
   $("achCount").textContent=done+" / "+achDefs.length;
   $("achRate").textContent=(done/achDefs.length*100).toFixed(1)+"%";
-  $("apBalance").textContent=ach.ap.toLocaleString("ja-JP")+" AP";
+  $("apBalance").textContent=ach.ap.toLocaleString("ja-JP")+" AP";if($("shopApBalance"))$("shopApBalance").textContent=(s.adminAPUnlimited?"∞":ach.ap.toLocaleString("ja-JP"))+" AP";
   $("achievementList").innerHTML=achDefs.map(d=>{
    const ok=!!ach.earned[d[0]],p=Math.min(d[4],progress(d)),pct=Math.min(100,p/d[4]*100);
    const hidden=d[6]==="play"||d[6]==="noRebirth"||d[6]==="facilityAll100";
@@ -678,7 +678,7 @@ render();requestAnimationFrame(loop);
   {id:"slots",name:"セーブ枠拡張",desc:"名前付きセーブ枠を3枠から6枠に拡張",price:40,type:"once"},
   {id:"bulk1",name:"まとめ買い拡張 I",desc:"能力・施設のまとめ買いに1,000レベルを追加",price:20,type:"once"},
   {id:"bulk2",name:"まとめ買い拡張 II",desc:"能力・施設のまとめ買いに10,000レベルを追加",price:40,type:"once"},
-  {id:"maxbuy",name:"最大購入機能",desc:"既存の一括購入ボタンを強調表示し、所持金で購入できるだけまとめて購入",price:60,type:"once"},
+  {id:"maxbuy",name:"最大購入上限拡張",desc:"所持金で最大購入する機能の1回あたりの上限を10,000から50,000レベルに拡張",price:60,type:"once"},
   {id:"themeBlue",name:"スキン：ブルー",desc:"深い青とシアンの研究施設テーマ",price:20,type:"theme"},
   {id:"themePurple",name:"スキン：パープル",desc:"紫を基調にした研究施設テーマ",price:30,type:"theme"},
   {id:"themeGold",name:"スキン：ゴールド",desc:"金色を基調にした高級テーマ",price:50,type:"theme"},
@@ -694,7 +694,7 @@ render();requestAnimationFrame(loop);
  function achievementData(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||"{}")}catch(e){return {}}}
  function setAchievementData(a){try{localStorage.setItem(ACH_KEY,JSON.stringify(a))}catch(e){}}
  function owned(id){return !!shop.purchased[id]}
- window.getApSaveSlotCount=()=>owned("slots")?6:3;
+ window.getApSaveSlotCount=()=>owned("slots")?6:3;window.apMaxBulk=()=>owned("maxbuy")?50000:10000;
  window.apNumberFormat=owned("numbers")?(localStorage.getItem("timeControlAPNumberFormat")||"jp"):"jp";
  function applyTheme(){const t=themes[shop.activeTheme]||themes.themeBlue;document.documentElement.style.setProperty("--bg",t[0]);document.documentElement.style.setProperty("--panel",t[1]);document.documentElement.style.setProperty("--line",t[2]);document.documentElement.style.setProperty("--accent",t[3]);}
  function updateBalance(){const a=achievementData();$("shopApBalance").textContent=(s.adminAPUnlimited?"∞":Math.max(0,Number(a.ap)||0).toLocaleString("ja-JP"))+" AP";}
@@ -720,7 +720,7 @@ render();requestAnimationFrame(loop);
   }
   document.querySelectorAll("[data-ap-bulk='1']").forEach(e=>e.hidden=!owned("bulk1"));
   document.querySelectorAll("[data-ap-bulk='2']").forEach(e=>e.hidden=!owned("bulk2"));
-  if(owned("maxbuy"))document.querySelectorAll("[data-fall],[data-ball]").forEach(b=>b.textContent="所持金で最大購入");
+  if(owned("maxbuy"))document.querySelectorAll("[data-fall],[data-ball]").forEach(b=>b.textContent="所持金で最大50,000Lv買う");
   $("apStatsExtra").innerHTML=owned("stats")?'<h3>詳細統計</h3><div class="stat"><span>累計TP獲得</span><b>'+Math.floor(Number(window.apTotalTP||0)).toLocaleString("ja-JP")+'</b></div><div class="stat"><span>累計プレイ時間</span><b>'+Math.floor(Number(window.apPlaySeconds||0)/3600)+'時間</b></div><div class="stat"><span>現在の転生倍率</span><b>×'+Number(s.rbMult||1).toFixed(2)+'</b></div><div class="stat"><span>能力合計レベル</span><b>'+s.fl.reduce((a,b)=>a+b,0).toLocaleString("ja-JP")+'</b></div>':'';
   $("apIncomeExtra").innerHTML=owned("income")?'<h3>収入分析</h3><div class="stat"><span>施設の基礎収入</span><b>'+moneyFmt(facilityIncome())+'</b></div><div class="stat"><span>総収入</span><b>'+moneyFmt(totalIncome())+'</b></div><div class="stat"><span>施設収入構成比（参考）</span><b>'+((facilityIncome()/(1+facilityIncome()))*100).toFixed(1)+'%</b></div>':'';
  }
