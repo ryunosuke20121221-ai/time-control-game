@@ -615,6 +615,7 @@ render();requestAnimationFrame(loop);
   $("adminTPInf").onchange=e=>{s.adminTPUnlimited=e.target.checked;saveAutoGame()};
   $("adminAPInf").onchange=e=>{s.adminAPUnlimited=e.target.checked;saveAutoGame()};
   $("adminApply").onclick=()=>{
+   if(!s.admin){$("log").textContent="管理者モードをONにしてから適用してください。";return;}
    const num=id=>Math.max(0,Number($(id).value)||0);
    s.level=Math.max(1,Math.floor(num("admLevel")));s.xp=num("admXp");s.money=num("admMoney");s.mp=Math.min(maxMP(),num("admMp"));s.tp=num("admTP");ach.ap=Math.floor(num("admAP"));s.rebirth=Math.floor(num("admRebirth"));s.rbMult=Math.max(1,num("admRbMult"));
    s.fl=funcs.map((_,i)=>Math.floor(num("admFl"+i)));s.bl=buildings.map((_,i)=>Math.floor(num("admBl"+i)));
@@ -645,7 +646,7 @@ render();requestAnimationFrame(loop);
   rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=shopLv(it.id));
  }
  const oldAdminClick=$("test1000").onclick;
- $("test1000").onclick=()=>{oldAdminClick?.();if(!s.admin)blockAdminProgress();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
+ $("test1000").onclick=()=>{if(s.admin)blockAdminProgress();oldAdminClick?.();$("adminPanel").style.display=s.admin?"block":"none";refreshAdminInputs();$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;};
  setupAdmin();
  const oldRender=render;
  render=function(){oldRender();check();renderAchievements();};
