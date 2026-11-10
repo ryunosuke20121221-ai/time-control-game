@@ -713,7 +713,7 @@ function renderSkillTree(){
  bossNodes.map(n=>'<div class="skill-node"><div><b>'+n.name+(s.skillTree.unlocked[n.id]?' ✓':'')+'</b><div class="skill-note">'+n.desc+'</div></div>'+(s.skillTree.unlocked[n.id]?'<span class="tag">取得済み</span>':nodeButton(n.id,"解放",n.cost,!route||!n.requires||s.sp<n.cost))+'</div>').join("")+'</div></div>'+
  (!route?'<div class="skill-card"><h3>最初のルート選択</h3><div class="skill-note">選択には1 SP必要です。選択後も反対ルートを取得できますが、必要SPが大幅に増えます。</div><div class="actions"><button data-route="swarm" '+(s.sp<1?'disabled':'')+'>連続討伐を選ぶ（1 SP）</button><button data-route="boss" '+(s.sp<1?'disabled':'')+'>ボス攻略を選ぶ（1 SP）</button></div></div>':'')+
  '<div class="skill-card"><h3>SP交換について</h3><div class="skill-note">1 SPにつき100,000 TP。反対ルートの最終スキルは主ルートの300倍のSPが必要です。スキルは転生後も維持されます。</div></div>';
- root.querySelectorAll("[data-sp-exchange]").forEach(b=>b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange)));
+ document.querySelectorAll("#view-skills [data-sp-exchange]").forEach(b=>b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange)));
  root.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>chooseSkillRoute(b.dataset.route));
  root.querySelectorAll("[data-skill-buy]").forEach(b=>b.onclick=()=>buySkillNode(b.dataset.skillBuy));
  renderBattleSkills();
@@ -801,7 +801,8 @@ function battleApplyDamage(mult=1){
  }
 }
 window.battleManualAttack=()=>{battleApplyDamage(2);renderBattle();render();saveAutoGame()};
-$("battleManual").addEventListener("click",window.battleManualAttack);
+// 描画更新後も手動攻撃ボタンの操作を確実に受け取る。
+const manualAttackButton=$("battleManual");if(manualAttackButton)manualAttackButton.onclick=window.battleManualAttack;
 let battleRenderedEnemy="";function battleMonsterArt(kind){
  const commonStart='<svg class="monster-art" viewBox="0 0 320 220" role="img" aria-label="魔物イラスト" shape-rendering="crispEdges">';
  const ground='<ellipse cx="160" cy="196" rx="105" ry="12" fill="#0008"/>';
