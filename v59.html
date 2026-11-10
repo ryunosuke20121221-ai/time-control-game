@@ -405,17 +405,16 @@ function affordableLevelCount(){
  const startN=s.level-1,step=levelRepresentationStep(),maxSteps=Math.max(0,Math.floor((Number.MAX_VALUE/4-s.level)/step));
  if(maxSteps<1)return 0;
  let low=0,high=1;const costForSteps=k=>requiredXPSum(startN,k*step);
- // 管理者モードで極端なXPを設定した場合も、1フレーム内で探索し続けないよう上限を設ける。
- // 上限に達した場合は見つかった範囲だけ進め、次のフレームで続きを処理する。
+ // 必要XPの累積式は整数レベル数を前提とする。小数の中点を渡すと床関数配列の参照が壊れ、XP精算が停止する。
+ // 整数の範囲で二分探索し、常に整数レベル数だけを返す。
  for(let bracket=0;bracket<1024&&high<maxSteps&&BigNum.cmp(costForSteps(high),xp)<=0;bracket++){
   low=high;const next=Math.min(maxSteps,high*2);
   if(next<=high)break;
   high=next;
  }
  if(BigNum.cmp(costForSteps(high),xp)<=0)return high*step;
- // Numberの大きな整数では low+1===low になる。相対精度で二分探索し、midが端点に丸められたら終了する。
  for(let i=0;i<128;i++){
-  const mid=low+(high-low)/2;
+  const mid=Math.floor(low+(high-low)/2);
   if(mid<=low||mid>=high)break;
   if(BigNum.cmp(costForSteps(mid),xp)<=0)low=mid;else high=mid;
  }
