@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム 試作品 v59</title>
+<title>時間操作ゲーム 試作品 v60</title>
 <style>
 html,body,button{touch-action:manipulation}
 :root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
@@ -44,7 +44,7 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
 .battle-log{min-height:2.5em;padding:9px;border-radius:9px;background:#0b1425;color:#c9d9f5;font-size:.88rem}
 </style></head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
-<h1>時間操作ゲーム <span class="tag">試作品 v59</span></h1>
+<h1>時間操作ゲーム <span class="tag">試作品 v60</span></h1>
 <p>タブ切り替え・固定ステータス・カード式施設表示・転生ショップに対応。転生倍率は累計加算式。施設XP倍率は施設レベルに応じて100%から75%まで段階的に減衰し、Lv50000以降は75%固定。購入・描画・収入計算を最適化。大量XPは必要量と複利報酬を一括計算。</p>
 <div class="view active" id="view-home"><div class="viewgrid two-col">
 <section class="panel"><h2>プレイヤー</h2>
@@ -787,8 +787,9 @@ function battleApplyDamage(mult=1){
  if(BigNum.cmp(damage,0)<=0)return;
  if(BigNum.cmp(damage,hp)>=0){
   const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
-  const money=BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult()));
-  const xp=BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN());
+  const rewardBonus=s.skillTree?.swarmUltimate?1.5:1;
+  const money=BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus);
+  const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),rewardBonus);
   addMoneyBN(money);gainXP(xp);s.battleKills=info.number;s.battleGroup.shift();
   if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";}
   else $("battleLog").textContent="魔物を撃破！ "+moneyFmt(money)+" と "+xpBNFmt(BigNum.mul(xp,allXpMult()))+" XPを獲得。";
