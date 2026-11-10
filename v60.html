@@ -669,7 +669,7 @@ function skillRouteFactor(route,final=false){
 const skillRouteNames={swarm:"連続討伐",boss:"ボス攻略",time:"時空干渉",manaCycle:"魔力循環",tactics:"戦術解析",alchemy:"旧・時間錬成",mana:"旧・魔力制御",critical:"旧・致命攻撃",rebirth:"旧・転生覚醒",fortune:"旧・幸運報酬"};
 const extraSkillDefs={
  timeEcho:{route:"time",cost:12,name:"時間反響",desc:"戦闘スキル使用時、20%の確率で威力50%の追撃が発生"},
- timeFreeze:{route:"time",cost:28,name:"時間凍結",desc:"10回スキルを使うごとに、次のスキル攻撃が威力2倍",requires:"timeEcho"},
+ timeFreeze:{route:"time",cost:28,name:"時間凍結",desc:"10回目のスキル攻撃が威力2倍",requires:"timeEcho"},
  timeRift:{route:"time",cost:60,name:"時空裂け目",desc:"時間反響の発生率を35%にし、追撃威力を75%にする",requires:"timeEcho",final:true},
  manaReturn:{route:"manaCycle",cost:12,name:"魔力回収",desc:"敵撃破時にMPを3回復"},
  manaSurge:{route:"manaCycle",cost:28,name:"高魔力共鳴",desc:"MPが最大値の80%以上なら戦闘スキル威力+25%",requires:"manaReturn"},
