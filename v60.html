@@ -751,14 +751,6 @@ function battleUseSkill(id){
  $("battleLog").textContent=skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+skill.mp+"消費しました。";
  render();saveAutoGame();
 }
-[id])return;
- if(!s.admin&&s.mp<skill.mp){$("battleLog").textContent="MPが足りません。";return;}
- if(!s.admin)s.mp-=skill.mp;
- const target=s.battleGroup?.[0],info=target?battleEnemyInfo(target.number):battleEnemyInfo();
- battleApplyDamage(skill.mult*(info.boss?skill.bossMult:1));
- $("battleLog").textContent=skill.name+"を使用！ MPを"+skill.mp+"消費しました。";
- render();saveAutoGame();
-}
 function battleEnemyNumber(){return Math.max(1,Math.floor(Number(s.battleKills)||0)+1)}
 function battleEnemyInfo(number=battleEnemyNumber()){
  const n=Math.max(1,Math.floor(Number(number)||1));
