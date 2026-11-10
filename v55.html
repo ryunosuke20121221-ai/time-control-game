@@ -290,7 +290,7 @@ function formatStat(key,n,defaultDecimals=2){
  return cachedFormat("stat:"+key+":"+n+":"+c.mode+":"+d+":"+c.separator+":"+c.significant,()=>compactNumFmtUncached(n,d,c.mode,c.separator,c.significant));
 }
 function compactNumFmt(n,decimals=2){return formatStat("xp",n,decimals)}
-function moneyFmt(n){const x=BigNum.from(n);if(BigNum.cmp(x,0)<=0)return "¥0";if(x.e<4)return "¥"+formatStat("money",BigNum.toNumber(x),2);return moneyBNFmt(x)+"円";}
+function moneyFmt(n){const x=BigNum.from(n);if(BigNum.cmp(x,0)<=0)return "¥0";if(x.e<4)return "¥"+formatStat("money",BigNum.toNumber(x),2);return moneyBNFmt(x);}
 function gainXP(n){let x;try{x=BigNum.from(n)}catch(e){return}if(BigNum.cmp(x,0)<=0)return;addXPBN(BigNum.mul(x,allXpMult()))}
 // need() の累積値を周期250の床関数分解で計算する。レベルごとのwhile処理を避ける。
 const floorSq250Prefix=[0];
@@ -416,7 +416,7 @@ function processPendingXP(){
 }
 function tapMoneyPerTap(autoMult=1){return BigNum.mul(totalIncomeBN(),0.005*autoMult*(1+shopEffect("tapMoney",0.02)))}
 function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult()*(1+shopEffect("autoTapPower",0.01)):1;const tapXp=BigNum.mul(BigNum.mul(BigNum.add(0.5,BigNum.mul(Math.max(0,s.level-1),0.05)),bodyAdaptMult()),(s.rbMult||1)*autoMult*(1+shopEffect("tapXp",0.02))*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1));gainXP(tapXp);addMoneyBN(tapMoneyPerTap(autoMult));}
-let facilityMoneyCacheKey="",facilityMoneyCacheBN=BigNum.from(0),facilityXpCacheKey="",facilityXpCache=0;
+let facilityMoneyCacheKey="",facilityMoneyCacheBN=BigNum.from(0),facilityXpCacheKey="",facilityXpCache=0,facilityXpCacheBN=BigNum.from(0);
 function facilityIncomeBN(){const key=s.bl.join(",")+"|"+(s.fl[1]||0)+"|"+shopLv("facilityMoney");if(key!==facilityMoneyCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=Math.max(0,s.bl[i]||0);if(lv>0)total=BigNum.add(total,BigNum.mul(Math.max(1,b.income/2),lv))});facilityMoneyCacheBN=BigNum.mul(total,(1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02)));facilityMoneyCacheKey=key}return facilityMoneyCacheBN}
 function facilityIncome(){const n=BigNum.toNumber(facilityIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function facilityXPEffectiveLevel(level){
@@ -424,11 +424,12 @@ function facilityXPEffectiveLevel(level){
  // Lv1〜1000は通常成長、1001〜10000は増加分80%、10000超は増加分60%。
  return Math.min(level,1000)+Math.max(0,Math.min(level-1000,9000))*0.80+Math.max(0,level-10000)*0.60;
 }
-function facilityXPBase(){const key=s.bl.join(",");if(key!==facilityXpCacheKey){facilityXpCache=buildings.reduce((sum,b,i)=>{const lv=Math.max(0,s.bl[i]||0);return sum+facilityXPEffectiveLevel(lv)*b.xpIncome/2*Math.max(0.75,1-lv/200000)},0);facilityXpCacheKey=key}return facilityXpCache}
+function facilityXPBaseBN(){const key=s.bl.join(",");if(key!==facilityXpCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=BigNum.from(Math.max(0,s.bl[i]||0));if(BigNum.cmp(lv,0)<=0)return;const eff=BigNum.add(BigNum.add(BigNum.from(Math.min(BigNum.toNumber(lv),1000)),BigNum.mul(Math.max(0,Math.min(BigNum.toNumber(lv)-1000,9000)),0.80)),BigNum.mul(Math.max(0,BigNum.toNumber(lv)-10000),0.60));const decay=BigNum.toNumber(lv)>50000?0.75:Math.max(0.75,1-BigNum.toNumber(lv)/200000);total=BigNum.add(total,BigNum.mul(BigNum.mul(eff,b.xpIncome/2),decay))});facilityXpCache=BigNum.toNumber(total);facilityXpCacheBN=total;facilityXpCacheKey=key}return facilityXpCacheBN}
+function facilityXPBase(){const n=BigNum.toNumber(facilityXPBaseBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function localSlowXpMult(){return 1+Math.max(0,s.fl[1]||0)*0.002}
 // 施設ごとのレベル減衰をキャッシュ可能な基礎値に含める。プレイヤー倍率は都度反映。
 function facilityXPLevelMultiplier(level){const lv=Math.max(0,Number(level)||0);return levelXpMult()*Math.max(0.75,1-lv/200000)}
-function passiveXPIncomeBN(){return BigNum.mul(facilityXPBase(),BigNum.mul(levelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)))}
+function passiveXPIncomeBN(){return BigNum.mul(facilityXPBaseBN(),BigNum.mul(levelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)))}
 function passiveXPIncome(){const n=BigNum.toNumber(passiveXPIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function abilityMoneyMult(){return s.on?(1.5+(s.level-1)*.05)*(1+s.fl[1]*.02)*(1+shopEffect("abilityMoney",0.01)):1}
 function totalIncomeBN(){const ability=s.on?BigNum.mul(BigNum.mul(BigNum.add(1.5,BigNum.mul(Math.max(0,s.level-1),0.05)),1+(s.fl[1]||0)*0.02),1+shopEffect("abilityMoney",0.01)):BigNum.from(1);return BigNum.mul(BigNum.mul(BigNum.add(1,facilityIncomeBN()),levelMoneyMultBN()),BigNum.mul(ability,(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))}
