@@ -807,10 +807,11 @@ function renderBattleSkills(){
 function battleUseSkill(id){
  skillEnsureState();
  const skill=battleSkillDefs.find(x=>x.id===id);if(!skill||!s.skillTree.unlocked[id])return;
- if(!s.admin&&s.mp<skill.mp){$("battleLog").textContent="MPが足りません。";return;}
- if(!s.admin)s.mp-=skill.mp;
+ const mpCost=skillMpCost(skill.mp);
+ if(!s.admin&&s.mp<mpCost){$("battleLog").textContent="MPが足りません。";return;}
+ if(!s.admin)s.mp-=mpCost;
  battleApplyDamage(skill.mult,skill.targets||1,skill.bossMult||1);
- $("battleLog").textContent=skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+skill.mp+"消費しました。";
+ $("battleLog").textContent=skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+mpCost+"消費しました。";
  render();saveAutoGame();
 }
 function battleEnemyNumber(){return Math.max(1,Math.floor(Number(s.battleKills)||0)+1)}
@@ -850,7 +851,8 @@ function battleBaseDamage(){
  const lv=Math.max(1,Number(s.level)||1);
  let base=BigNum.add(10,BigNum.mul(Math.max(0,lv-1),2));
  base=BigNum.mul(base,BigNum.mul(s.rbMult||1,1+Math.max(0,Number(s.fl?.[2])||0)*0.05));
- base=BigNum.mul(base,skillDamageFactor());\n return s.on?BigNum.mul(base,1.5):base;
+ base=BigNum.mul(base,skillDamageFactor());
+ return s.on?BigNum.mul(base,1.5):base;
 }
 function showBossVictory(info){
  const el=$("bossVictory");if(!el)return;
@@ -864,13 +866,15 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
  for(const number of targets){
   const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
   const target=s.battleGroup[index],info=battleEnemyInfo(target.number);
-  let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));\n  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.10:0));\n  if(critChance>0&&Math.random()<critChance)damage=BigNum.mul(damage,skillHas("critical3")?2.5:2);
+  let damage=BigNum.mul(battleBaseDamage(),mult*(info.boss?bossMultiplier:1));
+  const critChance=Math.min(.5,skillRank("critical")*.05+(skillHas("critical3")?.10:0));
+  if(critChance>0&&Math.random()<critChance)damage=BigNum.mul(damage,skillHas("critical3")?2.5:2);
   const hp=BigNum.from(target.hp);if(BigNum.cmp(damage,0)<=0)continue;
   if(BigNum.cmp(damage,hp)>=0){
    const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
-   const rewardBonus=s.skillTree?.swarmUltimate?1.5:1;
+   const rewardBonus=(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("money",info.boss);
    const money=BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus);
-   const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),rewardBonus);
+   const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",info.boss));
    addMoneyBN(money);gainXP(xp);s.battleKills=info.number;s.battleGroup.splice(index,1);killed=true;
    if(info.boss){showBossVictory(info);$("battleLog").textContent="ボス撃破！ "+info.name+"を討伐しました。";}
   }else target.hp=BigNum.json(BigNum.sub(hp,damage));
