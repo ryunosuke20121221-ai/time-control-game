@@ -1099,7 +1099,7 @@ battleEnsureState();render();requestAnimationFrame(loop);
    persist();shopDirty=true;rebirthShopDirty=true;render();saveAutoGame();$("log").textContent="管理者設定を適用しました。";
   };
   const preset=(kind)=>{
-   const cfg={early:[50,10000,1e5,100,100,5],mid:[400,1e7,1e9,500,1000,10],late:[10000,1e12,1e15,5000,1e6,50],max:[1e6,1e100,1e100,1e6,1e100,100]}[kind];
+   const cfg={early:[50,10000,1e5,100,100,5],mid:[400,1e7,1e9,500,1000,10],late:[10000,1e12,1e15,5000,1e6,50],max:[1e6,1e12,1e100,1e6,1e100,100]}[kind];
    $("admLevel").value=cfg[0];$("admXp").value=cfg[1];$("admMoney").value=cfg[2];$("admMp").value=cfg[3];$("admTP").value=cfg[4];$("admRbMult").value=cfg[5];
    $("admRebirth").value=kind==="early"?0:kind==="mid"?5:kind==="late"?20:100;
    $("admAP").value=ach.ap;
