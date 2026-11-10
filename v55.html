@@ -226,16 +226,23 @@ const MAX_PLAYER_LEVEL=Infinity;
  function canAffordMoney(v){try{return BigNum.cmp(moneyBN(),BigNum.from(v))>=0}catch(e){return false}}
  function moneyBNFmt(v){
   const x=BigNum.from(v);if(x.m===0)return "¥0";
-  const cfg=numberConfig("money"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0)));
+  const cfg=numberConfig("money"),mode=cfg.mode||"jp",digits=Math.max(0,Math.min(6,Math.floor(Number(cfg.decimals??2)||0))),trim=n=>n.toFixed(digits).replace(/\.?0+$/,"");
   if(mode==="sci")return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
-  if(mode==="full"&&x.e<=15)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
-  if(mode==="short"){if(x.e<3)return "¥"+BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];if(g<names.length)return "¥"+(x.m*Math.pow(10,x.e-g*3)).toFixed(digits).replace(/\.?0+$/,"")+(names[g]||"")}
-  if(x.e<4)return "¥"+BigNum.toNumber(x).toFixed(digits).replace(/\.?0+$/,"");
+  if(mode==="full"){
+   if(x.e<=15)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+   return "¥"+x.m.toFixed(Math.max(0,Math.min(8,(cfg.significant||3)-1))).replace(/\.?0+$/,"")+"e"+x.e;
+  }
+  if(mode==="short"){
+   if(x.e<3)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
+   const g=Math.floor(x.e/3),names=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
+   const val=x.m*Math.pow(10,x.e-g*3);
+   return "¥"+trim(val)+(names[g]||("e"+g*3));
+  }
+  if(x.e<4)return "¥"+groupedNumber(BigNum.toNumber(x),digits,cfg.separator||"comma");
   const group=Math.floor(x.e/4),labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
-  if(group-1>=labels.length*100)return x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e+"円";
+  if(group-1>=labels.length*100)return "¥"+x.m.toFixed(digits).replace(/\.?0+$/,"")+"×10^"+x.e;
   const idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length));
-  const scaled=x.m*Math.pow(10,x.e-group*4);
-  return scaled.toFixed(digits).replace(/\.?0+$/,"")+label+"円";
+  return "¥"+trim(x.m*Math.pow(10,x.e-group*4))+label;
  }
 
 const fresh=()=>({level:1,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,shop:{},lastSeen:Date.now(),fl:[0,0,0,0],bl:[0,0,0,0,0]});
@@ -295,7 +302,7 @@ function formatStat(key,n,defaultDecimals=2){
  return cachedFormat("stat:"+key+":"+n+":"+c.mode+":"+d+":"+c.separator+":"+c.significant,()=>compactNumFmtUncached(n,d,c.mode,c.separator,c.significant));
 }
 function compactNumFmt(n,decimals=2){return formatStat("xp",n,decimals)}
-function moneyFmt(n){const x=BigNum.from(n);if(BigNum.cmp(x,0)<=0)return "¥0";if(x.e<4)return "¥"+formatStat("money",BigNum.toNumber(x),2);return moneyBNFmt(x);}
+function moneyFmt(n){return moneyBNFmt(n);}
 function gainXP(n){let x;try{x=BigNum.from(n)}catch(e){return}if(BigNum.cmp(x,0)<=0)return;addXPBN(BigNum.mul(x,allXpMult()))}
 // need() の累積値を周期250の床関数分解で計算する。レベルごとのwhile処理を避ける。
 const floorSq250Prefix=[0];
@@ -328,9 +335,18 @@ function affordableLevelCount(){
  const startN=s.level-1,step=levelRepresentationStep(),maxSteps=Math.max(0,Math.floor((Number.MAX_VALUE/4-s.level)/step));
  if(maxSteps<1)return 0;
  let low=0,high=1;const costForSteps=k=>requiredXPSum(startN,k*step);
- while(high<maxSteps&&BigNum.cmp(costForSteps(high),xp)<=0){low=high;const next=Math.min(maxSteps,high*2);if(next<=high)break;high=next}
+ while(high<maxSteps&&BigNum.cmp(costForSteps(high),xp)<=0){
+  low=high;const next=Math.min(maxSteps,high*2);
+  if(next<=high)break;
+  high=next;
+ }
  if(BigNum.cmp(costForSteps(high),xp)<=0)return high*step;
- while(low+1<high){const mid=Math.floor(low+(high-low)/2);if(BigNum.cmp(costForSteps(mid),xp)<=0)low=mid;else high=mid}
+ // Numberの大きな整数では low+1===low になる。相対精度で二分探索し、midが端点に丸められたら終了する。
+ for(let i=0;i<128;i++){
+  const mid=low+(high-low)/2;
+  if(mid<=low||mid>=high)break;
+  if(BigNum.cmp(costForSteps(mid),xp)<=0)low=mid;else high=mid;
+ }
  return low*step;
 }
 function totalIncomeAtLevelBN(level){
