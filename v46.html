@@ -601,9 +601,9 @@ render();requestAnimationFrame(loop);
   $("achRate").textContent=(done/achDefs.length*100).toFixed(1)+"%";
   $("apBalance").textContent=formatStat("ap",ach.ap,0)+" AP";if($("shopApBalance"))$("shopApBalance").textContent=(s.adminAPUnlimited?"∞":ach.ap.toLocaleString("ja-JP"))+" AP";
   $("achievementList").innerHTML=achDefs.map(d=>{
-   const ok=!!ach.earned[d[0]],p=Math.min(d[4],progress(d)),pct=Math.min(100,p/d[4]*100);
+   const ok=!!ach.earned[d[0]],p=Math.min(d[4],progress(d)),pct=Math.min(100,p/d[4]*100),fmtKey=d[6]==="totalTP"?"tp":d[6]==="money"?"money":d[6]==="rebirth"?"rebirthCount":d[6].includes("ability")?"abilityLevel":d[6].includes("facility")?"facilityLevel":"level";
    const hidden=d[6]==="play"||d[6]==="noRebirth"||d[6]==="facilityAll100";
-   return '<div class="achievement '+(ok?'done':'locked')+'"><div class="ach-head"><b>'+(ok||!hidden?esc(d[1]):"？？？")+'</b><span class="ach-cat">'+esc(d[2])+'</span></div><div class="small">'+(ok||!hidden?esc(d[3]):"隠された実績。条件を満たすと公開されます。")+'</div><div class="reward">報酬：'+formatStat("ap",d[5],0)+' AP '+(ok?'・達成済み':'')+'</div><div class="small">'+(ok? "達成！":p.toLocaleString("ja-JP")+" / "+d[4].toLocaleString("ja-JP"))+'</div><div class="progress"><span style="width:'+pct+'%"></span></div></div>'
+   return '<div class="achievement '+(ok?'done':'locked')+'"><div class="ach-head"><b>'+(ok||!hidden?esc(d[1]):"？？？")+'</b><span class="ach-cat">'+esc(d[2])+'</span></div><div class="small">'+(ok||!hidden?esc(d[3]):"隠された実績。条件を満たすと公開されます。")+'</div><div class="reward">報酬：'+formatStat("ap",d[5],0)+' AP '+(ok?'・達成済み':'')+'</div><div class="small">'+(ok? "達成！":formatStat(fmtKey,p,0)+" / "+formatStat(fmtKey,d[4],0))+'</div><div class="progress"><span style="width:'+pct+'%"></span></div></div>'
   }).join("");
  }
  function addField(parent,id,label,value){
@@ -703,7 +703,7 @@ render();requestAnimationFrame(loop);
  function loadNumberSettings(){
   const oldMode=localStorage.getItem("timeControlAPNumberFormat")||"jp";let saved={};
   try{const v=JSON.parse(localStorage.getItem(NUMBER_SETTINGS_KEY)||"null");if(v&&typeof v==="object")saved=v}catch(e){}
-  const out={};for(const [key] of NUMBER_KEYS)out[key]={mode:oldMode,decimals:2,separator:"comma",significant:3,...(saved[key]||{})};return out;
+  const noDecimals=["tp","ap","level","rebirthCount","abilityLevel","facilityLevel"];const out={};for(const [key] of NUMBER_KEYS)out[key]={mode:oldMode,decimals:noDecimals.includes(key)?0:key==="mp"?1:2,separator:"comma",significant:3,...(saved[key]||{})};return out;
  }
  function saveNumberSettings(){try{localStorage.setItem(NUMBER_SETTINGS_KEY,JSON.stringify(window.numberFormatSettings||{}))}catch(e){}}
  function renderNumberSettings(){
@@ -743,7 +743,7 @@ render();requestAnimationFrame(loop);
   document.querySelectorAll("[data-ap-bulk='1']").forEach(e=>e.hidden=!owned("bulk1"));
   document.querySelectorAll("[data-ap-bulk='2']").forEach(e=>e.hidden=!owned("bulk2"));
   if(owned("maxbuy"))document.querySelectorAll("[data-fall],[data-ball]").forEach(b=>b.textContent="所持金で最大50,000Lv買う");
-  $("apStatsExtra").innerHTML=owned("stats")?'<h3>詳細統計</h3><div class="stat"><span>累計TP獲得</span><b>'+formatStat("tp",Math.floor(Number(window.apTotalTP||0)),0)+'</b></div><div class="stat"><span>累計プレイ時間</span><b>'+Math.floor(Number(window.apPlaySeconds||0)/3600)+'時間</b></div><div class="stat"><span>現在の転生倍率</span><b>×'+Number(s.rbMult||1).toFixed(2)+'</b></div><div class="stat"><span>能力合計レベル</span><b>'+formatStat("abilityLevel",s.fl.reduce((a,b)=>a+b,0),0)+'</b></div>':'';
+  $("apStatsExtra").innerHTML=owned("stats")?'<h3>詳細統計</h3><div class="stat"><span>累計TP獲得</span><b>'+formatStat("tp",Math.floor(Number(window.apTotalTP||0)),0)+'</b></div><div class="stat"><span>累計プレイ時間</span><b>'+formatStat("time",Math.floor(Number(window.apPlaySeconds||0)/3600),0)+'時間</b></div><div class="stat"><span>現在の転生倍率</span><b>×'+Number(s.rbMult||1).toFixed(2)+'</b></div><div class="stat"><span>能力合計レベル</span><b>'+formatStat("abilityLevel",s.fl.reduce((a,b)=>a+b,0),0)+'</b></div>':'';
   $("apIncomeExtra").innerHTML=owned("income")?'<h3>収入分析</h3><div class="stat"><span>施設の基礎収入</span><b>'+moneyFmt(facilityIncome())+'</b></div><div class="stat"><span>総収入</span><b>'+moneyFmt(totalIncome())+'</b></div><div class="stat"><span>施設収入構成比（参考）</span><b>'+((facilityIncome()/(1+facilityIncome()))*100).toFixed(1)+'%</b></div>':'';
  }
  function setTitle(id){shop.activeTitle=id;write();$("apTitleSelect").value=id;$("apTitlePreview").textContent="現在の称号："+products.find(p=>p.id===id).name}
