@@ -508,8 +508,16 @@ function processPendingXP(){
   if(BigNum.cmp(currentXP,cost)<0)break;
   const newLevel=oldLevel+ups;
   if(!Number.isFinite(newLevel)||newLevel<=oldLevel)break;
+  // レベルアップ報酬の計算失敗でXPだけ消費され、レベルが据え置きになるのを防ぐ。
+  // 報酬計算は先に試し、失敗してもレベルアップ自体は成立させる。
+  const oldMoney=moneyBN();
+  let rewards={money:oldMoney,rewarded:0};
+  try{rewards=processLevelRewards(oldLevel+1,newLevel)}catch(rewardErr){
+   console.error("レベルアップ報酬の計算エラー",rewardErr);
+   const log=$("log");if(log)log.textContent="レベルアップ報酬の計算でエラーが発生しました。レベルとXPの精算は継続します。";
+  }
   setXPBN(BigNum.sub(currentXP,cost));
-  const oldMoney=moneyBN(),rewards=processLevelRewards(oldLevel+1,newLevel);setMoneyBN(rewards.money);
+  setMoneyBN(rewards.money);
   pendingLevelUps+=ups;pendingReward=BigNum.add(pendingReward,BigNum.sub(moneyBN(),oldMoney));pendingRewardedLevels+=rewards.rewarded;
   s.level=newLevel;totalUps+=ups;
   const crossedUnlock=[...funcs,...buildings].some(item=>oldLevel<item.unlock&&s.level>=item.unlock);if(crossedUnlock)shopDirty=true;
