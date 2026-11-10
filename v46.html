@@ -156,7 +156,7 @@ const AUTO_SAVE_KEY="timeControlAutoSaveV1";
 let pendingLevelUps=0,pendingReward=0,pendingRewardedLevels=0;
 function allXpMult(){return 1+shopEffect("allXp",0.01)}
 function allMoneyMult(){return 1+shopEffect("allMoney",0.01)}
-function levelRepresentationStep(){return Math.max(1,Math.ceil(Math.abs(s.level)*Number.EPSILON))}
+function levelRepresentationStep(){const x=Math.abs(s.level);return x<1?1:Math.max(1,Math.pow(2,Math.floor(Math.log2(x))-52))}
 function need(){const n=Math.max(0,s.level-1),step=levelRepresentationStep(),discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;return step>1?requiredXPSum(n,step):Math.max(1,(100+n*5+Math.floor(n/100)+Math.floor(n*n/250))*discount)}
 function levelXpMult(){return (1+(s.level-1)*.05)*(s.rbMult||1)}
 function levelMoneyMult(){return (1+(s.level-1)*.025)*(s.rbMult||1)}
@@ -225,37 +225,43 @@ function floorSq250SumPrefix(n){
  return 62500*q*(q-1)*(2*q-1)/6+62250*q*(q-1)/2+q*FLOOR_SQ250_BLOCK+250*q*q*r+q*r*(r-1)+floorSq250Prefix[r];
 }
 function requiredXPSum(startN,count){
- if(count<=0)return 0;
- const endN=startN+count;
- const sumN=count*(2*startN+count-1)/2;
- const floor100=floor100SumPrefix(endN)-floor100SumPrefix(startN);
- const floorSq=floorSq250SumPrefix(endN)-floorSq250SumPrefix(startN);
+ if(!(count>0))return 0;
  const discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;
- return (100*count+5*sumN+floor100+floorSq)*discount;
+ let total;
+ if(Math.abs(startN)>1e8){
+  // 巨大な開始レベルでは巨大な累積値同士を引かず、区間内の和を直接計算する。
+  const sumN=count*(2*startN+count-1)/2;
+  const m=count-1;
+  const sumSquares=count*startN*startN+startN*count*m+count*m*(2*count-1)/6;
+  total=100*count+5*sumN+sumN/100+sumSquares/250;
+ }else{
+  const endN=startN+count;
+  const sumN=count*(2*startN+count-1)/2;
+  const floor100=floor100SumPrefix(endN)-floor100SumPrefix(startN);
+  const floorSq=floorSq250SumPrefix(endN)-floorSq250SumPrefix(startN);
+  total=100*count+5*sumN+floor100+floorSq;
+ }
+ return Number.isFinite(total)?total*discount:Number.POSITIVE_INFINITY;
 }
 function affordableLevelCount(){
- // Numberの安全整数上限で止めず、現在の桁で表現可能な最小ステップを確保する。
- // 9007兆付近では1ずつ表現できないため、必要XPを満たす次の表現可能な幅で進める。
- const maxCount=Math.max(0,Number.MAX_VALUE-s.level);
- if(maxCount<=0||s.xp<need())return 0;
- const startN=s.level-1,xp=s.xp;
- const minStep=levelRepresentationStep();
- let low=0,high=Math.min(maxCount,minStep);
- if(requiredXPSum(startN,high)>xp)return 0;
- low=high;
- while(high<maxCount){
-  const next=Math.min(maxCount,high*2);
+ if(!(s.xp>=need()))return 0;
+ const startN=s.level-1,xp=s.xp,step=levelRepresentationStep();
+ const maxSteps=Math.max(0,Math.floor((Number.MAX_VALUE/4-s.level)/step));
+ if(maxSteps<1)return 0;
+ let low=0,high=1;
+ const costForSteps=k=>requiredXPSum(startN,k*step);
+ while(high<maxSteps&&costForSteps(high)<=xp){
+  low=high;
+  const next=Math.min(maxSteps,high*2);
   if(next<=high)break;
-  if(requiredXPSum(startN,next)>xp){high=next;break;}
-  low=next;high=next;
+  high=next;
  }
- if(high===low)return low;
- while(high-low>Math.max(1,Math.abs(high)*Number.EPSILON)){
-  const mid=low+(high-low)/2;
-  if(mid<=low||mid>=high)break;
-  if(requiredXPSum(startN,mid)<=xp)low=mid;else high=mid;
+ if(costForSteps(high)<=xp)return high*step;
+ while(low+1<high){
+  const mid=Math.floor(low+(high-low)/2);
+  if(costForSteps(mid)<=xp)low=mid;else high=mid;
  }
- return Math.floor(low);
+ return low*step;
 }
 function totalIncomeAtLevel(level){
  const rb=s.rbMult||1;
