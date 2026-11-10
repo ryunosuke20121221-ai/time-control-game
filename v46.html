@@ -233,14 +233,25 @@ function requiredXPSum(startN,count){
  return (100*count+5*sumN+floor100+floorSq)*discount;
 }
 function affordableLevelCount(){
- const maxCount=Math.max(0,Number.MAX_SAFE_INTEGER-s.level);
+ // Numberの安全整数上限で止めず、現在の桁で表現可能な最小ステップを確保する。
+ // 9007兆付近では1ずつ表現できないため、必要XPを満たす次の表現可能な幅で進める。
+ const maxCount=Math.max(0,Number.MAX_VALUE-s.level);
  if(maxCount<=0||s.xp<need())return 0;
  const startN=s.level-1,xp=s.xp;
- let low=0,high=1;
- while(high<maxCount&&requiredXPSum(startN,high)<=xp){low=high;high=Math.min(maxCount,high*2)}
- if(high===maxCount&&requiredXPSum(startN,high)<=xp)return high;
- while(low+1<high){
-  const mid=Math.floor((low+high)/2);
+ const minStep=Math.max(1,Math.ceil(Math.abs(s.level)*Number.EPSILON));
+ let low=0,high=Math.min(maxCount,minStep);
+ if(requiredXPSum(startN,high)>xp)return 0;
+ low=high;
+ while(high<maxCount){
+  const next=Math.min(maxCount,high*2);
+  if(next<=high)break;
+  if(requiredXPSum(startN,next)>xp){high=next;break;}
+  low=next;high=next;
+ }
+ if(high===low)return low;
+ while(high-low>Math.max(1,Math.abs(high)*Number.EPSILON)){
+  const mid=low+(high-low)/2;
+  if(mid<=low||mid>=high)break;
   if(requiredXPSum(startN,mid)<=xp)low=mid;else high=mid;
  }
  return low;
