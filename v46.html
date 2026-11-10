@@ -195,7 +195,7 @@ function compactNumFmtUncached(n,decimals=2,mode="jp",separator="comma",signific
   const g=Math.floor(Math.log10(n)/3),named=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Ocd","Nod","Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg","Tg"];
   return (n/Math.pow(1000,g)).toFixed(decimals).replace(/\.?0+$/,"")+(named[g]||("e"+g*3));
  }
- const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極"];
+ const labels=["万","億","兆","京","垓","秭","穣","溝","澗","正","載","極","恒河沙","阿僧祇","那由他","不可思議","無量大数"];
  if(n>=1e4){const group=Math.floor(Math.log10(n)/4),idx=group-1,label=labels[idx%labels.length]+"*".repeat(Math.floor(idx/labels.length)),unit=Math.pow(10,group*4),scale=Math.pow(10,decimals);return (Math.floor(n/unit*scale)/scale).toFixed(decimals).replace(/\.?0+$/,'')+label}
  return groupedNumber(n,decimals,separator);
 }
