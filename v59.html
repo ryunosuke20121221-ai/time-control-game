@@ -377,6 +377,7 @@ function gainXP(n){let x;try{x=BigNum.from(n)}catch(e){return}if(BigNum.cmp(x,0)
 // 巨大レベル帯でも能力使用中のXPがBigNumの桁落ちで消えないよう、必要XPの0.1%/秒を最低保証する。
 function abilityXPPerSecondBN(){
  const normal=BigNum.mul(BigNum.mul(1+s.fl[0]*.02+shopEffect("abilityXp",0.02),bodyAutoXpMult()),BigNum.mul(levelXpMultBN(),localSlowXpMult()*continuousBonus()*(s.mpXpBoost?boostMultiplier():1)));
+ if(s.level<1e12)return normal;
  const minimum=BigNum.mul(needBN(),0.001);
  return BigNum.cmp(normal,minimum)>=0?normal:minimum;
 }
