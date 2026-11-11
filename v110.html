@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム 試験版v106</title>
+<title>時間操作ゲーム 試験版v110</title>
 <style>
 html,body,button{touch-action:manipulation}html,body{overflow-anchor:none}
 :root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
@@ -393,7 +393,7 @@ const rebirthUpgrades=[
   {id:"allMoney",name:"全体お金獲得",desc:"すべてのお金獲得 +1% / Lv",base:4,cap:100},
   {id:"allXp",name:"全体XP獲得",desc:"すべてのXP獲得 +1% / Lv",base:4,cap:100}]},
  {cat:"特殊強化",items:[
-  {id:"abilityCap",name:"能力上限突破",desc:"能力レベル上限 +10 / Lv",base:8,cap:100},
+  {id:"abilityCap",name:"能力上限突破",desc:"能力レベル上限を拡張。Lv100までは+10 / Lv、Lv101以降は+5 / Lv（最大Lv200）。Lv100以降はTP費用の上昇を緩やかに変更。",base:8,cap:200},
   {id:"boostCap",name:"ブースト上限",desc:"ブースト倍率上限 +0.1 / Lv",base:8,cap:100}]},
  {cat:"戦闘基礎強化",items:[
   {id:"battleDamage",name:"基礎攻撃力",desc:"戦闘ダメージ +2% / Lv（最大+200%）",base:8,cap:100},
@@ -402,7 +402,7 @@ const rebirthUpgrades=[
   {id:"ticketBonus",name:"挑戦券獲得量",desc:"雑魚敵100体ごとの挑戦券 +1枚 / 10Lv（最大+5枚）",base:12,cap:50}]}
 ];
 function shopLv(id){return Math.max(0,Number(s.shop?.[id])||0)}
-function shopCost(item){return Math.floor(item.base*Math.pow(1.35,shopLv(item.id)))}
+function shopCost(item){const lv=shopLv(item.id);if(item.id==="abilityCap")return Math.floor(item.base*Math.pow(1.35,Math.min(lv,100))*Math.pow(1.03,Math.max(0,lv-100)));return Math.floor(item.base*Math.pow(1.35,lv))}
 function shopEffect(id,per=1){return shopLv(id)*per}
 function renderRebirthShop(){
  const root=$("rebirthShop");if(!root)return;
@@ -567,7 +567,7 @@ function mpBoostDrain(){const drain=0.1*(boostMultiplier()-1);return (s.mpXpBoos
 function continuousBonus(){const t=Math.max(0,s.continuousUseSeconds||0);if(t<10)return 1;if(t<30)return 1.1;if(t<60)return 1.25;if(t<120)return 1.5;if(t<180)return 2;if(t<240)return 2.5;return 3+Math.floor((t-240)/30)*0.25}
 function continuousGrowthRate(){if(!s.on)return 0;if(s.admin)return 1;const ratio=s.mp/Math.max(1,maxMP());if(ratio<0.2)return 0;if(ratio>=0.95)return 1.25;if(ratio>=0.9)return 1.15;return 1}
 function continuousBonusText(){return "×"+formatStat("multiplier",continuousBonus())}
-function abilityLevelCap(){const caps=[50,100,200,350,500,750,1000,1500,2000,3000,5000];return caps[Math.min(s.rebirth,caps.length-1)]+shopEffect("abilityCap",10)}
+function abilityLevelCap(){const caps=[50,100,200,350,500,750,1000,1500,2000,3000,5000];const lv=shopLv("abilityCap");const bonus=Math.min(lv,100)*10+Math.max(0,lv-100)*5;return caps[Math.min(s.rebirth,caps.length-1)]+bonus}
 function bodyAdaptMult(){const lv=Math.max(0,s.fl[2]||0);return 1+0.015*lv+0.00001*lv*lv}
 function bodyAutoXpMult(){const lv=Math.max(0,s.fl[2]||0);return 1+Math.max(0,lv-99)*0.002}
 function bodyTapMoneyMult(){const lv=Math.max(0,s.fl[2]||0);return 1+Math.max(0,lv-499)*0.001}
@@ -773,28 +773,26 @@ function processLevelRewards(startExclusive,endInclusive){
   const result=processRewardRange(money,from,to,band.step,band.milestone,band.late);
   money=result.money;rewarded+=result.rewarded;
  }
- // 1兆〜1極未満は従来ルールを維持。レベルが1000倍（3桁増加）するごとに報酬間隔を+1000。
- // 例：1兆〜1000兆未満は100ごと、その次は1100ごと、以後同様。
- const trillion=10n**12n,oneGoku=10n**48n;
- let legacyCursor=start>trillion-1n?start:trillion-1n;
- if(legacyCursor<oneGoku-1n&&end>legacyCursor){
-  while(legacyCursor<end&&legacyCursor<oneGoku-1n){
-   const probe=legacyCursor+1n;
-   const exponent=probe.toString().length-1;
+ // 1兆〜1極未満は従来の段階式を維持。
+ // 1兆から100レベルごと、レベルが1000倍になるごとに間隔を+1000する。
+ let cursor=start>999999999999n?start:999999999999n;
+ const preLimit=10n**48n;
+ if(cursor<preLimit-1n&&end>cursor){
+  while(cursor<end&&cursor<preLimit-1n){
+   const probe=cursor+1n,exponent=probe.toString().length-1;
    const scaleIndex=Math.max(0,Math.floor((exponent-12)/3));
    const step=100+1000*scaleIndex,milestone=step*10;
    const nextExponent=15+3*scaleIndex;
    const nextBoundary=10n**BigInt(nextExponent);
-   const segmentEnd=end<nextBoundary-1n?end:(nextBoundary-1n<oneGoku-1n?nextBoundary-1n:oneGoku-1n);
-   if(segmentEnd<=legacyCursor)break;
-   const result=processRewardRange(money,legacyCursor,segmentEnd,step,milestone,true);
+   const segmentEnd=end<nextBoundary-1n?end:(nextBoundary-1n<preLimit-1n?nextBoundary-1n:preLimit-1n);
+   const result=processRewardRange(money,cursor,segmentEnd,step,milestone,true);
    money=result.money;rewarded+=result.rewarded;
-   legacyCursor=segmentEnd;
+   cursor=segmentEnd;
   }
  }
- // Lv1極（10^48）以降は、現在の日本語単位1個分ごとに報酬。
+ // 1極（10^48）以降は、現在の日本語単位1個分ごとに報酬。
  // 次の単位へ進むと間隔もその単位1個分へ切り替わり、以後同じ規則を繰り返す。
- let cursor=start>=oneGoku?start:oneGoku-1n;
+ cursor=start>=(10n**48n)?start:(10n**48n)-1n;
  if(end>cursor){
   while(cursor<end){
    const probe=cursor+1n;
