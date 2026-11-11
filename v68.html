@@ -341,7 +341,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   return "¥"+trim(scaled)+label;
  }
 
-const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,admin:false,tp:0,sp:0,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false},shop:{},lastSeen:Date.now(),battleKills:0,battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
+const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,rbMultBig:{m:1,e:0},admin:false,tp:0,sp:0,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false},shop:{},lastSeen:Date.now(),battleKills:0,battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
 let s=fresh(),last=performance.now(),shopDirty=true,rebirthShopDirty=true;
 const AUTO_SAVE_KEY="timeControlAutoSaveV1";
 let pendingLevelUps=0n,pendingReward=BigNum.from(0),pendingRewardedLevels=0n;
