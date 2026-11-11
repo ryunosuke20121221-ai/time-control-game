@@ -261,8 +261,8 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
    <b>🏆 討伐マイルストーン</b>
    <div id="milestoneStatus" class="small" style="margin-top:6px">次の特殊敵：100体</div>
    <div class="small">時空エネルギー：<b id="timeEnergyValue">0</b> ／ 連鎖補正：<b id="milestoneChainValue">0%</b></div>
-   <div class="small">魂の収穫者：特殊敵撃破でMP回復 ／ 時空略奪：時空エネルギーで攻撃力上昇</div>
-   <div class="small">竜王の財宝：初回報酬増加 ／ 超越の連鎖：連続撃破で攻撃力上昇</div>
+   <div class="small">魂の収穫者：初回撃破で最大MPの10%回復 ／ 時空略奪：時空エネルギー1点につき攻撃力+0.1%（最大+50%）</div>
+   <div class="small">竜王の財宝：初回報酬のお金・XP・SPが1.5倍 ／ 超越の連鎖：初回撃破ごとに攻撃力+0.5%（最大+25%）</div>
    <button id="milestoneRetry" style="display:none;margin-top:8px">マイルストーン敵に再挑戦</button><button id="milestoneReplay" style="display:none;margin-top:8px">前回のマイルストーン敵に再戦（報酬なし）</button>
   </section>
   <div id="battleStage" class="battle-stage" style="margin-top:12px">
@@ -1182,7 +1182,7 @@ const n=Math.max(1,Math.floor(Number(number)||1));
   info.variant=Number(stored.variant)||0;info.timerExpired=!!stored.timerExpired;
   if(stored.milestoneId){
    const def=milestoneDef(stored.milestoneId);
-   if(def){info.name=def.name;info.kind=def.kind;info.boss=true;info.milestone=true;info.variant=def.variant;}
+   if(def){const bossBase=battleBosses.find(x=>x.kind===def.kind)||battleBosses[0];info.name=def.name;info.kind=def.kind;info.baseHp=bossBase.baseHp;info.reward=bossBase.reward;info.xp=bossBase.xp;info.boss=true;info.milestone=true;info.variant=def.variant;}
   }
  }
  return info;
@@ -1207,7 +1207,7 @@ if(!Array.isArray(s.battleGroup))s.battleGroup=[];
  if(s.milestoneQueue.length){
   const id=s.milestoneQueue[0],def=milestoneDef(id),number=battleEnemyNumber();
   if(def){
-   const info={...battleEnemyInfo(number),variant:def.variant,boss:true,milestone:true};
+   const bossBase=battleBosses.find(x=>x.kind===def.kind)||battleBosses[0];const info={...battleEnemyInfo(number),...bossBase,number,name:def.name,kind:def.kind,variant:def.variant,boss:true,milestone:true};
    const hp=BigNum.json(BigNum.mul(battleMaxHpBN({...info,number}),def.hpMult));
    const timer=120;
    s.battleGroup=[{number,hp,variant:def.variant,rewardMultiplier:battleVariantMultiplier(def.variant),timer,timerMax:timer,timerPause:0,timerExpired:false,milestoneId:id}];
