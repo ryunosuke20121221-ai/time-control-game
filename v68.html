@@ -359,7 +359,7 @@ function levelToBigInt(value){
 function levelToBN(level=s.level){return BigNum.from(levelToBigInt(level))}
 function levelOffsetBN(level=s.level){const n=levelToBigInt(level);return BigNum.from(n>1n?n-1n:0n)}
 function serializeGameState(){const out={...s},levelText=s.level.toString();out.level=levelText;out.levelBig=levelText;return out}
-function needBN(){return requiredXPSum(0n,s.level>1n?s.level-1n:0n)}
+function needBN(){return requiredXPSum(s.level>1n?s.level-1n:0n,1n)}
 function need(){const n=BigNum.toNumber(needBN());return Number.isFinite(n)?Math.max(1,n):Number.MAX_VALUE}
 function levelXpMultBN(level=s.level){return BigNum.mul(BigNum.add(1,BigNum.mul(levelOffsetBN(level),0.05)),s.rbMult||1)}
 function levelMoneyMultBN(level=s.level){return BigNum.mul(BigNum.add(1,BigNum.mul(levelOffsetBN(level),0.025)),s.rbMult||1)}
