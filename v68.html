@@ -505,7 +505,7 @@ function applyRewardCycles(money,firstLevelBig,rewardStep,milestoneStep,cycleCou
  money=BigNum.from(money);
  if(cycleCount<=0n)return money;
  const perCycle=milestoneStep/rewardStep;
- const base=BigNum.from(firstLevelBig.toString());
+ const base=BigNum.from(firstLevelBig);
  const cycleDelta=BigNum.from(milestoneStep);
  const cycleDelta2=BigNum.mul(cycleDelta,cycleDelta);
  const normal=rewardEventPolynomial(false,lateBand);
@@ -560,7 +560,7 @@ function processRewardRange(money,fromExclusive,toInclusive,rewardStep,milestone
  for(let i=0;i<remaining;i++){
   const level=tailStart+BigInt(i)*step;
   const isMilestone=level%milestone===0n;
-  const event=rewardEventValues(level.toString(),isMilestone,lateBand);
+  const event=rewardEventValues(level,isMilestone,lateBand);
   money=BigNum.add(BigNum.mul(money,event.q),event.additive);
  }
  return {money,rewarded:count};
@@ -582,7 +582,7 @@ function processPendingXP(){
   // レベルアップ報酬の計算失敗でXPだけ消費され、レベルが据え置きになるのを防ぐ。
   // 報酬計算は先に試し、失敗してもレベルアップ自体は成立させる。
   const oldMoney=moneyBN();
-  let rewards={money:oldMoney,rewarded:0};
+  let rewards={money:oldMoney,rewarded:0n};
   try{rewards=processLevelRewards(oldLevel,newLevel)}catch(rewardErr){
    console.error("レベルアップ報酬の計算エラー",rewardErr);
    const log=$("log");if(log)log.textContent="レベルアップ報酬の計算でエラーが発生しました。レベルとXPの精算は継続します。";
