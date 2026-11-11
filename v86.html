@@ -903,13 +903,13 @@ function updateSkillTreeVisibility(){const unlocked=skillTreeIsUnlocked(),nav=$(
 let skillMapZoom=0.8;
 let skillTreeRenderKey="";
 function renderSkillTree(){
+ document.querySelectorAll("#view-skills [data-sp-exchange]").forEach(b=>{if(!b.dataset.spBound){b.dataset.spBound="1";b.onclick=()=>exchangeSkillPoints(b.dataset.spExchange==="max"?"max":Number(b.dataset.spExchange));}});
  if(!skillTreeIsUnlocked())return;
  const root=$("skillTreeRoot");if(!root)return;skillEnsureState();
  $("skillPointBalance").textContent=formatStat("tp",s.sp,0)+" SP";$("skillTpBalance").textContent=formatStat("tp",s.tp,0)+" TP";
  const route=s.skillTree.route,swarmLv=s.skillTree.swarmLv;
  const nextKey=[route,swarmLv,s.sp,s.tp,JSON.stringify(s.skillTree.unlocked),!!s.skillTree.swarmUltimate].join("|");
  if(nextKey===skillTreeRenderKey){renderBattleSkills();return;}
- skillTreeRenderKey=nextKey;
  const W=2200,C=1100;
  const polar=(angle,r)=>({x:C+Math.sin(angle*Math.PI/180)*r,y:C-Math.cos(angle*Math.PI/180)*r});
  const nodes=[],edges=[];
@@ -982,6 +982,7 @@ function renderSkillTree(){
  }).join("");
  const oldViewport=root.querySelector(".skill-map-viewport"),oldLeft=oldViewport?oldViewport.scrollLeft:null,oldTop=oldViewport?oldViewport.scrollTop:null;
  root.innerHTML='<div class="skill-note">各スキルは独立した丸いノードです。枝の線は前提スキルを示します。スワイプ／ドラッグで移動、ピンチまたは＋／−で拡大縮小できます。</div><div class="skill-map-toolbar"><b>スキルマップ</b><span class="skill-map-zoom-label">'+Math.round(skillMapZoom*100)+'%</span><button type="button" data-skill-zoom="out">−</button><button type="button" data-skill-zoom="in">＋</button><button type="button" data-skill-zoom="reset">中央へ</button></div><div class="skill-map-viewport"><div class="skill-map-sizer"><div class="skill-map-world skill-map-individual-world"><svg class="skill-map-connectors" viewBox="0 0 2200 2200" aria-hidden="true">'+lineSvg+'</svg><div class="skill-map-core"><span>✦</span><b>始原の核</b><small>基本スキル</small></div>'+routeLabels+nodeHtml+'</div></div></div><div class="skill-map-legend"><span><i class="owned"></i>取得済み</span><span><i class="ready"></i>解放可能</span><span><i class="locked"></i>前提条件／SP不足</span></div><div class="skill-card"><b>所持SP・TP</b><div class="skill-note">SP交換：1 SP = 100,000 TP。取得済みスキルは転生後も維持。</div></div>';
+ skillTreeRenderKey=nextKey;
  const viewport=root.querySelector(".skill-map-viewport"),world=root.querySelector(".skill-map-world"),sizer=root.querySelector(".skill-map-sizer");
  const applyZoom=()=>{world.style.transform="scale("+skillMapZoom+")";sizer.style.width=(2200*skillMapZoom)+"px";sizer.style.height=(2200*skillMapZoom)+"px";root.querySelector(".skill-map-zoom-label").textContent=Math.round(skillMapZoom*100)+"%";};
  applyZoom();
