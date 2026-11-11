@@ -777,10 +777,11 @@ function processPendingXP(){
   // レベルアップ報酬の計算失敗でXPだけ消費され、レベルが据え置きになるのを防ぐ。
   // 報酬計算は先に試し、失敗してもレベルアップ自体は成立させる。
   const oldMoney=moneyBN();
-  let rewards={money:oldMoney,rewarded:0n};
+  let rewards;
   try{rewards=processLevelRewards(oldLevel,newLevel)}catch(rewardErr){
    console.error("レベルアップ報酬の計算エラー",rewardErr);
-   const log=$("log");if(log)log.textContent="レベルアップ報酬の計算でエラーが発生しました。レベルとXPの精算は継続します。";
+   const log=$("log");if(log)log.textContent="レベルアップ報酬の計算に失敗したため、XPとレベルは消費せず精算を停止しました。";
+   break;
   }
   setXPBN(BigNum.sub(currentXP,cost));
   setMoneyBN(rewards.money);
