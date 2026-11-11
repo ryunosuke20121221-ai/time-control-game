@@ -734,7 +734,7 @@ function skillEchoPower(){return skillHas("timeRift")?.75:.50;}
 function skillManaDamageFactor(){const ratio=maxMP()>0?s.mp/maxMP():0;if(skillHas("manaOverload")&&ratio>=.5)return 1.5;if(skillHas("manaSurge")&&ratio>=.8)return 1.25;return 1;}
 function exchangeSkillPoints(amount){
  skillEnsureState();
- if(amount==="max")amount=s.adminTPUnlimited?1000000000000:Math.min(1000000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
+ if(amount==="max")amount=s.adminTPUnlimited?1000000000:Math.min(1000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
  amount=Math.max(0,Math.floor(Number(amount)||0));
  if(!amount)return;
  const cost=amount*SKILL_SP_TP_COST;
