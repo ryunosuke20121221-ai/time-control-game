@@ -914,7 +914,7 @@ function renderSkillTree(){
  const polar=(angle,r)=>({x:C+Math.sin(angle*Math.PI/180)*r,y:C-Math.cos(angle*Math.PI/180)*r});
  const nodes=[],edges=[];
  const add=(id,name,desc,cost,available,final,angle,r,kind="normal")=>{
-  const p=polar(angle,r),owned=(id==="swarmLevel"?swarmLv>0:id==="swarmUltimate"?!!s.skillTree.swarmUltimate:skillHas(id));
+  const p=polar(angle,r),owned=(id==="swarmLevel"?swarmLv>=7:id==="swarmUltimate"?!!s.skillTree.swarmUltimate:skillHas(id));
   const can=!!available&&!owned&&s.sp>=cost;
   const state=owned?"取得済み":!available?"前提スキル不足":can?"解放可能":"SP不足";
   nodes.push({id,name,desc,cost,available,final,owned,can,state,x:p.x,y:p.y,kind});
