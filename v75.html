@@ -745,6 +745,7 @@ const compositeSkillDefs={
  transcendentHunt:{cost:250,name:"超越個体探知",desc:"連続討伐の極意＋時空崩壊が必要。強化雑魚・強化ボスが出現する",requires:["swarmUltimate","timeCollapse"]},
  chronoStagger:{cost:180,name:"時停衝撃",desc:"時空崩壊＋時間凍結が必要。ボスの制限時間を4秒止める攻撃スキル",requires:["timeCollapse","timeFreeze"]}
 };
+function compositeRequirementsMet(def){return def.requires.every(id=>id==="swarmUltimate"?!!s.skillTree.swarmUltimate:skillHas(id));}
 function skillHas(id){return !!s.skillTree?.unlocked?.[id];}
 function skillRank(prefix){return [1,2,3].filter(n=>skillHas(prefix+n)).length;}
 function skillTierBonus(prefix){const rank=skillRank(prefix);return rank>=3?.35:rank===2?.15:rank===1?.05:0;}
@@ -777,7 +778,7 @@ function buySkillNode(id){
  if(id==="swarmLevel"){const lv=s.skillTree.swarmLv;if(lv>=7)return;cost=swarmLevelCosts[lv]*skillRouteFactor("swarm");ok=s.sp>=cost;if(ok)s.skillTree.swarmLv++;}
  else if(id==="swarmUltimate"){if(s.skillTree.swarmLv<7||s.skillTree.swarmUltimate)return;cost=30*skillRouteFactor("swarm",true);ok=s.sp>=cost;if(ok)s.skillTree.swarmUltimate=true;}
  else if(extraSkillDefs[id]){const d=extraSkillDefs[id];if(skillHas(id)||(d.requires&&!skillHas(d.requires)))return;cost=d.cost*skillRouteFactor(d.route,!!d.final);ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
- else if(compositeSkillDefs[id]){const d=compositeSkillDefs[id];if(skillHas(id)||!d.requires.every(skillHas))return;cost=d.cost;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
+ else if(compositeSkillDefs[id]){const d=compositeSkillDefs[id];if(skillHas(id)||!compositeRequirementsMet(d))return;cost=d.cost;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
  else if(id==="chronoFusion"){if(skillHas(id)||!skillHas("timeWave")||!skillHas("timeCollapse")||!["timeRift","manaOverload","tacticalFinish"].every(skillHas))return;cost=2500;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
  else if(id==="transcendence"){if(skillHas(id)||!skillHas("chronoFusion"))return;cost=10000;ok=s.sp>=cost;if(ok)s.skillTree.unlocked[id]=true;}
  else{
@@ -829,7 +830,7 @@ const specialReady=skillHas("timeWave")&&skillHas("timeCollapse")&&["timeRift","
  const swarmNodes=swarm.map(d=>node(d.id,d.name,d.desc,d.cost,!d.requires||skillHas(d.requires),!!d.final)).join("")+node("swarmUltimate","連続討伐の極意","討伐報酬1.5倍。群れの拡張Lv7が必要",30,swarmLv>=7,true);
  const bossNodes=boss.map(d=>node(d.id,d.name,d.desc,d.cost,!d.requires||skillHas(d.requires),!!d.final)).join("");
  const extraNodes=groups.map(g=>'<section class="skill-map-branch" style="left:'+({time:1130,manaCycle:860,tactics:90}[g.key])+'px;top:'+({time:700,manaCycle:1110,tactics:1110}[g.key])+'px"><h3>'+g.title+'</h3><p>'+g.desc+'</p>'+g.ids.map(id=>{const d=extraSkillDefs[id];return node(id,d.name,d.desc,d.cost,!d.requires||skillHas(d.requires),!!d.final)}).join("")+'</section>').join("");
- const compositeNodes=Object.entries(compositeSkillDefs).map(([id,d])=>node(id,d.name,d.desc,d.cost,d.requires.every(skillHas),true)).join("");
+ const compositeNodes=Object.entries(compositeSkillDefs).map(([id,d])=>node(id,d.name,d.desc,d.cost,compositeRequirementsMet(d),true)).join("");
  const specialNodes=special.map(d=>node(d.id,d.name,d.desc,d.cost,d.id==="chronoFusion"?specialReady:skillHas("chronoFusion"),true)).join("");
  const oldViewport=root.querySelector(".skill-map-viewport");
  const oldLeft=oldViewport?oldViewport.scrollLeft:null,oldTop=oldViewport?oldViewport.scrollTop:null;
@@ -949,7 +950,7 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
    const money=BigNum.mul(BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),rewardBonus),variantMult*timerBonus);
    const xp=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",info.boss)*variantMult*timerBonus);
    addMoneyBN(money);gainXP(xp);s.battleKills=info.number;
-   if(variant>0){const tpDrop=info.boss?(variant===3?25:variant===2?10:3):(variant===3?10:variant===2?5:2);s.tp=(Number(s.tp)||0)+tpDrop;if(info.boss||variant===3){const spDrop=info.boss?(variant===3?10:variant===2?3:1):5;s.sp=(Number(s.sp)||0)+spDrop;} }
+   if(variant>0){const tpDrop=info.boss?(variant===3?25:variant===2?10:3):(variant===3?10:variant===2?5:2);s.tp=(Number(s.tp)||0)+tpDrop;if(info.boss||variant===3){const spDrop=info.boss?(variant===3?10:variant===2?3:1):5;s.sp=(Number(s.sp)||0)+spDrop;} $("battleLog").textContent=(info.boss?"強化ボス":"強化個体")+"を討伐！ TP+"+tpDrop+((info.boss||variant===3)?"・SP+"+(info.boss?(variant===3?10:variant===2?3:1):5):""); }
    if(skillHas("manaReturn"))s.mp=Math.min(maxMP(),s.mp+(skillHas("manaOverload")?6:3));
    if(s.skillTree.focusNumber===number){s.skillTree.focusNumber=0;s.skillTree.focusHits=0;}
    s.battleGroup.splice(index,1);killed=true;
