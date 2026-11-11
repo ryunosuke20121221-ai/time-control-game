@@ -908,7 +908,7 @@ const branchRouteDefs={swarm:{A:["群勢連鎖","大群掃討","群勢の極致"
 const branchCosts={A:[80,150,300],B:[200,500,1000]};
 const specialUpgradeCosts=[5000,5000,7500,12500,20000,30000,45000,65000,90000,120000];
 const specialSkillNames={swarm:{A:"群勢の覇者",B:"無尽の戦利品"},boss:{A:"竜王殺し",B:"王権の略奪"},time:{A:"時空の残響王",B:"永劫の支配者"},manaCycle:{A:"魔力の源泉",B:"魔力消滅の極意"},tactics:{A:"完全照準",B:"絶対決着"}};
-function branchEnsureState(){const b=s.skillTree.branch&&typeof s.skillTree.branch==="object"?s.skillTree.branch:{};s.skillTree.branch={choice:b.choice&&typeof b.choice==="object"?b.choice:{},door:!!b.door,opposite:b.opposite&&typeof b.opposite==="object"?b.opposite:{},specialId:typeof b.specialId==="string"?b.specialId:"",specialLv:Math.max(0,Math.min(10,Math.floor(Number(b.specialLv)||0)))};}
+function branchEnsureState(){const b=s.skillTree.branch&&typeof s.skillTree.branch==="object"?s.skillTree.branch:{};b.choice=b.choice&&typeof b.choice==="object"?b.choice:{};b.door=!!b.door;b.opposite=b.opposite&&typeof b.opposite==="object"?b.opposite:{};b.specialId=typeof b.specialId==="string"?b.specialId:"";b.specialLv=Math.max(0,Math.min(10,Math.floor(Number(b.specialLv)||0)));s.skillTree.branch=b;}
 function branchNodeId(r,side,lv){return "branch_"+r+"_"+side+"_"+lv;}
 function branchNodeLevel(r,side){return [1,2,3].filter(n=>skillHas(branchNodeId(r,side,n))).length;}
 function branchOldSkillsComplete(){const ids=["chainLightning","stormBurst","timeWave","timeSlash","dragonBane","bossNova","timeCollapse","timeEcho","timeFreeze","timeRift","manaReturn","manaSurge","manaOverload","tacticalFocus","bossExpose","tacticalFinish","transcendentHunt","chronoStagger","chronoFusion","transcendence"];return s.skillTree.swarmLv>=7&&!!s.skillTree.swarmUltimate&&ids.every(skillHas);}
