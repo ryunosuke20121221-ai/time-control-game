@@ -348,6 +348,8 @@ function levelToBigInt(value){
  if(sci){const fraction=sci[2]||"",digits=(sci[1]+fraction).replace(/^0+/,"")||"0",power=Number(sci[3])-fraction.length;if(!Number.isSafeInteger(power)||Math.abs(power)>100000)throw new RangeError("Level exponent is too large");let n=BigInt(digits);if(power>=0)n*=10n**BigInt(power);else n/=10n**BigInt(-power);return n<1n?1n:n}
  throw new TypeError("Invalid player level");
 }
+// XP累積式・レベル報酬処理が共通して使う整数変換。
+function toLevelInteger(value){return levelToBigInt(value)}
 function levelToBN(level=s.level){return BigNum.from(levelToBigInt(level))}
 function levelOffsetBN(level=s.level){const n=levelToBigInt(level);return BigNum.from(n>1n?n-1n:0n)}
 function serializeGameState(){const out={...s},levelText=s.level.toString();out.level=levelText;out.levelBig=levelText;return out}
