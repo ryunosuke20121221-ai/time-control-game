@@ -232,49 +232,41 @@ const MAX_PLAYER_LEVEL=Infinity;
 
  // BigNum基盤: XP・お金・巨大レベル由来の倍率計算に使用。
  const BigNum=(()=>{
-  const norm=(m,e=0)=>{
-   m=Number(m);e=Math.trunc(Number(e)||0);
-   if(!Number.isFinite(m))throw new RangeError("BigNum mantissa must be finite");
-   if(m===0)return {m:0,e:0};
-   while(Math.abs(m)>=10){m/=10;e++}
-   while(Math.abs(m)<1){m*=10;e--}
-   m=Number(m.toPrecision(15));
-   if(Math.abs(m)>=10){m/=10;e++}
-   return {m,e};
-  };
-  const from=v=>{
-   if(v&&typeof v==="object"&&Number.isFinite(v.m)&&Number.isFinite(v.e))return norm(v.m,v.e);
-   if(typeof v==="string"){
-    const match=v.trim().match(/^([+-]?(?:\d+\.?\d*|\.\d+))(?:e([+-]?\d+))?$/i);
-    if(!match)throw new TypeError("Invalid BigNum: "+v);
-    return norm(Number(match[1]),Number(match[2]||0));
-   }
-   if(typeof v==="bigint"){if(v===0n)return norm(0);const neg=v<0n,digits=(neg?-v:v).toString(),head=digits.slice(0,16),mantissa=Number(head)/Math.pow(10,head.length-1);return norm(neg?-mantissa:mantissa,digits.length-1)}const n=Number(v);if(!Number.isFinite(n))throw new RangeError("BigNum input must be finite");
-   if(n===0)return norm(0);
-   const e=Math.floor(Math.log10(Math.abs(n)));
-   return norm(n/Math.pow(10,e),e);
-  };
-  const cmp=(a,b)=>{
-   a=from(a);b=from(b);
-   if(a.m===0||b.m===0)return Math.sign(a.m)-Math.sign(b.m);
-   if(Math.sign(a.m)!==Math.sign(b.m))return Math.sign(a.m)-Math.sign(b.m);
-   if(a.e!==b.e)return (a.e>b.e?1:-1)*Math.sign(a.m);
-   return a.m===b.m?0:a.m>b.m?1:-1;
-  };
-  const add=(a,b)=>{
-   a=from(a);b=from(b);if(a.m===0)return b;if(b.m===0)return a;
-   if(a.e<b.e){const t=a;a=b;b=t}
-   const d=a.e-b.e;if(d>16)return a;
-   return norm(a.m+b.m*Math.pow(10,-d),a.e);
-  };
-  const sub=(a,b)=>{b=from(b);return add(a,{m:-b.m,e:b.e})};
-  const mul=(a,b)=>{a=from(a);b=from(b);return norm(a.m*b.m,a.e+b.e)};
-  const div=(a,b)=>{a=from(a);b=from(b);if(!b.m)throw new RangeError("Division by zero");return norm(a.m/b.m,a.e-b.e)};
-  const toNumber=a=>{a=from(a);if(!a.m)return 0;if(a.e>308)return a.m>0?Infinity:-Infinity;if(a.e< -324)return 0;return a.m*Math.pow(10,a.e)};
-  const toString=(a,places=6)=>{a=from(a);if(!a.m)return "0";return a.m.toFixed(Math.max(0,Math.min(12,places))).replace(/\.?0+$/,"")+"e"+a.e};
-  const json=a=>{a=from(a);return {m:a.m,e:a.e}};
-  return Object.freeze({from,cmp,add,sub,mul,div,toNumber,toString,json});
- })();
+ const PREC=60n;
+ function parseParts(text){
+  const m=String(text).trim().match(/^([+-]?)(\\d*)(?:\\.(\\d*))?(?:e([+-]?\\d+))?$/i);
+  if(!m||!(m[2]||m[3]))throw new TypeError("Invalid BigNum: "+text);
+  const frac=m[3]||"",digits=((m[2]||"")+frac).replace(/^0+/,"");
+  if(!digits)return {c:0n,scale:0};
+  const exp=Number(m[4]||0)-frac.length;if(!Number.isSafeInteger(exp)||Math.abs(exp)>1000000)throw new RangeError("BigNum exponent too large");
+  return {c:BigInt((m[1]==="-"?"-":"")+digits),scale:exp};
+ }
+ function make(coefficient,scale=0){
+  let c=BigInt(coefficient),s=Number(scale);if(!Number.isSafeInteger(s)||Math.abs(s)>1000000)throw new RangeError("BigNum scale too large");
+  if(c===0n)return {m:0,e:0,d:"0",p:1};
+  const negative=c<0n;if(negative)c=-c;let digits=c.toString();
+  if(BigInt(digits.length)>PREC){const cut=digits.length-Number(PREC),head=BigInt(digits.slice(0,Number(PREC))),next=Number(digits[Number(PREC)]||0);c=head+(next>=5?1n:0n);s+=cut;if(c.toString().length>Number(PREC)){c/=10n;s++}digits=c.toString()}
+  const e=digits.length-1+s,head=digits.slice(0,16),mantissa=Number(head)/Math.pow(10,head.length-1);
+  return {m:negative?-mantissa:mantissa,e,d:(negative?"-":"")+digits,p:digits.length};
+ }
+ function from(v){
+  if(v&&typeof v==="object"&&typeof v.d==="string"&&Number.isFinite(v.e)){const c=BigInt(v.d),p=Math.abs(c).toString().length;return make(c,Number(v.e)-(p-1))}
+  if(v&&typeof v==="object"&&Number.isFinite(v.m)&&Number.isFinite(v.e)){const p=parseParts(String(v.m));return make(p.c,p.scale+Math.trunc(v.e))}
+  if(typeof v==="bigint")return make(v,0);
+  if(typeof v==="string"){const p=parseParts(v);return make(p.c,p.scale)}
+  const n=Number(v);if(!Number.isFinite(n))throw new RangeError("BigNum input must be finite");const p=parseParts(n.toString());return make(p.c,p.scale);
+ }
+ function parts(v){const x=from(v),c=BigInt(x.d),p=Math.abs(c).toString().length;return {x,c,scale:x.e-(p-1)}}
+ const cmp=(a,b)=>{const A=parts(a),B=parts(b);if(A.c===0n||B.c===0n)return A.c===B.c?0:A.c>0n?1:-1;if((A.c<0n)!==(B.c<0n))return A.c<0n?-1:1;let result=0;if(A.x.e!==B.x.e)result=A.x.e>B.x.e?1:-1;else{const ad=(A.c<0n?-A.c:A.c).toString(),bd=(B.c<0n?-B.c:B.c).toString(),len=Math.max(ad.length,bd.length),av=BigInt(ad.padEnd(len,"0")),bv=BigInt(bd.padEnd(len,"0"));result=av===bv?0:av>bv?1:-1}return A.c<0n?-result:result};
+ const add=(a,b)=>{const A=parts(a),B=parts(b);if(A.c===0n)return B.x;if(B.c===0n)return A.x;const gap=Math.abs(A.x.e-B.x.e);if(gap>Number(PREC)+2)return A.x.e>B.x.e?A.x:B.x;const scale=Math.min(A.scale,B.scale),da=A.scale-scale,db=B.scale-scale;return make(A.c*10n**BigInt(da)+B.c*10n**BigInt(db),scale)};
+ const sub=(a,b)=>{const B=parts(b);return add(a,make(-B.c,B.scale))};
+ const mul=(a,b)=>{const A=parts(a),B=parts(b);return make(A.c*B.c,A.scale+B.scale)};
+ const div=(a,b)=>{const A=parts(a),B=parts(b);if(B.c===0n)throw new RangeError("Division by zero");const numerator=A.c*10n**PREC,den=B.c;let q=numerator/den,rem=numerator%den;if((rem<0n?-rem:rem)*2n>=(den<0n?-den:den))q+=((numerator<0n)!==(den<0n)?-1n:1n);return make(q,A.scale-B.scale-Number(PREC))};
+ const toNumber=a=>{const x=from(a);if(!x.m)return 0;if(x.e>308)return x.m>0?Infinity:-Infinity;if(x.e< -324)return 0;return x.m*Math.pow(10,x.e)};
+ const toString=(a,places=6)=>{const x=from(a);if(!x.m)return "0";return x.m.toFixed(Math.max(0,Math.min(12,places))).replace(/\\.?0+$/ ,"")+"e"+x.e};
+ const json=a=>{const x=from(a);return {m:x.m,e:x.e,d:x.d,p:x.p}};
+ return Object.freeze({from,cmp,add,sub,mul,div,toNumber,toString,json});
+})();
 
 
  // 所持金BigNum移行・第1段階。収入の加算、表示、保存を巨大数対応にする。
