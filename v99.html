@@ -1199,7 +1199,7 @@ if(!Array.isArray(s.battleGroup))s.battleGroup=[];
  if(s.milestoneQueue.length){
   const id=s.milestoneQueue[0],def=milestoneDef(id),number=battleEnemyNumber();
   if(def){
-   const info={...battleEnemyInfo(number),variant:def.variant};
+   const info={...battleEnemyInfo(number),variant:def.variant,boss:true,milestone:true};
    const hp=BigNum.json(BigNum.mul(battleMaxHpBN({...info,number}),def.hpMult));
    const timer=120;
    s.battleGroup=[{number,hp,variant:def.variant,rewardMultiplier:battleVariantMultiplier(def.variant),timer,timerMax:timer,timerPause:0,timerExpired:false,milestoneId:id}];
