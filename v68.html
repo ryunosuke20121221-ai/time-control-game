@@ -234,7 +234,7 @@ const MAX_PLAYER_LEVEL=Infinity;
  const BigNum=(()=>{
  const PREC=60n;
  function parseParts(text){
-  const m=String(text).trim().match(/^([+-]?)(\\d*)(?:\\.(\\d*))?(?:e([+-]?\\d+))?$/i);
+  const m=String(text).trim().match(/^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i);
   if(!m||!(m[2]||m[3]))throw new TypeError("Invalid BigNum: "+text);
   const frac=m[3]||"",digits=((m[2]||"")+frac).replace(/^0+/,"");
   if(!digits)return {c:0n,scale:0};
@@ -263,7 +263,7 @@ const MAX_PLAYER_LEVEL=Infinity;
  const mul=(a,b)=>{const A=parts(a),B=parts(b);return make(A.c*B.c,A.scale+B.scale)};
  const div=(a,b)=>{const A=parts(a),B=parts(b);if(B.c===0n)throw new RangeError("Division by zero");const numerator=A.c*10n**PREC,den=B.c;let q=numerator/den,rem=numerator%den;if((rem<0n?-rem:rem)*2n>=(den<0n?-den:den))q+=((numerator<0n)!==(den<0n)?-1n:1n);return make(q,A.scale-B.scale-Number(PREC))};
  const toNumber=a=>{const x=from(a);if(!x.m)return 0;if(x.e>308)return x.m>0?Infinity:-Infinity;if(x.e< -324)return 0;return x.m*Math.pow(10,x.e)};
- const toString=(a,places=6)=>{const x=from(a);if(!x.m)return "0";return x.m.toFixed(Math.max(0,Math.min(12,places))).replace(/\\.?0+$/ ,"")+"e"+x.e};
+ const toString=(a,places=6)=>{const x=from(a);if(!x.m)return "0";return x.m.toFixed(Math.max(0,Math.min(12,places))).replace(/\.?0+$/,"")+"e"+x.e};
  const json=a=>{const x=from(a);return {m:x.m,e:x.e,d:x.d,p:x.p}};
  return Object.freeze({from,cmp,add,sub,mul,div,toNumber,toString,json});
 })();
