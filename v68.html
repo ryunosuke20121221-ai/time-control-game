@@ -430,7 +430,7 @@ function gainXP(n){let x;try{x=BigNum.from(n)}catch(e){return}if(BigNum.cmp(x,0)
 // 巨大レベル帯でも能力使用中のXPがBigNumの桁落ちで消えないよう、必要XPの0.1%/秒を最低保証する。
 function abilityXPPerSecondBN(){
  const normal=BigNum.mul(BigNum.mul(1+s.fl[0]*.02+shopEffect("abilityXp",0.02),bodyAutoXpMult()),BigNum.mul(levelXpMultBN(),localSlowXpMult()*continuousBonus()*(s.mpXpBoost?boostMultiplier():1)));
- if(s.level<1000000000000000000n)return normal;
+ if(s.level<1000000000000n)return normal;
  const minimum=BigNum.mul(needBN(),0.001);
  return BigNum.cmp(normal,minimum)>=0?normal:minimum;
 }
@@ -619,7 +619,7 @@ function safeCost(base,rate,level){const exponent=Math.log(base)+level*Math.log(
 // 等比数列の合計から購入可能数を二分探索。個別価格を1件ずつ試す旧方式を避ける。
 function estimatedCostSum(base,rate,startLevel,count){if(count<=0)return 0;const firstExp=Math.log(base)+startLevel*Math.log(rate);const lastExp=firstExp+(count-1)*Math.log(rate);if(lastExp>700)return Infinity;const first=Math.exp(firstExp);if(Math.abs(rate-1)<1e-12)return first*count;const sum=first*Math.expm1(count*Math.log(rate))/(rate-1);return Number.isFinite(sum)?sum:Infinity}
 function maxGeometricCount(base,rate,startLevel,budget,limit){let lo=0,hi=Math.max(0,Math.floor(limit));while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(estimatedCostSum(base,rate,startLevel,mid)<=budget)lo=mid;else hi=mid-1}return lo}
-function geometricCostBN(base,rate,level,discount=1){if(level<0)return BigNum.from(0);const log=Math.log(base)+level*Math.log(rate)+Math.log(Math.max(1e-12,discount));if(!Number.isFinite(log))return BigNum.from("1e1000000000000000");const e=Math.floor(log/Math.LN10);return BigNum.from({m:Math.exp(log-e*Math.LN10),e})}
+function geometricCostBN(base,rate,level,discount=1){if(level<0)return BigNum.from(0);const log=Math.log(base)+level*Math.log(rate)+Math.log(Math.max(1e-12,discount));if(!Number.isFinite(log))return BigNum.from("1e1000000000");const e=Math.floor(log/Math.LN10);return BigNum.from({m:Math.exp(log-e*Math.LN10),e})}
  function fCostBN(i){return s.admin?BigNum.from(0):geometricCostBN(funcs[i].base,funcs[i].rate,s.fl[i])}
  function fCost(i){return s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i])}
 function facilityCostAt(i,level){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(i===0)return level===0?Math.max(1,Math.floor(250*discount)):Math.max(1,Math.floor(safeCost(300,1.25,level-1)*discount));return Math.max(1,Math.floor(safeCost(buildings[i].cost,1.5,level)*discount))}
@@ -669,7 +669,7 @@ const buttons=$("functions").querySelectorAll("button[data-f],button[data-fmax],
 const facilityButtons=$("facilities").querySelectorAll("button[data-b],button[data-bmax],button[data-ball]");facilityButtons.forEach(b=>{const i=Number(b.dataset.b??b.dataset.bmax??b.dataset.ball);const canBuy=s.level>=BigInt(buildings[i].unlock)&&(b.hasAttribute("data-ball")?s.admin||s.adminMoneyUnlimited||canAffordMoney(bCost(i)):canAffordMoney(bCost(i)));const disabled=!canBuy;if(b.disabled!==disabled)b.disabled=disabled});
 }
 window.buyF=i=>{let c=fCostBN(i);if(s.level>=BigInt(funcs[i].unlock)&&s.fl[i]<abilityLevelCap()&&(s.admin||s.adminMoneyUnlimited||canAffordMoney(c))){if(!s.admin&&!s.adminMoneyUnlimited)spendMoneyBN(c);s.fl[i]++;shopDirty=true;render()}};
-function bigPowPositive(base,power){if(power<=0)return BigNum.from(1);const log=Math.log10(base)*power;if(!Number.isFinite(log))return BigNum.from("1e1000000000000000");const e=Math.floor(log);return BigNum.from({m:Math.pow(10,log-e),e})}
+function bigPowPositive(base,power){if(power<=0)return BigNum.from(1);const log=Math.log10(base)*power;if(!Number.isFinite(log))return BigNum.from("1e1000000000");const e=Math.floor(log);return BigNum.from({m:Math.pow(10,log-e),e})}
 
 const battleEnemies=[
  {name:"スライム",hp:100,reward:50,xp:20,kind:"slime"},
@@ -734,7 +734,7 @@ function skillEchoPower(){return skillHas("timeRift")?.75:.50;}
 function skillManaDamageFactor(){const ratio=maxMP()>0?s.mp/maxMP():0;if(skillHas("manaOverload")&&ratio>=.5)return 1.5;if(skillHas("manaSurge")&&ratio>=.8)return 1.25;return 1;}
 function exchangeSkillPoints(amount){
  skillEnsureState();
- if(amount==="max")amount=s.adminTPUnlimited?1000000000000000:Math.min(1000000000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
+ if(amount==="max")amount=s.adminTPUnlimited?1000000000000:Math.min(1000000000000,Math.floor(Math.max(0,s.tp)/SKILL_SP_TP_COST));
  amount=Math.max(0,Math.floor(Number(amount)||0));
  if(!amount)return;
  const cost=amount*SKILL_SP_TP_COST;
