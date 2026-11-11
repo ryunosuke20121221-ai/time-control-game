@@ -974,11 +974,11 @@ function skillTreeIsUnlocked(){if(!s.skillTreeUnlocked&&(Number(s.rebirth)>=1||N
 function updateSkillTreeVisibility(){const unlocked=skillTreeIsUnlocked(),nav=$("skillTreeNav"),notice=$("skillTreeUnlockNotice");if(nav)nav.style.display=unlocked?"":"none";if(notice){notice.style.display=unlocked?"none":"block";notice.innerHTML=unlocked?"":`🌳 スキルツリー解放まで<br>条件：転生1回以上、または所持TP 100,000以上<br>現在：転生 ${formatStat("rebirthCount",s.rebirth,0)}回 ／ TP ${formatStat("tp",Math.min(100000,Math.max(0,Number(s.tp)||0)),0)} / 100,000`;}}
 
 function branchEffectDescription(r,side,lv){
- const per={swarm:{A:"通常敵へのダメージ+4%",B:"通常敵の討伐報酬+5%"},boss:{A:"ボスへのダメージ+6%",B:"ボス討伐報酬+8%"},time:{A:"全敵へのダメージ+2.5%",B:"攻撃速度+3%（攻撃間隔を短縮）"},manaCycle:{A:"MP自然回復量+1%",B:"戦闘スキルのMP消費-3%"},tactics:{A:"ボスへのダメージ+2.5%",B:"敵HP20%以下へのダメージ+8%"}};
+ const per={swarm:{A:"通常敵へのダメージ+4%",B:"全敵の討伐報酬+5%"},boss:{A:"ボスへのダメージ+6%",B:"ボス討伐報酬+8%"},time:{A:"全敵へのダメージ+2.5%",B:"攻撃速度+3%（攻撃間隔を短縮）"},manaCycle:{A:"MP自然回復量+1%",B:"戦闘スキルのMP消費-3%"},tactics:{A:"ボスへのダメージ+2.5%",B:"敵HP20%以下へのダメージ+8%"}};
  return per[r][side]+"。この段階で加算、同じ側の取得段階分が累積します（現在Lv"+lv+"）。";
 }
 function branchSpecialDescription(r,side,lv){
- const per={swarm:{A:"通常敵へのダメージ+20%/Lv",B:"通常敵の討伐報酬+20%/Lv"},boss:{A:"ボスへのダメージ+25%/Lv",B:"ボス討伐報酬+20%/Lv"},time:{A:"全敵へのダメージ+10%/Lv",B:"攻撃速度+4%/Lv"},manaCycle:{A:"MP自然回復量+5%/Lv",B:"戦闘スキルMP消費を追加で4%/Lv軽減（乗算）"},tactics:{A:"ボスへのダメージ+12%/Lv",B:"敵HP20%以下へのダメージ+10%/Lv"}};
+ const per={swarm:{A:"通常敵へのダメージ+20%/Lv",B:"全敵の討伐報酬+20%/Lv"},boss:{A:"ボスへのダメージ+25%/Lv",B:"ボス討伐報酬+20%/Lv"},time:{A:"全敵へのダメージ+10%/Lv",B:"攻撃速度+4%/Lv"},manaCycle:{A:"MP自然回復量+5%/Lv",B:"戦闘スキルMP消費を追加で4%/Lv軽減（乗算）"},tactics:{A:"ボスへのダメージ+12%/Lv",B:"敵HP20%以下へのダメージ+10%/Lv"}};
  return per[r][side]+"。最大Lv10。Lv"+lv+"時点の専用効果です。";
 }
 function skillPurchaseConfirmation(id){
