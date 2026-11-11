@@ -1134,7 +1134,7 @@ const battleMilestoneDefs=[
  {id:"m400000",at:400000,name:"超越強化個体・極",variant:3,sp:16000,hpMult:2.5,kind:"chaos"},
  {id:"m500000",at:500000,name:"終末級個体",variant:3,sp:25000,hpMult:3,kind:"chaos"},
  {id:"m750000",at:750000,name:"終末級個体・極",variant:3,sp:35000,hpMult:3.5,kind:"chaos"},
- {id:"m1000000",at:1000000,name:"終焉の存在",variant:3,sp:50000,hpMult:4,kind:"chaos"}
+ {id:"m1000000",at:1000000,name:"終焉の存在",variant:3,sp:25000,hpMult:4,kind:"chaos"}
 ];
 function milestoneDef(id){return battleMilestoneDefs.find(x=>x.id===id)||null}
 function milestoneEnsureState(){
@@ -1200,7 +1200,7 @@ if(!Array.isArray(s.battleGroup))s.battleGroup=[];
   const id=s.milestoneQueue[0],def=milestoneDef(id),number=battleEnemyNumber();
   if(def){
    const info={...battleEnemyInfo(number),variant:def.variant};
-   const hp=BigNum.json(battleMaxHpBN({...info,number}));
+   const hp=BigNum.json(BigNum.mul(battleMaxHpBN({...info,number}),def.hpMult));
    const timer=120;
    s.battleGroup=[{number,hp,variant:def.variant,rewardMultiplier:battleVariantMultiplier(def.variant),timer,timerMax:timer,timerPause:0,timerExpired:false,milestoneId:id}];
    s.battleEnemyHp=hp;return;
