@@ -1118,10 +1118,10 @@ const battleMilestoneDefs=[
  {id:"m10000",at:10000,name:"時空の番人",variant:3,sp:1000,hpMult:1.25,kind:"titan"},
  {id:"m15000",at:15000,name:"覚醒強化個体",variant:1,sp:250,hpMult:1.1,kind:"dragon"},
  {id:"m20000",at:20000,name:"災厄強化個体",variant:2,sp:500,hpMult:1.15,kind:"demon"},
- {id:"m25000",at:25000,name:"最大強化個体・超越",variant:3,sp:1000,hpMult:1.25,kind:"chaos"},
+ {id:"m25000",at:25000,name:"最大強化個体・超越",variant:3,sp:1000,hpMult:1.25,kind:"wolf",boss:false},
  {id:"m30000",at:30000,name:"覚醒強化個体",variant:1,sp:500,hpMult:1.1,kind:"titan"},
  {id:"m40000",at:40000,name:"災厄強化個体",variant:2,sp:750,hpMult:1.15,kind:"ancientDragon"},
- {id:"m50000",at:50000,name:"最大強化個体・災厄",variant:3,sp:1500,hpMult:1.35,kind:"chaos"},
+ {id:"m50000",at:50000,name:"最大強化個体・災厄",variant:3,sp:1500,hpMult:1.35,kind:"skeleton",boss:false},
  {id:"m60000",at:60000,name:"覚醒強化個体",variant:1,sp:1000,hpMult:1.1,kind:"demon"},
  {id:"m70000",at:70000,name:"災厄強化個体",variant:2,sp:1250,hpMult:1.15,kind:"titan"},
  {id:"m80000",at:80000,name:"覚醒強化個体",variant:1,sp:1500,hpMult:1.1,kind:"dragon"},
@@ -1182,7 +1182,7 @@ const n=Math.max(1,Math.floor(Number(number)||1));
   info.variant=Number(stored.variant)||0;info.timerExpired=!!stored.timerExpired;
   if(stored.milestoneId){
    const def=milestoneDef(stored.milestoneId);
-   if(def){const bossBase=battleBosses.find(x=>x.kind===def.kind)||battleBosses[0];info.name=def.name;info.kind=def.kind;info.baseHp=bossBase.baseHp;info.reward=bossBase.reward;info.xp=bossBase.xp;info.boss=true;info.milestone=true;info.variant=def.variant;}
+   if(def){const baseTemplate=def.boss===false?(battleEnemies.find(x=>x.kind===def.kind)||battleEnemies[0]):(battleBosses.find(x=>x.kind===def.kind)||battleBosses[0]);info.name=def.name;info.kind=def.kind;info.baseHp=baseTemplate.baseHp||baseTemplate.hp;info.hp=baseTemplate.hp||info.hp;info.reward=baseTemplate.reward;info.xp=baseTemplate.xp;info.boss=def.boss!==false;info.milestone=true;info.variant=def.variant;}
   }
  }
  return info;
@@ -1207,7 +1207,7 @@ if(!Array.isArray(s.battleGroup))s.battleGroup=[];
  if(s.milestoneQueue.length){
   const id=s.milestoneQueue[0],def=milestoneDef(id),number=battleEnemyNumber();
   if(def){
-   const bossBase=battleBosses.find(x=>x.kind===def.kind)||battleBosses[0];const info={...battleEnemyInfo(number),...bossBase,number,name:def.name,kind:def.kind,variant:def.variant,boss:true,milestone:true};
+   const baseTemplate=def.boss===false?(battleEnemies.find(x=>x.kind===def.kind)||battleEnemies[0]):(battleBosses.find(x=>x.kind===def.kind)||battleBosses[0]);const info={...battleEnemyInfo(number),...baseTemplate,number,name:def.name,kind:def.kind,variant:def.variant,boss:def.boss!==false,milestone:true};
    const hp=BigNum.json(BigNum.mul(battleMaxHpBN({...info,number}),def.hpMult));
    const timer=120;
    s.battleGroup=[{number,hp,variant:def.variant,rewardMultiplier:battleVariantMultiplier(def.variant),timer,timerMax:timer,timerPause:0,timerExpired:false,milestoneId:id}];
@@ -1320,8 +1320,8 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
    if(milestone){
     const firstClear=!s.milestoneRewarded[milestoneId];
     if(firstClear){
-     const rewardScale=BigNum.mul(BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),skillRewardFactor("money",true)*branchRewardFactor(info)),1.5);
-     const xpReward=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",true)*branchRewardFactor(info)*1.5);
+     const rewardScale=BigNum.mul(BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),skillRewardFactor("money",info.boss)*branchRewardFactor(info)),1.5);
+     const xpReward=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",info.boss)*branchRewardFactor(info)*1.5);
      addMoneyBN(rewardScale);gainXP(xpReward);
      const spReward=Math.floor(milestone.sp*1.5);
      s.sp=(Number(s.sp)||0)+spReward;
@@ -1408,8 +1408,8 @@ function renderBattle(){
  }
  const ratio=target?Math.max(0,Math.min(1,BigNum.toNumber(BigNum.div(hp,max)))):0;
  const timerPanel=$("bossTimerPanel"),timerText=$("bossTimerText"),timerBar=$("bossTimerBar"),timerHint=$("bossTimerHint");
- const timerActive=!!(target&&info.boss&&target.timer>0&&!target.timerExpired);
- if(timerPanel){timerPanel.classList.toggle("show",!!(target&&info.boss&&target.variant));if(timerActive){timerText.textContent="強化ボス制限時間 "+Math.ceil(target.timer)+"秒"+(target.timerPause>0?"・停止中":"");timerBar.max=target.timerMax||120;timerBar.value=target.timer;timerHint.textContent="制限時間内に倒すと報酬2倍。時停衝撃で4秒停止。時間切れでもボスは弱体化して戦闘継続。"}else if(target&&info.boss&&target.variant){timerText.textContent="時間切れ・ボス弱体化";timerBar.value=0;timerHint.textContent="ボスの防御が崩れ、与えるダメージが1.5倍。";}}
+ const timerActive=!!(target&&(info.boss||target.milestoneId)&&target.timer>0&&!target.timerExpired);
+ if(timerPanel){timerPanel.classList.toggle("show",!!(target&&((info.boss&&target.variant)||target.milestoneId)));if(timerActive){timerText.textContent=(target.milestoneId?"特殊敵":"強化ボス")+"制限時間 "+Math.ceil(target.timer)+"秒"+(target.timerPause>0?"・停止中":"");timerBar.max=target.timerMax||120;timerBar.value=target.timer;timerHint.textContent="制限時間内に倒すと報酬2倍。時停衝撃で4秒停止。時間切れでもボスは弱体化して戦闘継続。"}else if(target&&((info.boss&&target.variant)||target.milestoneId)){timerText.textContent="時間切れ・ボス弱体化";timerBar.value=0;timerHint.textContent="ボスの防御が崩れ、与えるダメージが1.5倍。";}}
  milestoneEnsureState();milestoneQueueRefresh();
  const nextMilestone=battleMilestoneDefs.find(x=>!s.milestoneCleared[x.id]);
  const status=$("milestoneStatus");
