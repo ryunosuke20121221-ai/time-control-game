@@ -263,7 +263,7 @@ progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;
    <div class="small">時空エネルギー：<b id="timeEnergyValue">0</b> ／ 連鎖補正：<b id="milestoneChainValue">0%</b></div>
    <div class="small">魂の収穫者：特殊敵撃破でMP回復 ／ 時空略奪：時空エネルギーで攻撃力上昇</div>
    <div class="small">竜王の財宝：初回報酬増加 ／ 超越の連鎖：連続撃破で攻撃力上昇</div>
-   <button id="milestoneRetry" style="display:none;margin-top:8px">マイルストーン敵に再挑戦</button>
+   <button id="milestoneRetry" style="display:none;margin-top:8px">マイルストーン敵に再挑戦</button><button id="milestoneReplay" style="display:none;margin-top:8px">前回のマイルストーン敵に再戦（報酬なし）</button>
   </section>
   <div id="battleStage" class="battle-stage" style="margin-top:12px">
    <svg class="monster-art" viewBox="0 0 320 220" aria-label="スライム"><ellipse cx="160" cy="190" rx="105" ry="14" fill="#0008"/><path d="M55 170 Q60 65 160 55 Q260 65 265 170 Q260 195 160 195 Q60 195 55 170" fill="#1688ed" stroke="#6de4ff" stroke-width="9"/><ellipse cx="125" cy="135" rx="10" ry="15" fill="#07162b"/><ellipse cx="195" cy="135" rx="10" ry="15" fill="#07162b"/><path d="M140 158 Q160 176 180 158" fill="none" stroke="#07162b" stroke-width="7" stroke-linecap="round"/></svg>
@@ -511,7 +511,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   return "¥"+trim(scaled)+label;
  }
 
-const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,rbMultBig:{m:1,e:0},admin:false,tp:0,sp:0,skillTreeUnlocked:false,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false,branch:{choice:{},door:false,opposite:{},specialId:"",specialLv:0}},shop:{},lastSeen:Date.now(),battleKills:0,bossDefeats:0,enhancedDefeats:0,enhancedBossDefeats:0,bestiaryDefeats:{},milestoneCleared:{},milestoneRewarded:{},milestoneQueue:[],milestoneFailed:"",timeEnergy:0,milestoneChain:0,battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
+const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,rbMultBig:{m:1,e:0},admin:false,tp:0,sp:0,skillTreeUnlocked:false,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false,branch:{choice:{},door:false,opposite:{},specialId:"",specialLv:0}},shop:{},lastSeen:Date.now(),battleKills:0,bossDefeats:0,enhancedDefeats:0,enhancedBossDefeats:0,bestiaryDefeats:{},milestoneCleared:{},milestoneRewarded:{},milestoneQueue:[],milestoneFailed:"",milestoneLastDefeated:"",milestoneRepeatActive:false,timeEnergy:0,milestoneChain:0,battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
 let s=fresh(),last=performance.now(),shopDirty=true,rebirthShopDirty=true;
 const AUTO_SAVE_KEY="timeControlAutoSaveV1";
 let pendingLevelUps=0n,pendingReward=BigNum.from(0),pendingRewardedLevels=0n;
@@ -1141,7 +1141,7 @@ function milestoneEnsureState(){
  if(!s.milestoneCleared||typeof s.milestoneCleared!=="object")s.milestoneCleared={};
  if(!s.milestoneRewarded||typeof s.milestoneRewarded!=="object")s.milestoneRewarded={};
  if(!Array.isArray(s.milestoneQueue))s.milestoneQueue=[];
- s.milestoneQueue=s.milestoneQueue.filter((id,i,a)=>milestoneDef(id)&&!s.milestoneCleared[id]&&a.indexOf(id)===i);
+ s.milestoneQueue=s.milestoneQueue.filter((id,i,a)=>milestoneDef(id)&&(!s.milestoneCleared[id]||(s.milestoneRepeatActive&&id===s.milestoneLastDefeated))&&a.indexOf(id)===i);
  s.milestoneFailed=milestoneDef(s.milestoneFailed)?.id||"";
  s.timeEnergy=Math.max(0,Number(s.timeEnergy)||0);
  s.milestoneChain=Math.max(0,Number(s.milestoneChain)||0);
@@ -1164,6 +1164,14 @@ function milestoneRetry(){
  s.milestoneFailed="";
  battleSpawnWave();render();saveAutoGame();
  setBattleLogMessage("マイルストーン敵への再挑戦を開始！");
+}
+function milestoneReplay(){
+ milestoneEnsureState();
+ const id=s.milestoneLastDefeated;
+ if(!id||!s.milestoneCleared[id]||s.milestoneFailed||s.milestoneQueue.some(q=>!s.milestoneCleared[q])||s.battleGroup?.some(x=>x.milestoneId))return;
+ s.milestoneRepeatActive=true;s.milestoneQueue.unshift(id);
+ battleSpawnWave();render();saveAutoGame();
+ setBattleLogMessage("前回のマイルストーン敵に再挑戦！");
 }
 function battleEnemyNumber(){return Math.max(1,Math.floor(Number(s.battleKills)||0)+1)}
 function battleEnemyInfo(number=battleEnemyNumber()){
@@ -1310,24 +1318,29 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
    const scale=bigPowPositive(1.10,Math.max(0,info.number-1));
    const milestoneId=target.milestoneId||"",milestone=milestoneId?milestoneDef(milestoneId):null;
    if(milestone){
-    const rewardScale=BigNum.mul(BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),skillRewardFactor("money",true)*branchRewardFactor(info)),1.5);
-    const xpReward=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",true)*branchRewardFactor(info)*1.5);
-    addMoneyBN(rewardScale);gainXP(xpReward);
-    const spReward=Math.floor(milestone.sp*1.5);
-    s.sp=(Number(s.sp)||0)+spReward;
-    // 1) 魂の収穫者：特殊敵撃破でMPを回復。ボス級なので最大MPの10%。
-    s.mp=Math.min(maxMP(),s.mp+maxMP()*.10);
-    // 2) 時空略奪：到達桁に応じた時空エネルギーを獲得。1点につき攻撃力+0.1%。
-    const energyGain=1+Math.max(0,Math.floor(Math.log10(milestone.at/100)));
-    s.timeEnergy=(Number(s.timeEnergy)||0)+energyGain;
-    // 3) 竜王の財宝：初回報酬にSP・お金・XPのボーナスを適用。
-    // 4) 討伐マイルストーン：初回撃破状態を保存し、次の待機対象へ進める。
-    s.milestoneCleared[milestoneId]=true;s.milestoneRewarded[milestoneId]=true;
+    const firstClear=!s.milestoneRewarded[milestoneId];
+    if(firstClear){
+     const rewardScale=BigNum.mul(BigNum.mul(BigNum.mul(BigNum.mul(info.reward,scale),BigNum.mul(levelMoneyMultBN(),allMoneyMult())),skillRewardFactor("money",true)*branchRewardFactor(info)),1.5);
+     const xpReward=BigNum.mul(BigNum.mul(BigNum.mul(info.xp,scale),levelXpMultBN()),(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("xp",true)*branchRewardFactor(info)*1.5);
+     addMoneyBN(rewardScale);gainXP(xpReward);
+     const spReward=Math.floor(milestone.sp*1.5);
+     s.sp=(Number(s.sp)||0)+spReward;
+     // 魂の収穫者：特殊敵撃破で最大MPの10%を回復。
+     s.mp=Math.min(maxMP(),s.mp+maxMP()*.10);
+     // 時空略奪：到達桁に応じて時空エネルギーを獲得。1点につき攻撃力+0.1%。
+     const energyGain=1+Math.max(0,Math.floor(Math.log10(milestone.at/100)));
+     s.timeEnergy=(Number(s.timeEnergy)||0)+energyGain;
+     // 竜王の財宝：初回報酬のお金・XPを1.5倍、SPにも1.5倍補正。
+     // 討伐マイルストーン：初回撃破と報酬取得状態を別々に保存。
+     s.milestoneRewarded[milestoneId]=true;
+     // 超越の連鎖：連続した特殊敵の初回撃破ごとに攻撃力+0.5%、最大+25%。
+     s.milestoneChain=Math.min(50,(Number(s.milestoneChain)||0)+1);
+     showEnhancedRewardToast("🏆 "+milestone.name+" 初回撃破！\nSP +"+spReward+"　時空エネルギー +"+energyGain+"\nMP +"+formatStat("mp",maxMP()*.10,1)+"\nお金 +"+moneyFmt(rewardScale)+"\nXP +"+xpBNFmt(xpReward));
+    }else{
+     showEnhancedRewardToast("🏆 "+milestone.name+" 再撃破！\n初回報酬は取得済みのため、追加報酬はありません。");
+    }
+    s.milestoneCleared[milestoneId]=true;s.milestoneLastDefeated=milestoneId;s.milestoneRepeatActive=false;
     s.milestoneQueue=s.milestoneQueue.filter(id=>id!==milestoneId);
-    // 5) 超越の連鎖：連続した特殊敵の撃破ごとに攻撃力+0.5%、最大+25%。
-    s.milestoneChain=Math.min(50,(Number(s.milestoneChain)||0)+1);
-    const rewardMessage="🏆 "+milestone.name+" 撃破！\nSP +"+spReward+"　時空エネルギー +"+energyGain+"\nMP +"+formatStat("mp",maxMP()*.10,1)+"\nお金 +"+moneyFmt(rewardScale)+"\nXP +"+xpBNFmt(xpReward);
-    showEnhancedRewardToast(rewardMessage);
     if(info.boss)showBossVictory(info);
    }else{
     const rewardBonus=(s.skillTree?.swarmUltimate?1.5:1)*skillRewardFactor("money",info.boss)*branchRewardFactor(info);
@@ -1404,7 +1417,7 @@ function renderBattle(){
  const energyEl=$("timeEnergyValue"),chainEl=$("milestoneChainValue"),retryEl=$("milestoneRetry");
  if(energyEl)energyEl.textContent=formatStat("level",s.timeEnergy,0);
  if(chainEl)chainEl.textContent="+"+formatStat("multiplier",Math.min(25,s.milestoneChain*.5),1)+"%";
- if(retryEl){retryEl.style.display=s.milestoneFailed?"block":"none";retryEl.onclick=milestoneRetry;}
+ if(retryEl){retryEl.style.display=s.milestoneFailed?"block":"none";retryEl.onclick=milestoneRetry;}const replayEl=$("milestoneReplay");if(replayEl){const canReplay=!!s.milestoneLastDefeated&&!s.milestoneFailed&&!s.milestoneRepeatActive&&!s.milestoneQueue.some(id=>!s.milestoneCleared[id])&&!group.some(x=>x.milestoneId);replayEl.style.display=canReplay?"block":"none";replayEl.onclick=milestoneReplay;}
  $("battleKills").textContent=formatStat("level",s.battleKills,0)+"体";
  $("bestiaryBossDefeats").textContent=formatStat("level",s.bossDefeats||0,0)+"体";
  $("bestiaryEnhancedDefeats").textContent=formatStat("level",s.enhancedDefeats||0,0)+"体";
@@ -1433,7 +1446,7 @@ $("toggle").onclick=()=>{s.on=!s.on;if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=f
 $("boostSelect").onchange=()=>{s.boostTarget=Number($("boostSelect").value)||1.5;render()};
 $("xpBoostBtn").onclick=()=>{if(s.on){s.mpXpBoost=!s.mpXpBoost;render()}};
 $("moneyBoostBtn").onclick=()=>{if(s.on){s.mpMoneyBoost=!s.mpMoneyBoost;render()}};
-$("rebirthBtn").onclick=()=>{if(s.level>=400n){const oldLevel=s.level,nextRebirth=s.rebirth+1,addMult=BigNum.mul(levelToBN(oldLevel),0.005),nextMult=s.rebirth>0?BigNum.add(rbMultBN(),addMult):(BigNum.cmp(addMult,1)>0?addMult:BigNum.from(1)),earnedTP=Math.min(Number.MAX_SAFE_INTEGER,Number(oldLevel/100n)),keepTP=(s.tp||0)+earnedTP,keepShop={...(s.shop||{})},keepSP=s.sp||0,keepSkills=s.skillTree||fresh().skillTree,keepKills=s.battleKills||0,keepBossDefeats=s.bossDefeats||0,keepEnhancedDefeats=s.enhancedDefeats||0,keepEnhancedBossDefeats=s.enhancedBossDefeats||0,keepBestiaryDefeats=s.bestiaryDefeats||{},keepGroup=s.battleGroup||[],keepMilestoneCleared=s.milestoneCleared||{},keepMilestoneRewarded=s.milestoneRewarded||{},keepMilestoneQueue=s.milestoneQueue||[],keepMilestoneFailed=s.milestoneFailed||"",keepTimeEnergy=s.timeEnergy||0,keepMilestoneChain=s.milestoneChain||0;s={...fresh(),rebirth:nextRebirth,tp:keepTP,sp:keepSP,skillTree:keepSkills,battleKills:keepKills,bossDefeats:keepBossDefeats,enhancedDefeats:keepEnhancedDefeats,enhancedBossDefeats:keepEnhancedBossDefeats,bestiaryDefeats:keepBestiaryDefeats,battleGroup:keepGroup,milestoneCleared:keepMilestoneCleared,milestoneRewarded:keepMilestoneRewarded,milestoneQueue:keepMilestoneQueue,milestoneFailed:keepMilestoneFailed,timeEnergy:keepTimeEnergy,milestoneChain:keepMilestoneChain,shop:keepShop};setRBMultBN(nextMult);rebirthShopDirty=true;pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;addMoneyBN(shopEffect("startMoney",100)*allMoneyMult());s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${formatMultiplierBN(addMult)}。累計倍率×${formatMultiplierBN(rbMultBN())}です。`;render()}};
+$("rebirthBtn").onclick=()=>{if(s.level>=400n){const oldLevel=s.level,nextRebirth=s.rebirth+1,addMult=BigNum.mul(levelToBN(oldLevel),0.005),nextMult=s.rebirth>0?BigNum.add(rbMultBN(),addMult):(BigNum.cmp(addMult,1)>0?addMult:BigNum.from(1)),earnedTP=Math.min(Number.MAX_SAFE_INTEGER,Number(oldLevel/100n)),keepTP=(s.tp||0)+earnedTP,keepShop={...(s.shop||{})},keepSP=s.sp||0,keepSkills=s.skillTree||fresh().skillTree,keepKills=s.battleKills||0,keepBossDefeats=s.bossDefeats||0,keepEnhancedDefeats=s.enhancedDefeats||0,keepEnhancedBossDefeats=s.enhancedBossDefeats||0,keepBestiaryDefeats=s.bestiaryDefeats||{},keepGroup=s.battleGroup||[],keepMilestoneCleared=s.milestoneCleared||{},keepMilestoneRewarded=s.milestoneRewarded||{},keepMilestoneQueue=s.milestoneQueue||[],keepMilestoneFailed=s.milestoneFailed||"",keepMilestoneLastDefeated=s.milestoneLastDefeated||"",keepMilestoneRepeatActive=!!s.milestoneRepeatActive,keepTimeEnergy=s.timeEnergy||0,keepMilestoneChain=s.milestoneChain||0;s={...fresh(),rebirth:nextRebirth,tp:keepTP,sp:keepSP,skillTree:keepSkills,battleKills:keepKills,bossDefeats:keepBossDefeats,enhancedDefeats:keepEnhancedDefeats,enhancedBossDefeats:keepEnhancedBossDefeats,bestiaryDefeats:keepBestiaryDefeats,battleGroup:keepGroup,milestoneCleared:keepMilestoneCleared,milestoneRewarded:keepMilestoneRewarded,milestoneQueue:keepMilestoneQueue,milestoneFailed:keepMilestoneFailed,milestoneLastDefeated:keepMilestoneLastDefeated,milestoneRepeatActive:keepMilestoneRepeatActive,timeEnergy:keepTimeEnergy,milestoneChain:keepMilestoneChain,shop:keepShop};setRBMultBN(nextMult);rebirthShopDirty=true;pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;addMoneyBN(shopEffect("startMoney",100)*allMoneyMult());s.mp=Math.min(maxMP(),s.mp+shopEffect("startMp",1));shopDirty=true;autoTapTimer=0;saveAutoGame();$("log").textContent=`転生成功！ 転生ポイント+${earnedTP}、倍率加算+${formatMultiplierBN(addMult)}。累計倍率×${formatMultiplierBN(rbMultBN())}です。`;render()}};
 const SAVE_SLOTS_KEY="timeControlNamedSaveSlotsV1";
 function applyOfflineProgress(){
  const now=Date.now();
