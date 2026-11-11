@@ -257,7 +257,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   const n=Number(v);if(!Number.isFinite(n))throw new RangeError("BigNum input must be finite");const p=parseParts(n.toString());return make(p.c,p.scale);
  }
  function parts(v){const x=from(v),c=BigInt(x.d),p=(c<0n?-c:c).toString().length;return {x,c,scale:x.e-(p-1)}}
- const cmp=(a,b)=>{const A=parts(a),B=parts(b);if(A.c===0n||B.c===0n)return A.c===B.c?0:A.c>0n?1:-1;if((A.c<0n)!==(B.c<0n))return A.c<0n?-1:1;let result=0;if(A.x.e!==B.x.e)result=A.x.e>B.x.e?1:-1;else{const ad=(A.c<0n?-A.c:A.c).toString(),bd=(B.c<0n?-B.c:B.c).toString(),len=Math.max(ad.length,bd.length),av=BigInt(ad.padEnd(len,"0")),bv=BigInt(bd.padEnd(len,"0"));result=av===bv?0:av>bv?1:-1}return A.c<0n?-result:result};
+ const cmp=(a,b)=>{const A=parts(a),B=parts(b);if(A.c===0n)return B.c===0n?0:(B.c<0n?1:-1);if(B.c===0n)return A.c<0n?-1:1;if((A.c<0n)!==(B.c<0n))return A.c<0n?-1:1;let result=0;if(A.x.e!==B.x.e)result=A.x.e>B.x.e?1:-1;else{const ad=(A.c<0n?-A.c:A.c).toString(),bd=(B.c<0n?-B.c:B.c).toString(),len=Math.max(ad.length,bd.length),av=BigInt(ad.padEnd(len,"0")),bv=BigInt(bd.padEnd(len,"0"));result=av===bv?0:av>bv?1:-1}return A.c<0n?-result:result};
  const add=(a,b)=>{const A=parts(a),B=parts(b);if(A.c===0n)return B.x;if(B.c===0n)return A.x;const gap=Math.abs(A.x.e-B.x.e);if(gap>Number(PREC)+2)return A.x.e>B.x.e?A.x:B.x;const scale=Math.min(A.scale,B.scale),da=A.scale-scale,db=B.scale-scale;return make(A.c*10n**BigInt(da)+B.c*10n**BigInt(db),scale)};
  const sub=(a,b)=>{const B=parts(b);return add(a,make(-B.c,B.scale))};
  const mul=(a,b)=>{const A=parts(a),B=parts(b);return make(A.c*B.c,A.scale+B.scale)};
