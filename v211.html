@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>時間操作ゲーム v209</title>
+<title>時間操作ゲーム v211</title>
 <style>
 html,body,button{touch-action:manipulation}html,body{overflow-anchor:none}
 :root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
@@ -1732,6 +1732,7 @@ function renderBattle(){
  const timerActive=!!(target&&(info.boss||target.milestoneId)&&target.timer>0&&!target.timerExpired);
  if(timerPanel){timerPanel.classList.toggle("show",!!(target&&((info.boss&&target.variant)||target.milestoneId)));if(timerActive){timerText.textContent=(target.milestoneId?"特殊敵":"強化ボス")+"制限時間 "+Math.ceil(target.timer)+"秒"+(target.timerPause>0?"・停止中":"");timerBar.max=target.timerMax||120;timerBar.value=target.timer;timerHint.textContent=target.milestoneId?(target.challengeMode?"制限時間内に撃破してください。時間切れになると挑戦失敗となり、挑戦券は消費されます。時停衝撃で4秒停止。":"制限時間内に撃破してください。時間切れになると挑戦失敗となり、再挑戦が必要です。時停衝撃で4秒停止。"):"制限時間内に倒すと報酬2倍。時停衝撃で4秒停止。時間切れでもボスは弱体化して戦闘継続。"}else if(target&&((info.boss&&target.variant)||target.milestoneId)){timerText.textContent="時間切れ・ボス弱体化";timerBar.value=0;timerHint.textContent="ボスの防御が崩れ、与えるダメージが1.5倍。";}}
  milestoneEnsureState();milestoneQueueRefresh();
+ if(!$("milestoneSchedule")?.hidden)renderMilestoneSchedule();
  const nextMilestone=battleMilestoneDefs.find(x=>!s.milestoneCleared[x.id]);
  const status=$("milestoneStatus");
  if(status)status.textContent=s.milestoneFailed?"挑戦失敗："+milestoneDef(s.milestoneFailed).name+"（再挑戦可能）":(nextMilestone?"次の確定出現："+nextMilestone.at.toLocaleString("ja-JP")+"体「"+nextMilestone.name+"」":"全マイルストーン達成！");
