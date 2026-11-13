@@ -1327,7 +1327,7 @@ function renderBattleSkills(){
   const newList=root.querySelector(".battle-skill-list");if(newList)newList.scrollTop=oldScroll;
   root.querySelectorAll("[data-battle-skill]").forEach(b=>b.onclick=()=>battleUseSkill(b.dataset.battleSkill));
  }
- unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(!preview)return;const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.hits>1?"集中攻撃："+p.hits+"回 ／ ダメージ目安："+xpBNFmt(p.total):p.count>1?"1体あたり目安："+xpBNFmt(p.perTarget)+" ／ 合計："+xpBNFmt(p.total):"ダメージ目安："+xpBNFmt(p.total)):"ダメージ目安：対象なし";});
+ unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(!preview)return;const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.maxHitsPerTarget>1?"集中攻撃："+p.maxHitsPerTarget+"回 ／ ダメージ目安："+xpBNFmt(p.total):p.count>1?(p.maxHitsPerTarget>1?"集中攻撃：最大"+p.maxHitsPerTarget+"回 ／ ":"")+"1体あたり目安："+xpBNFmt(p.perTarget)+" ／ 合計："+xpBNFmt(p.total):"ダメージ目安："+xpBNFmt(p.total)):"ダメージ目安：対象なし";});
 }
 function battleUseSkill(id){
  skillEnsureState();
@@ -1692,7 +1692,8 @@ function battlePreviewSkillDamage(skill){
   total=BigNum.add(total,damage);
   target.hp=BigNum.json(BigNum.cmp(damage,target.hp)>=0?BigNum.from(0):BigNum.sub(target.hp,damage));
  }
- return {total,perTarget:BigNum.div(total,unique.length),count:unique.length,hits:appliedHits};
+ const maxHitsPerTarget=Math.max(0,...hitOffsets.values());
+ return {total,perTarget:BigNum.div(total,unique.length),count:unique.length,hits:appliedHits,maxHitsPerTarget};
 }
 function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
  battleEnsureState();
