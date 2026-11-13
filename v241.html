@@ -1115,7 +1115,7 @@ const extraSkillDefs={
 };
 const compositeSkillDefs={
  transcendentHunt:{cost:250,name:"超越個体探知",desc:"連続討伐の極意＋時空崩壊が必要。強化雑魚・強化ボスが出現する",requires:["swarmUltimate","timeCollapse"]},
- chronoStagger:{cost:180,name:"時停衝撃",desc:"時空崩壊＋時間凍結が必要。MP60・威力×56・ボス補正×2.2の攻撃で、強化ボスの制限時間を4秒停止",requires:["timeCollapse","timeFreeze"]}
+ chronoStagger:{cost:180,name:"時停衝撃",desc:"時空崩壊＋時間凍結が必要。MP60・威力×56・ボス補正×2.2の攻撃で、強化ボス・強化マイルストーンの制限時間を1回4秒、合計最大12秒停止",requires:["timeCollapse","timeFreeze"]}
 };
 
 const branchRouteDefs={swarm:{A:["群勢連鎖","大群掃討","群勢の極致"],B:["戦利品増幅","討伐連鎖報酬","無尽討伐"]},boss:{A:["竜脈破砕","強敵看破","竜殺しの真髄"],B:["王の戦利品","撃破の余波","覇者の報酬"]},time:{A:["残響増幅","時空共鳴","無限残響"],B:["時間圧縮","時の支配","永劫制御"]},manaCycle:{A:["魔力貯蔵","魔力還流","永久循環"],B:["消費抑制","魔力節約","無尽魔力"]},tactics:{A:["精密照準","急所連撃","完全解析"],B:["防御看破","弱点露呈","絶対決着"]}};
@@ -1873,7 +1873,7 @@ function renderBattle(){
  const ratio=target?Math.max(0,Math.min(1,BigNum.toNumber(BigNum.div(hp,max)))):0;
  const timerPanel=$("bossTimerPanel"),timerText=$("bossTimerText"),timerBar=$("bossTimerBar"),timerHint=$("bossTimerHint");
  const timerActive=!!(target&&(info.boss||target.milestoneId)&&target.timer>0&&!target.timerExpired);
- if(timerPanel){timerPanel.classList.toggle("show",!!(target&&((info.boss&&target.variant)||target.milestoneId)));if(timerActive){timerText.textContent=(target.milestoneId?"特殊敵":"強化ボス")+"制限時間 "+Math.ceil(target.timer)+"秒"+(target.timerPause>0?"・停止中":"");timerBar.max=target.timerMax||120;timerBar.value=target.timer;timerHint.textContent=target.milestoneId?(target.challengeMode?"制限時間内に撃破してください。時間切れになると挑戦失敗となり、挑戦券は消費されます。時停衝撃で4秒停止。":"制限時間内に撃破してください。時間切れになると挑戦失敗となり、再挑戦が必要です。時停衝撃で4秒停止。"):"制限時間内に倒すと報酬2倍。時停衝撃で4秒停止。時間切れでもボスは弱体化して戦闘継続。"}else if(target&&((info.boss&&target.variant)||target.milestoneId)){timerText.textContent="時間切れ・ボス弱体化";timerBar.value=0;timerHint.textContent="ボスの防御が崩れ、与えるダメージが1.5倍。";}}
+ if(timerPanel){timerPanel.classList.toggle("show",!!(target&&((info.boss&&target.variant)||target.milestoneId)));if(timerActive){timerText.textContent=(target.milestoneId?"特殊敵":"強化ボス")+"制限時間 "+Math.ceil(target.timer)+"秒"+(target.timerPause>0?"・停止中":"");timerBar.max=target.timerMax||120;timerBar.value=target.timer;timerHint.textContent=target.milestoneId?(target.challengeMode?"制限時間内に撃破してください。時間切れになると挑戦失敗となり、挑戦券は消費されます。時停衝撃で合計最大12秒停止。":"制限時間内に撃破してください。時間切れになると挑戦失敗となり、再挑戦が必要です。時停衝撃で合計最大12秒停止。"):"制限時間内に倒すと報酬2倍。時停衝撃で合計最大12秒停止。時間切れでもボスは弱体化して戦闘継続。"}else if(target&&((info.boss&&target.variant)||target.milestoneId)){timerText.textContent="時間切れ・ボス弱体化";timerBar.value=0;timerHint.textContent="ボスの防御が崩れ、与えるダメージが1.5倍。";}}
  milestoneEnsureState();milestoneQueueRefresh();
  if(!$("milestoneSchedule")?.hidden)renderMilestoneSchedule();
  const nextMilestone=battleMilestoneDefs.find(x=>!s.milestoneCleared[x.id]);
