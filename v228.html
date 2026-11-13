@@ -1340,8 +1340,13 @@ function battleUseSkill(id){
  let castMult=skill.mult*skillManaDamageFactor(mpRatioBefore);
  if(skillHas("timeFreeze")){s.skillTree.timeCastCount=(Number(s.skillTree.timeCastCount)||0)+1;if(s.skillTree.timeCastCount%10===0)castMult*=2;}
  if(id==="chronoStagger"&&s.battleGroup?.length){const target=s.battleGroup[0],info=battleEnemyInfo(target.number);if(info.boss&&target.variant)target.timerPause=Math.min(12,(Number(target.timerPause)||0)+4);}
- battleApplyDamage(castMult,skill.targets||1,skill.bossMult||1);
- if(skillEchoChance()>0&&Math.random()<skillEchoChance())battleApplyDamage(castMult*skillEchoPower(),skill.targets||1,skill.bossMult||1);
+ const hitCount=Math.max(1,Math.floor(Number(skill.targets)||1));
+ const selectedTargets=(s.battleGroup||[]).slice(0,hitCount);
+ const targetSequence=selectedTargets.length?Array.from({length:hitCount},(_,i)=>selectedTargets[i%selectedTargets.length].number):[];
+ const echoTriggered=skillEchoChance()>0&&Math.random()<skillEchoChance();
+ // 追撃は同じ発動時に選ばれた敵だけへ適用。主攻撃で全滅した場合、新しいウェーブへ誤射しない。
+ battleApplyDamage(castMult,hitCount,skill.bossMult||1,echoTriggered,targetSequence);
+ if(echoTriggered)battleApplyDamage(castMult*skillEchoPower(),hitCount,skill.bossMult||1,false,targetSequence);
  setBattleLogMessage(skill.name+"を使用！ 最大"+(skill.targets||1)+"体に攻撃し、MPを"+skillMpCostLabel(skill.mp)+"消費しました。");
  render();saveAutoGame();
 }
@@ -1695,12 +1700,12 @@ function battlePreviewSkillDamage(skill){
  const maxHitsPerTarget=Math.max(0,...hitOffsets.values());
  return {total,perTarget:BigNum.div(total,unique.length),count:unique.length,hits:appliedHits,maxHitsPerTarget};
 }
-function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
+function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1,deferSpawn=false,targetSequence=null){
  battleEnsureState();
  const available=(s.battleGroup||[]);
  const hitCount=Math.max(1,Math.floor(Number(targetCount)||1));
  const selected=available.slice(0,hitCount);
- const targets=selected.length?Array.from({length:hitCount},(_,i)=>selected[i%selected.length].number):[];
+ const targets=Array.isArray(targetSequence)?targetSequence.slice(0,hitCount):(selected.length?Array.from({length:hitCount},(_,i)=>selected[i%selected.length].number):[]);
  let killed=false,firstAppliedDamage=null;
  for(const number of targets){
   const index=s.battleGroup.findIndex(x=>x.number===number);if(index<0)continue;
@@ -1790,7 +1795,7 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1){
    s.battleGroup.splice(index,1);killed=true;
   }else target.hp=BigNum.json(BigNum.sub(hp,damage));
  }
- if(!s.battleGroup.length){milestoneQueueRefresh();battleSpawnWave();}
+ if(!s.battleGroup.length&&!deferSpawn){milestoneQueueRefresh();battleSpawnWave();}
  s.battleEnemyHp=s.battleGroup[0]?.hp||BigNum.json(0);
  if(killed)battleRenderedEnemy="";
  if(!killed&&firstAppliedDamage!==null){const first=s.battleGroup[0];if(first)setBattleLogMessage("魔物に "+xpBNFmt(firstAppliedDamage)+" ダメージ！");}
