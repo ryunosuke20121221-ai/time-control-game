@@ -1339,7 +1339,7 @@ function battleUseSkill(id){
  if(!s.admin)s.mp-=mpCost;
  let castMult=skill.mult*skillManaDamageFactor(mpRatioBefore);
  if(skillHas("timeFreeze")){s.skillTree.timeCastCount=(Number(s.skillTree.timeCastCount)||0)+1;if(s.skillTree.timeCastCount%10===0)castMult*=2;}
- if(id==="chronoStagger"&&s.battleGroup?.length){const target=s.battleGroup[0],info=battleEnemyInfo(target.number);if(info.boss&&target.variant){const used=Math.max(0,Number(target.timerPauseUsed)||0),added=Math.min(4,Math.max(0,12-used));target.timerPause=Math.min(12,(Number(target.timerPause)||0)+added);target.timerPauseUsed=used+added;}}
+ if(id==="chronoStagger"&&s.battleGroup?.length){const target=s.battleGroup[0],info=battleEnemyInfo(target.number);if(info.boss&&target.variant){const used=target.timerPauseUsed===undefined&&Number(target.timerPause)>0?12:Math.max(0,Number(target.timerPauseUsed)||0),added=Math.min(4,Math.max(0,12-used));target.timerPause=Math.min(12,(Number(target.timerPause)||0)+added);target.timerPauseUsed=used+added;}}
  const hitCount=Math.max(1,Math.floor(Number(skill.targets)||1));
  const selectedTargets=(s.battleGroup||[]).slice(0,hitCount);
  const targetSequence=selectedTargets.length?Array.from({length:hitCount},(_,i)=>selectedTargets[i%selectedTargets.length].number):[];
