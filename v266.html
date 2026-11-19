@@ -1918,7 +1918,7 @@ function rebirthBlockedByBattle(){
  return !!(s.milestoneQueue?.length||s.challengeQueueId);
 }
 let battleManualLastAt=0;
-window.battleManualAttack=()=>{if(tsActive()){tsPlayerAttack(true);if(Number(s.shardSkills?.linkedTap)>0)tapReward(false);return;}const now=performance.now(),cooldown=battleManualCooldownSeconds()*1000;if(battleManualLastAt>0&&now-battleManualLastAt<cooldown)return;battleManualLastAt=now;battleApplyDamage(1.25);if(Number(s.shardSkills?.linkedTap)>0)tapReward();renderBattle();render();saveAutoGame()};
+window.battleManualAttack=()=>{if(tsActive()){tsPlayerAttack(true);return;}const now=performance.now(),cooldown=battleManualCooldownSeconds()*1000;if(battleManualLastAt>0&&now-battleManualLastAt<cooldown)return;battleManualLastAt=now;battleApplyDamage(1.25);if(Number(s.shardSkills?.linkedTap)>0)tapReward();renderBattle();render();saveAutoGame()};
 // 描画更新後も手動攻撃ボタンの操作を確実に受け取る。
 const manualAttackButton=$("battleManual");if(manualAttackButton)manualAttackButton.onclick=window.battleManualAttack;
 let battleRenderedEnemy="";function battleMonsterArt(kind){
@@ -2298,7 +2298,7 @@ function tsEscape(){
  const amount=Math.floor((base+extra)*(1+(Number(t.upgrades.shardBoost)||0)*.10));
  s.timeShards=(Number(s.timeShards)||0)+amount;s.timeShardsTotal=(Number(s.timeShardsTotal)||0)+amount;
  if(first)t.cores+=5;if(noDefeat)t.cores++;
- t.completedRuns++;t.echo.points+=5+(noDefeat?2:0);if(t.completedRuns===3&&noDefeat)tsUnlockPermanent("echo");t.boon=true;t.unlocked=true;t.worldCycle++;
+ t.completedRuns++;t.echo.points+=5+(noDefeat?2:0);if(t.completedRuns>=3&&noDefeat)tsUnlockPermanent("echo");t.boon=true;t.unlocked=true;t.worldCycle++;
  d.active=false;d.internalShards=0;d.finalBoss=false;d.enemyGroup=[];tsMajorReset();
 }
 function tsMajorReset(){
@@ -2446,17 +2446,20 @@ function tsRender(){
   const equipped=t.permanent.equipped.includes(x[0]);
   return '<div class="ts-item"><b>'+x[1]+' '+(available?"解放済み":"未解放")+' Lv'+lv+'/4</b><p>'+x[2]+'</p><small>'+(available?(costs?"強化費用："+moneyFmt(costs.money)+"・欠片"+costs.shard:(max?"最大":"強化不可")):(x[0]==="echo"?"3回目の脱出を無敗で達成すると解放":"2回目の侵入で対応する領域ボスを撃破すると解放"))+'</small><button data-ts="perm" data-id="'+x[0]+'" '+(upgradeAllowed&&canAffordMoney(costs.money)&&Number(s.timeShards)>=costs.shard?"":"disabled")+'>'+(max?"最大":"強化")+'</button><button data-ts="equip" data-id="'+x[0]+'" '+(!available||d.active?"disabled":"")+'>'+(equipped?"装備解除":"装備")+'</button></div>';
  }).join("");
+ const facilityUniqueEffects=["お金収入+10% / 段階","購入費用-5% / 段階","XP収入+10% / 段階","オフライン報酬+5% / 段階。IIIで上限12時間","施設の欠片抽選率+1ポイント / 段階"];
  const facHtml=buildings.map((b,i)=>{
   const current=t.facilityEvo[i],common=tsEvolutionCost("facility",i,"common"),unique=tsEvolutionCost("facility",i,"unique"),cr=tsEvolutionRequirement("facility",i,"common"),ur=tsEvolutionRequirement("facility",i,"unique");
   const commonReady=!!common&&!cr&&canAffordMoney(common.money)&&Number(s.timeShards)>=common.shards&&!d.active;
   const uniqueReady=!!unique&&!ur&&canAffordMoney(unique.money)&&Number(s.timeShards)>=unique.shards&&!d.active;
-  return '<div class="ts-item"><b>'+b.name+'</b><p>共通進化 '+current.common+'/3・固有進化 '+current.unique+'/3</p><small>共通：'+(common?moneyFmt(common.money)+"・欠片"+common.shards:"最大")+'<br>固有：'+(unique?moneyFmt(unique.money)+"・欠片"+unique.shards:"最大")+'</small><button data-ts="evo" data-type="facility" data-index="'+i+'" data-kind="common" '+(commonReady?"":"disabled")+'>'+(cr||"共通進化")+'</button><button data-ts="evo" data-type="facility" data-index="'+i+'" data-kind="unique" '+(uniqueReady?"":"disabled")+'>'+(ur||"固有進化")+'</button></div>';
+  return '<div class="ts-item"><b>'+b.name+'</b><p>共通進化 '+current.common+'/3・固有進化 '+current.unique+'/3</p><small>共通：収益周期短縮 5% / 10% / 15%<br>固有：'+facilityUniqueEffects[i]+'<br>共通費用：'+(common?moneyFmt(common.money)+"・欠片"+common.shards:"最大")+'<br>固有費用：'+(unique?moneyFmt(unique.money)+"・欠片"+unique.shards:"最大")+'</small><button data-ts="evo" data-type="facility" data-index="'+i+'" data-kind="common" '+(commonReady?"":"disabled")+'>'+(cr||"共通進化")+'</button><button data-ts="evo" data-type="facility" data-index="'+i+'" data-kind="unique" '+(uniqueReady?"":"disabled")+'>'+(ur||"固有進化")+'</button></div>';
  }).join("");
+ const abilityCommonEffects=["能力使用中XP+3% / 段階","局所減速XP倍率+3% / 段階","身体適応の主効果+3% / 段階","精密制御のMP回復+3% / 段階"];
+ const abilityUniqueEffects=["自動タップ+3% / 段階","施設収入+3% / 段階","タップXP+5% / 段階","MP消費軽減+2ポイント / 段階"];
  const abilHtml=funcs.map((f,i)=>{
   const current=t.abilityEvo[i],common=tsEvolutionCost("ability",i,"common"),unique=tsEvolutionCost("ability",i,"unique"),cr=tsEvolutionRequirement("ability",i,"common"),ur=tsEvolutionRequirement("ability",i,"unique");
   const commonReady=!!common&&!cr&&canAffordMoney(common.money)&&Number(s.timeShards)>=common.shards&&!d.active;
   const uniqueReady=!!unique&&!ur&&canAffordMoney(unique.money)&&Number(s.timeShards)>=unique.shards&&!d.active;
-  return '<div class="ts-item"><b>'+f.name+'</b><p>共通進化 '+current.common+'/3・固有進化 '+current.unique+'/3</p><small>共通：'+(common?moneyFmt(common.money)+"・欠片"+common.shards:"最大")+'<br>固有：'+(unique?moneyFmt(unique.money)+"・欠片"+unique.shards:"最大")+'</small><button data-ts="evo" data-type="ability" data-index="'+i+'" data-kind="common" '+(commonReady?"":"disabled")+'>'+(cr||"共通進化")+'</button><button data-ts="evo" data-type="ability" data-index="'+i+'" data-kind="unique" '+(uniqueReady?"":"disabled")+'>'+(ur||"固有進化")+'</button></div>';
+  return '<div class="ts-item"><b>'+f.name+'</b><p>共通進化 '+current.common+'/3・固有進化 '+current.unique+'/3</p><small>共通：'+abilityCommonEffects[i]+'<br>固有：'+abilityUniqueEffects[i]+'<br>共通費用：'+(common?moneyFmt(common.money)+"・欠片"+common.shards:"最大")+'<br>固有費用：'+(unique?moneyFmt(unique.money)+"・欠片"+unique.shards:"最大")+'</small><button data-ts="evo" data-type="ability" data-index="'+i+'" data-kind="common" '+(commonReady?"":"disabled")+'>'+(cr||"共通進化")+'</button><button data-ts="evo" data-type="ability" data-index="'+i+'" data-kind="unique" '+(uniqueReady?"":"disabled")+'>'+(ur||"固有進化")+'</button></div>';
  }).join("");
  const areaNames=["時間の残骸","結晶の境界","時空の深淵"];
  const fight=d.active?
@@ -2464,7 +2467,7 @@ function tsRender(){
   '<section class="ts-panel"><p>初回9核、2回目以降10核で侵入。3領域と最終ボスを攻略して脱出する。</p><small>次の侵入費用：核'+(t.completedRuns?10:9)+'個</small><br><button class="primary" id="tsEnter" '+(t.cores>=(t.completedRuns?10:9)?"":"disabled")+'>'+(t.completedRuns?"時空の歪みに再侵入":"時空の扉を開く")+'</button></section>';
  const spent=tsEchoSpent(),respecCost=spent*20,availableCores=Math.min(t.cores,Math.ceil(Math.max(0,respecCost-(Number(s.timeShards)||0))/200));
  root.innerHTML=
-  '<section class="ts-panel"><h2>時空システム</h2><div class="ts-stats"><div>通常'+shardName+' <b>'+s.timeShards+'</b></div><div>時空の核 <b>'+t.cores+'</b></div><div>脱出回数 <b>'+t.completedRuns+'</b></div><div>時空残響ポイント <b>'+t.echo.points+'</b></div></div><p>'+(t.boon?"時空の恩恵：お金・XP獲得量×10":"スキルツリー解放前でも核を制作して初回侵入できる。")+'</p><small>核制作費：'+craftCost+'個 / 1個</small><br><button id="tsCraftOne" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>核を1個制作</button><button id="tsCraftMax" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>作れるだけ制作</button></section>'+
+  '<section class="ts-panel"><h2>時空システム</h2><div class="ts-stats"><div>通常'+shardName+' <b id="tsShardBalance">'+s.timeShards+'</b></div><div>時空の核 <b id="tsCoreBalance">'+t.cores+'</b></div><div>脱出回数 <b id="tsRunBalance">'+t.completedRuns+'</b></div><div>時空残響ポイント <b id="tsEchoBalance">'+t.echo.points+'</b></div></div><p>'+(t.boon?"時空の恩恵：お金・XP獲得量×10":"スキルツリー解放前でも核を制作して初回侵入できる。")+'</p><small>核制作費：'+craftCost+'個 / 1個</small><br><button id="tsCraftOne" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>核を1個制作</button><button id="tsCraftMax" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>作れるだけ制作</button></section>'+
   fight+
   '<section class="ts-panel"><h3>欠片強化</h3><p>'+(s.skillTreeUnlocked?"敵・施設から欠片を入手できる。施設の欠片抽選は全施設共通の5分周期。":"スキルツリー解放後に利用可能。")+'</p><div class="ts-grid">'+shardHtml+'</div></section>'+
   '<section class="ts-panel"><h3>核強化</h3><p>次回侵入用の核'+coreReserve+'個は購入に使えない。すべての核強化はスキルツリー解放後。</p><div class="ts-grid">'+coreHtml+'</div></section>'+
@@ -2489,8 +2492,11 @@ function tsRender(){
  tsUpdateStatus();
 }
 function tsUpdateStatus(){
+ const t=tsEnsure(),d=t.distortion;
+ const shard=$("tsShardBalance"),core=$("tsCoreBalance"),runs=$("tsRunBalance"),echo=$("tsEchoBalance");
+ if(shard)shard.textContent=String(s.timeShards);if(core)core.textContent=String(t.cores);if(runs)runs.textContent=String(t.completedRuns);if(echo)echo.textContent=String(t.echo.points);
  if(!tsActive())return;
- const t=tsEnsure(),d=t.distortion,e=tsCurrentEnemy(),name=$("tsEnemyName");
+ const e=tsCurrentEnemy(),name=$("tsEnemyName");
  const alive=d.enemyGroup.filter(x=>Number(x.hp)>0).length,total=d.enemyGroup.length;
  if(name)name.textContent=e.n+"　残り"+alive+"/"+total+"体　HP "+Math.ceil(d.enemyHp)+"/"+Math.ceil(d.enemyMaxHp)+(d.bossPhase?"　段階"+(d.bossPhase+1):"");
  const bar=$("tsEnemyBar");if(bar){bar.max=Math.max(1,d.enemyMaxHp);bar.value=d.enemyHp}
