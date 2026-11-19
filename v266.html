@@ -2610,6 +2610,13 @@ continuousBonus=function(){
  if(t.echo.levels[0]<5||elapsed<=240)return base;
  return Math.min(10,3+Math.floor((elapsed-240)/30)*.5);
 };
+const __tsBaseTapReward=tapReward;
+tapReward=function(...args){if(tsActive())return;return __tsBaseTapReward(...args)};
+for(const name of ["buyF","buyFMax","buyFAll","buyB","buyBMax","buyBAll"]){
+ const original=window[name];if(typeof original==="function")window[name]=(...args)=>{if(tsActive())return;return original(...args)};
+}
+const __tsBaseBattleSkill=battleUseSkill;
+battleUseSkill=function(...args){if(tsActive())return false;return __tsBaseBattleSkill(...args)};
 const __tsBaseOffline=applyOfflineProgress;
 applyOfflineProgress=function(){const t=tsEnsure();if(s.on){s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;t.mpRecoveryDelay=t.boon?5*(t.echo.levels[0]>=1?.9:1):0}if(tsActive()){s.lastSeen=Date.now();return}return __tsBaseOffline()};
 
