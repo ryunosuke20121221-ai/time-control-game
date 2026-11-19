@@ -2044,8 +2044,10 @@ function applyOfflineProgress(){if(tsActive()){s.lastSeen=Date.now();return;}
  const earnedXp=facilityOffline.xp;
  addMoneyBN(earnedMoney);if(BigNum.cmp(earnedXp,0)>0)gainXP(earnedXp);
  const mpBefore=Math.max(0,Number(s.mp)||0);
- const tsv=tsEnsure(),delayBefore=tsv.mpRecoveryDelay,mpElapsed=Math.max(0,elapsed-delayBefore);tsv.mpRecoveryDelay=Math.max(0,delayBefore-elapsed);
-  const mpRecovered=mpElapsed*0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus())*(tsv.echo.levels[0]>=2?1.1:1)*(tsv.recoverySeconds>0?2:1);
+ const tsv=tsEnsure(),delayBefore=tsv.mpRecoveryDelay,recoveryBefore=tsv.recoverySeconds,mpElapsed=Math.max(0,elapsed-delayBefore),boostedElapsed=Math.max(0,Math.min(elapsed,recoveryBefore)-Math.min(delayBefore,recoveryBefore));
+ tsv.mpRecoveryDelay=Math.max(0,delayBefore-elapsed);tsv.recoverySeconds=Math.max(0,recoveryBefore-elapsed);
+ const mpRate=0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus())*(tsv.echo.levels[0]>=2?1.1:1);
+ const mpRecovered=mpElapsed*mpRate+boostedElapsed*mpRate;
  s.mp=Math.min(maxMP(),mpBefore+mpRecovered);
  $("log").textContent=`オフライン報酬：${moneyFmt(earnedMoney)}、${xpBNFmt(earnedXp)} XP（${Math.floor(elapsed/60)}分）。MPは自然回復しました。`;
 }
@@ -2420,7 +2422,7 @@ function tsRender(){
  const coreHtml=tsCoreDefs.map(x=>{
   const lv=Number(t.upgrades[x[0]])||0,cost=tsCoreCost(x[0]),memoryGate=x[0]==="memory"?(lv>=3||t.echo.levels[2]>=[1,2,3][lv]):true;
   const allowed=s.skillTreeUnlocked&&cost>0&&t.cores-cost>=coreReserve&&memoryGate&&!d.active;
-  let note="次の強化費用：核"+cost;
+  let note=cost?"次の強化費用：核"+cost:"最大強化済み";
   if(x[0]==="memory"&&lv<3&&!memoryGate)note="存在強化Lv"+[1,2,3][lv]+"が必要";
   else if(!s.skillTreeUnlocked)note="スキルツリー解放後に利用可能";
   else if(cost&&t.cores-cost<coreReserve)note="次回侵入用の核を確保中";
