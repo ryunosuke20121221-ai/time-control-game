@@ -985,7 +985,7 @@ function processPendingXP(){
 function tapMoneyPerTap(autoMult=1){return BigNum.mul(totalIncomeBN(),0.005*autoMult*(1+shopEffect("tapMoney",0.02)))}
 function tapReward(isAuto=false){const autoMult=isAuto?localAutoTapMult()*(1+shopEffect("autoTapPower",0.01)):1;const tapBase=BigNum.add(0.5,BigNum.mul(levelOffsetBN(),0.005));const tapXp=BigNum.mul(BigNum.mul(tapBase,bodyAdaptMult()*(isAuto?bodyAutoXpMult():1)),BigNum.mul(rbMultBN(),autoMult*(1+shopEffect("tapXp",0.02))*localSlowXpMult()*(s.on?continuousBonus():1)*(s.on&&s.mpXpBoost?boostMultiplier():1)));gainXP(tapXp);addMoneyBN(tapMoneyPerTap(autoMult));}
 let facilityMoneyCacheKey="",facilityMoneyCacheBN=BigNum.from(0),facilityXpCacheKey="",facilityXpCache=0,facilityXpCacheBN=BigNum.from(0);
-function facilityIncomeBN(){const key=s.bl.join(",")+"|"+(s.fl[1]||0)+"|"+shopLv("facilityMoney");if(key!==facilityMoneyCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=Math.max(0,s.bl[i]||0);if(lv>0)total=BigNum.add(total,BigNum.mul(Math.max(1,b.income/2),lv))});facilityMoneyCacheBN=BigNum.mul(total,(1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02)));facilityMoneyCacheKey=key}return facilityMoneyCacheBN}
+function facilityIncomeBN(){const key=s.bl.join(",")+"|"+(s.fl[1]||0)+"|"+shopLv("facilityMoney")+"|"+(s.shardSkills?.facilityBoost?1:0);if(key!==facilityMoneyCacheKey){let total=BigNum.from(0);buildings.forEach((b,i)=>{const lv=Math.max(0,s.bl[i]||0);if(lv>0)total=BigNum.add(total,BigNum.mul(Math.max(1,b.income/2),lv))});facilityMoneyCacheBN=BigNum.mul(total,(1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02))*(s.shardSkills?.facilityBoost?1.2:1));facilityMoneyCacheKey=key}return facilityMoneyCacheBN}
 function facilityIncome(){const n=BigNum.toNumber(facilityIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function facilityXPEffectiveLevel(level){
  level=Math.max(0,Number(level)||0);
@@ -997,12 +997,12 @@ function facilityXPBase(){const n=BigNum.toNumber(facilityXPBaseBN());return Num
 function localSlowXpMult(){return 1+Math.max(0,s.fl[1]||0)*0.002}
 // 施設ごとのレベル減衰をキャッシュ可能な基礎値に含める。プレイヤー倍率は都度反映。
 function facilityXPLevelMultiplier(level){const lv=Math.max(0,Number(level)||0);return BigNum.toNumber(facilityLevelXpMultBN())*Math.max(0.75,1-lv/200000)}
-function passiveXPIncomeBN(){return BigNum.mul(facilityXPBaseBN(),BigNum.mul(facilityLevelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)))}
+function passiveXPIncomeBN(){return BigNum.mul(facilityXPBaseBN(),BigNum.mul(facilityLevelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*(s.shardSkills?.facilityBoost?1.2:1)))}
 function passiveXPIncome(){const n=BigNum.toNumber(passiveXPIncomeBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function abilityMoneyMult(){const n=BigNum.toNumber(abilityMoneyMultBN());return Number.isFinite(n)?n:Number.MAX_VALUE}
 function abilityMoneyMultBN(level=s.level){return s.on?BigNum.mul(BigNum.add(1.5,BigNum.mul(levelOffsetBN(level),0.05)),1+shopEffect("abilityMoney",0.01)):BigNum.from(1)}
-function facilityMoneyEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);return BigNum.mul(BigNum.mul(Math.max(1,buildings[i].income/2),lv),BigNum.mul((1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02)),BigNum.mul(levelMoneyMultBN(),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))))}
-function facilityXPEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);const effective=BigNum.add(BigNum.add(Math.min(lv,1000),Math.max(0,Math.min(lv-1000,9000))*0.8),Math.max(0,lv-10000)*0.6);const decay=lv>50000?0.75:Math.max(0.75,1-lv/200000);return BigNum.mul(BigNum.mul(effective,buildings[i].xpIncome/2*decay),BigNum.mul(facilityLevelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult()))}
+function facilityMoneyEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);return BigNum.mul(BigNum.mul(Math.max(1,buildings[i].income/2),lv),BigNum.mul((1+(s.fl[1]||0)*0.02)*(1+shopEffect("facilityMoney",0.02))*(s.shardSkills?.facilityBoost?1.2:1),BigNum.mul(levelMoneyMultBN(),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))))}
+function facilityXPEarnBN(i){const lv=Math.max(0,s.bl[i]||0);if(!lv)return BigNum.from(0);const effective=BigNum.add(BigNum.add(Math.min(lv,1000),Math.max(0,Math.min(lv-1000,9000))*0.8),Math.max(0,lv-10000)*0.6);const decay=lv>50000?0.75:Math.max(0.75,1-lv/200000);return BigNum.mul(BigNum.mul(effective,buildings[i].xpIncome/2*decay),BigNum.mul(facilityLevelXpMultBN(),localSlowXpMult()*(1+shopEffect("facilityXp",0.02))*(s.on&&s.mpXpBoost?boostMultiplier():1)*allXpMult()*(s.shardSkills?.facilityBoost?1.2:1)))}
 function totalIncomeBN(){return BigNum.mul(BigNum.mul(BigNum.add(1,facilityIncomeBN()),levelMoneyMultBN()),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))}
 function baseIncomeRateBN(){return BigNum.mul(levelMoneyMultBN(),BigNum.mul(abilityMoneyMultBN(),(s.on&&s.mpMoneyBoost?boostMultiplier():1)*allMoneyMult()))}
 function facilityPayoutInterval(i){return [10,30,60,120,180][i]||60}
@@ -1030,7 +1030,7 @@ function collectFacilityPayouts(dt,moneyFactor=1,xpFactor=1){
  if(elapsed<=0)return {money:payoutMoney,xp:payoutXP};
  for(let i=0;i<buildings.length;i++){
   if(Math.max(0,Number(s.bl?.[i])||0)<=0){s.facilityTimers[i]=0;s.facilityPendingMoney[i]=BigNum.json(0);s.facilityPendingXP[i]=BigNum.json(0);continue;}
-  const interval=facilityPayoutInterval(i),outputBoost=s.shardSkills?.facilityBoost?1.2:1,moneyRate=BigNum.mul(facilityMoneyEarnBN(i),outputBoost),xpRate=BigNum.mul(facilityXPEarnBN(i),outputBoost);
+  const interval=facilityPayoutInterval(i),moneyRate=facilityMoneyEarnBN(i),xpRate=facilityXPEarnBN(i);
   let remaining=elapsed,timer=s.facilityTimers[i],pendingMoney=BigNum.from(s.facilityPendingMoney[i]),pendingXP=BigNum.from(s.facilityPendingXP[i]);
   const toNext=Math.max(0,interval-timer);
   if(remaining+1e-9>=toNext){
