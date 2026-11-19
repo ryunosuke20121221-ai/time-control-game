@@ -2143,21 +2143,47 @@ document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEv
 function tsFresh(){return {unlocked:false,boon:false,completedRuns:0,worldCycle:0,cores:0,upgrades:{},shardSense:0,shardAdapt:0,coreResearch:0,sync:{level:0,wealth:0,growth:0},echo:{points:0,levels:[0,0,0]},permanent:{unlocked:{},levels:{},equipped:[]},facilityEvo:Array.from({length:5},()=>({common:0,unique:0})),abilityEvo:Array.from({length:4},()=>({common:0,unique:0})),facilityUnlocks:[false,false,false,false,false],abilityUnlocks:[false,false,false,false],distortion:{active:false,run:0,region:0,index:0,finalBoss:false,hp:1000,enemyHp:0,enemyMaxHp:0,enemyDamage:0,internalShards:0,defeats:0,checkpointRegion:0,checkpointIndex:0,alterations:[],claimedBosses:{},claimedEnemies:{},enemyTimer:0,playerTimer:0,enteredAt:0}}}
 function tsEnsure(){
  if(!s.timeSpace||typeof s.timeSpace!=="object")s.timeSpace=tsFresh();
- const t=s.timeSpace,f=tsFresh();
- t.upgrades={...f.upgrades,...(t.upgrades||{})};
- t.sync={...f.sync,...(t.sync||{})};
- t.echo={...f.echo,...(t.echo||{}),levels:Array.isArray(t.echo?.levels)?t.echo.levels.slice(0,3):[0,0,0]};
- t.permanent={...f.permanent,...(t.permanent||{}),unlocked:{...(t.permanent?.unlocked||{})},levels:{...(t.permanent?.levels||{})},equipped:Array.isArray(t.permanent?.equipped)?t.permanent.equipped:[]};
- t.facilityEvo=Array.from({length:5},(_,i)=>({...f.facilityEvo[i],...(t.facilityEvo?.[i]||{})}));
- t.abilityEvo=Array.from({length:4},(_,i)=>({...f.abilityEvo[i],...(t.abilityEvo?.[i]||{})}));
- t.facilityUnlocks=Array.from({length:5},(_,i)=>!!t.facilityUnlocks?.[i]);
- t.abilityUnlocks=Array.from({length:4},(_,i)=>!!t.abilityUnlocks?.[i]);
- t.distortion={...f.distortion,...(t.distortion||{})};
- t.cores=Math.max(0,Math.floor(Number(t.cores)||0));t.completedRuns=Math.max(0,Math.floor(Number(t.completedRuns)||0));t.worldCycle=Math.max(0,Math.floor(Number(t.worldCycle)||0));
- t.shardSense=Math.max(0,Math.min(5,Math.floor(Number(t.shardSense)||0)));t.shardAdapt=Math.max(0,Math.min(5,Math.floor(Number(t.shardAdapt)||0)));t.coreResearch=Math.max(0,Math.min(5,Math.floor(Number(t.coreResearch)||0)));
- t.sync.level=Math.max(0,Math.min(300,Math.floor(Number(t.sync.level)||0)));t.sync.wealth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.wealth)||0)));t.sync.growth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.growth)||0)));
- t.echo.points=Math.max(0,Math.floor(Number(t.echo.points)||0));t.echo.levels=t.echo.levels.map(x=>Math.max(0,Math.min(5,Math.floor(Number(x)||0))));
- t.distortion.region=Math.max(0,Math.min(2,Math.floor(Number(t.distortion.region)||0)));t.distortion.index=Math.max(0,Math.min(8,Math.floor(Number(t.distortion.index)||0)));t.distortion.hp=Math.max(0,Number(t.distortion.hp)||1000);t.distortion.internalShards=Math.max(0,Math.floor(Number(t.distortion.internalShards)||0));t.distortion.defeats=Math.max(0,Math.floor(Number(t.distortion.defeats)||0));
+ const t=s.timeSpace,f=tsFresh(),isObj=x=>x&&typeof x==="object"&&!Array.isArray(x);
+ const fill=(target,defaults)=>{if(!isObj(target))target={};for(const k of Object.keys(defaults))if(target[k]===undefined)target[k]=defaults[k];return target};
+ t.upgrades=fill(t.upgrades,f.upgrades);
+ t.sync=fill(t.sync,f.sync);
+ t.echo=fill(t.echo,f.echo);
+ if(!Array.isArray(t.echo.levels))t.echo.levels=[0,0,0];
+ while(t.echo.levels.length<3)t.echo.levels.push(0);
+ t.permanent=fill(t.permanent,f.permanent);
+ t.permanent.unlocked=fill(t.permanent.unlocked,{});
+ t.permanent.levels=fill(t.permanent.levels,{});
+ if(!Array.isArray(t.permanent.equipped))t.permanent.equipped=[];
+ if(!Array.isArray(t.facilityEvo))t.facilityEvo=f.facilityEvo.map(x=>({...x}));
+ while(t.facilityEvo.length<5)t.facilityEvo.push({common:0,unique:0});
+ for(let i=0;i<5;i++)t.facilityEvo[i]=fill(t.facilityEvo[i],{common:0,unique:0});
+ if(!Array.isArray(t.abilityEvo))t.abilityEvo=f.abilityEvo.map(x=>({...x}));
+ while(t.abilityEvo.length<4)t.abilityEvo.push({common:0,unique:0});
+ for(let i=0;i<4;i++)t.abilityEvo[i]=fill(t.abilityEvo[i],{common:0,unique:0});
+ if(!Array.isArray(t.facilityUnlocks))t.facilityUnlocks=f.facilityUnlocks.slice();
+ while(t.facilityUnlocks.length<5)t.facilityUnlocks.push(false);
+ if(!Array.isArray(t.abilityUnlocks))t.abilityUnlocks=f.abilityUnlocks.slice();
+ while(t.abilityUnlocks.length<4)t.abilityUnlocks.push(false);
+ t.distortion=fill(t.distortion,f.distortion);
+ if(!Array.isArray(t.distortion.alterations))t.distortion.alterations=[];
+ t.distortion.claimedBosses=fill(t.distortion.claimedBosses,{});
+ t.distortion.claimedEnemies=fill(t.distortion.claimedEnemies,{});
+ t.cores=Math.max(0,Math.floor(Number(t.cores)||0));
+ t.completedRuns=Math.max(0,Math.floor(Number(t.completedRuns)||0));
+ t.worldCycle=Math.max(0,Math.floor(Number(t.worldCycle)||0));
+ t.shardSense=Math.max(0,Math.min(5,Math.floor(Number(t.shardSense)||0)));
+ t.shardAdapt=Math.max(0,Math.min(5,Math.floor(Number(t.shardAdapt)||0)));
+ t.coreResearch=Math.max(0,Math.min(5,Math.floor(Number(t.coreResearch)||0)));
+ t.sync.level=Math.max(0,Math.min(300,Math.floor(Number(t.sync.level)||0)));
+ t.sync.wealth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.wealth)||0)));
+ t.sync.growth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.growth)||0)));
+ t.echo.points=Math.max(0,Math.floor(Number(t.echo.points)||0));
+ for(let i=0;i<3;i++)t.echo.levels[i]=Math.max(0,Math.min(5,Math.floor(Number(t.echo.levels[i])||0)));
+ t.distortion.region=Math.max(0,Math.min(2,Math.floor(Number(t.distortion.region)||0)));
+ t.distortion.index=Math.max(0,Math.min(8,Math.floor(Number(t.distortion.index)||0)));
+ t.distortion.hp=Math.max(0,Number(t.distortion.hp)||1000);
+ t.distortion.internalShards=Math.max(0,Math.floor(Number(t.distortion.internalShards)||0));
+ t.distortion.defeats=Math.max(0,Math.floor(Number(t.distortion.defeats)||0));
  return t
 }
 function tsActive(){return !!(s.timeSpace&&s.timeSpace.distortion&&s.timeSpace.distortion.active)}
