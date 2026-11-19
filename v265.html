@@ -2056,7 +2056,7 @@ function loadAutoGame(){
  try{
   const raw=localStorage.getItem(AUTO_SAVE_KEY);if(!raw)return false;
   const data=JSON.parse(raw);if(!data||typeof data!=="object")return false;
-  s={...fresh(),...data};
+  s={...fresh(),...data};s.timeSpace=tsEnsure();
   s.timeShards=Math.max(0,Math.floor(Number(data.timeShards)||0));
   s.shardSkills=normalizeShardSkills(data.shardSkills);
   s.level=levelToBigInt(data.levelBig??data.level??1);
