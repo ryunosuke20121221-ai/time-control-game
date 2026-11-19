@@ -2294,11 +2294,11 @@ function tsEnemyAttack(dt){
 function tsEscape(){
  const t=tsEnsure(),d=t.distortion,first=t.completedRuns===0,noDefeat=d.defeats===0;
  const base=Math.floor((d.internalShards+(noDefeat&&t.echo.levels[1]>=2?3:0))*.30);
- let extra=0;while(Math.random()<.90)extra++;
+ let extra=0;while(extra<100000&&Math.random()<.90)extra++;
  const amount=Math.floor((base+extra)*(1+(Number(t.upgrades.shardBoost)||0)*.10));
  s.timeShards=(Number(s.timeShards)||0)+amount;s.timeShardsTotal=(Number(s.timeShardsTotal)||0)+amount;
  if(first)t.cores+=5;if(noDefeat)t.cores++;
- t.completedRuns++;t.echo.points+=5+(noDefeat?2:0);t.boon=true;t.unlocked=true;t.worldCycle++;
+ t.completedRuns++;t.echo.points+=5+(noDefeat?2:0);if(t.completedRuns===3&&noDefeat)tsUnlockPermanent("echo");t.boon=true;t.unlocked=true;t.worldCycle++;
  d.active=false;d.internalShards=0;d.finalBoss=false;d.enemyGroup=[];tsMajorReset();
 }
 function tsMajorReset(){
@@ -2366,7 +2366,7 @@ function tsEvolutionRequirement(type,i,kind){
  const t=tsEnsure(),arr=type==="facility"?t.facilityEvo:t.abilityEvo,lv=arr[i][kind];
  if(!t.boon)return "時空の恩恵が必要";
  if(type==="facility"&&Number(s.bl?.[i])<=0)return "施設を所持すると解放";
- if(type==="ability"&&Number(s.fl?.[i])<=0&&!tsAbilityUnlocked(i))return "能力を解放すると強化可能";
+ if(type==="ability"&&Number(s.fl?.[i])<=0)return "能力を購入すると強化可能";
  if(type==="facility"&&t.sync.wealth<5)return "豊穣同調Lv5が必要";
  if(type==="ability"&&t.sync.growth<5)return "成長同調Lv5が必要";
  if(t.sync.level<[50,150,300][lv])return "時空同調Lv"+[50,150,300][lv]+"が必要";
@@ -2418,7 +2418,7 @@ function tsRender(){
  const shardName=typeof shardDisplayName==="function"?shardDisplayName():"時空の欠片";
  const craftCost=Math.max(150,Math.floor(200*(1-t.coreResearch*.05)));
  const coreHtml=tsCoreDefs.map(x=>{
-  const lv=Number(t.upgrades[x[0]])||0,cost=tsCoreCost(x[0]),memoryGate=x[0]==="memory"?t.echo.levels[2]>=[1,2,3][lv]:true;
+  const lv=Number(t.upgrades[x[0]])||0,cost=tsCoreCost(x[0]),memoryGate=x[0]==="memory"?(lv>=3||t.echo.levels[2]>=[1,2,3][lv]):true;
   const allowed=s.skillTreeUnlocked&&cost>0&&t.cores-cost>=coreReserve&&memoryGate&&!d.active;
   let note="次の強化費用：核"+cost;
   if(x[0]==="memory"&&!memoryGate)note="存在強化Lv"+[1,2,3][lv]+"が必要";
@@ -2444,7 +2444,7 @@ function tsRender(){
   const lv=tsPermanentLevel(x[0]),available=!!t.permanent.unlocked[x[0]],max=lv>=4,upgradeAllowed=available&&!max&&t.echo.levels[2]>=3&&(lv<3||t.echo.levels[2]>=5)&&!d.active;
   const costs=available&&!max?{shard:[25,50,100,200][lv],money:BigNum.mul(needBN(),[10,30,75,150][lv])}:null;
   const equipped=t.permanent.equipped.includes(x[0]);
-  return '<div class="ts-item"><b>'+x[1]+' '+(available?"解放済み":"未解放")+' Lv'+lv+'/4</b><p>'+x[2]+'</p><small>'+(available?(costs?"強化費用："+moneyFmt(costs.money)+"・欠片"+costs.shard:(max?"最大":"強化不可")):"2回目の侵入で対応する領域ボスを撃破すると解放")+'</small><button data-ts="perm" data-id="'+x[0]+'" '+(upgradeAllowed&&canAffordMoney(costs.money)&&Number(s.timeShards)>=costs.shard?"":"disabled")+'>'+(max?"最大":"強化")+'</button><button data-ts="equip" data-id="'+x[0]+'" '+(!available||d.active?"disabled":"")+'>'+(equipped?"装備解除":"装備")+'</button></div>';
+  return '<div class="ts-item"><b>'+x[1]+' '+(available?"解放済み":"未解放")+' Lv'+lv+'/4</b><p>'+x[2]+'</p><small>'+(available?(costs?"強化費用："+moneyFmt(costs.money)+"・欠片"+costs.shard:(max?"最大":"強化不可")):(x[0]==="echo"?"3回目の脱出を無敗で達成すると解放":"2回目の侵入で対応する領域ボスを撃破すると解放"))+'</small><button data-ts="perm" data-id="'+x[0]+'" '+(upgradeAllowed&&canAffordMoney(costs.money)&&Number(s.timeShards)>=costs.shard?"":"disabled")+'>'+(max?"最大":"強化")+'</button><button data-ts="equip" data-id="'+x[0]+'" '+(!available||d.active?"disabled":"")+'>'+(equipped?"装備解除":"装備")+'</button></div>';
  }).join("");
  const facHtml=buildings.map((b,i)=>{
   const current=t.facilityEvo[i],common=tsEvolutionCost("facility",i,"common"),unique=tsEvolutionCost("facility",i,"unique"),cr=tsEvolutionRequirement("facility",i,"common"),ur=tsEvolutionRequirement("facility",i,"unique");
@@ -2536,7 +2536,7 @@ facilityBulkCostBN=function(i,start,count){const value=__tsBaseFacilityBulkCost(
 const __tsBaseFacilityXP=facilityXPEarnBN;
 facilityXPEarnBN=function(i){
  let value=__tsBaseFacilityXP(i);const t=tsEnsure();
- return BigNum.mul(value,(1+t.sync.wealth*.05)*(1+(Number(t.facilityEvo[i].unique)||0)*(i===2?.1:0)));
+ const local=tsPercent[Number(t.abilityEvo[1].unique)||0]||0;return BigNum.mul(value,(1+t.sync.wealth*.05)*(1+local)*(1+(Number(t.facilityEvo[i].unique)||0)*(i===2?.1:0)));
 };
 const __tsBaseBattleApply=battleApplyDamage;
 battleApplyDamage=function(...args){
@@ -2573,7 +2573,7 @@ bodyAdaptMult=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common
 const __tsBaseAutoTap=localAutoTapMult;
 localAutoTapMult=function(){const lv=Number(tsEnsure().abilityEvo[0].unique)||0;return __tsBaseAutoTap()*(1+tsPercent[lv])};
 const __tsBaseBattleDamage=battleBaseDamage;
-battleBaseDamage=function(){const lv=Number(tsEnsure().abilityEvo[2].common)||0;return BigNum.mul(__tsBaseBattleDamage(),1+tsPercent[lv])};
+battleBaseDamage=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common)||0,unique=Number(t.abilityEvo[2].unique)||0;return BigNum.mul(BigNum.mul(__tsBaseBattleDamage(),1+tsPercent[common]),1+[0,.05,.10,.15][unique])};
 const __tsBasePrecisionRegen=precisionRegen;
 precisionRegen=function(base=0.1){const lv=Number(tsEnsure().abilityEvo[3].common)||0;return __tsBasePrecisionRegen(base)+Math.max(0,Number(base)||0)*tsPercent[lv]};
 const __tsBaseContinuousRate=continuousGrowthRate;
@@ -2582,7 +2582,7 @@ const __tsBaseContinuousBonus=continuousBonus;
 continuousBonus=function(){
  const t=tsEnsure(),elapsed=Math.max(0,Number(s.continuousUseSeconds)||0),base=__tsBaseContinuousBonus();
  if(t.echo.levels[0]<5||elapsed<=240)return base;
- return Math.min(10,5+Math.floor((elapsed-240)/15)*.5);
+ return Math.min(10,3+Math.floor((elapsed-240)/30)*.5);
 };
 const __tsBaseOffline=applyOfflineProgress;
 applyOfflineProgress=function(){if(tsActive()){s.lastSeen=Date.now();return}return __tsBaseOffline()};
