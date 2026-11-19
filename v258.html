@@ -354,8 +354,8 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
    <div id="milestoneStatus" class="small" style="margin-top:6px">次のマイルストーン：10体</div>
     <button id="milestoneScheduleToggle" type="button" aria-expanded="false" style="margin-top:8px;width:100%">📜 マイルストーンボス出現予定を見る</button>
     
-   <div class="small">マイルストーンボスは節目ごとに出現する特別な敵です。</div><div class="small">時空の欠片：<b id="timeShardsValue">0</b> ／ 時空エネルギー：<b id="timeEnergyValue">0</b> ／ 連鎖補正：<b id="milestoneChainValue">0%</b></div><div class="item" style="margin-top:8px"><b>🌀 欠片スキル：連動タップ</b><div class="small">解放すると、手動攻撃1回ごとに通常のタップ報酬（お金・XP）を1回獲得します。自動攻撃やスキル攻撃では発動しません。</div><div class="stat"><span>状態</span><b id="linkedTapStatus">未解放</b></div><button id="linkedTapUnlock" style="width:100%;margin-top:6px">解放（時空の欠片20個）</button></div>
-   <div id="shardSkillShop" class="item" style="margin-top:10px"><b>時空の欠片スキル</b><div id="shardSkillList"></div></div>
+   <div class="small">マイルストーンボスは節目ごとに出現する特別な敵です。</div><div class="small">時空の欠片：<b id="timeShardsValue">0</b>個 ／ 時空エネルギー：<b id="timeEnergyValue">0</b> ／ 連鎖補正：<b id="milestoneChainValue">0%</b></div><div class="item" style="margin-top:8px"><b>🌀 欠片スキル：連動タップ</b><div class="small">解放すると、手動攻撃1回ごとに通常のタップ報酬（お金・XP）を1回獲得します。自動攻撃やスキル攻撃では発動しません。</div><div class="stat"><span>状態</span><b id="linkedTapStatus">未解放</b></div><button id="linkedTapUnlock" style="width:100%;margin-top:6px">解放（時空の欠片20個）</button></div>
+   <div id="shardMystery" class="small" style="margin-top:8px">時空の欠片を入手した。用途はまだ分からない。スキルツリーの解放後に調査できそうだ。</div><div id="shardSkillShop" class="item" style="margin-top:10px"><b>時空の欠片による強化</b><div id="shardSkillList"></div></div>
    <div class="small">魂の収穫者：初回撃破で最大MPの10%回復 ／ 時空略奪：時空エネルギー1点につき攻撃力+0.1%（最大+50%）</div>
    <div class="small">竜王の財宝：初回報酬のお金・XP・SPが1.5倍 ／ 超越の連鎖：初回撃破ごとに攻撃力+0.5%（最大+25%）</div>
    <button id="milestoneRetry" style="display:none;margin-top:8px">失敗したマイルストーン敵に再挑戦</button>
@@ -630,7 +630,7 @@ const MAX_PLAYER_LEVEL=Infinity;
   return "¥"+trim(scaled)+label;
  }
 
-const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,rbMultBig:{m:1,e:0},admin:false,tp:0,sp:0,skillTreeUnlocked:false,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false,branch:{choice:{},door:false,opposite:{},specialId:"",specialLv:0}},shop:{},lastSeen:Date.now(),battleKills:0,bossDefeats:0,enhancedDefeats:0,enhancedBossDefeats:0,enhancedBossPoints:0,enhancedBossFirstRewards:{},challengeTickets:0,challengeProgress:0,challengeQueueId:"",challengeSelectedId:"",bestiaryDefeats:{},milestoneCleared:{},milestoneRewarded:{},milestoneQueue:[],milestoneFailed:"",milestoneLastDefeated:"",milestoneRepeatActive:false,timeShards:0,shardSkills:{linkedTap:0,questBoost:0,timeHarvest:0},facilityTimers:[0,0,0,0,0],facilityPendingMoney:[{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0}],facilityPendingXP:[{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0}],facilityPayoutVersion:0,timeEnergy:0,milestoneChain:0,battleRebirthCarry:{m:1,e:0},battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
+const fresh=()=>({level:1n,xp:0,xpBig:{m:0,e:0},money:100,moneyBig:{m:1,e:2},mp:10,on:false,continuousUseSeconds:0,mpXpBoost:false,mpMoneyBoost:false,boostTarget:1.5,rebirth:0,rbMult:1,rbMultBig:{m:1,e:0},admin:false,tp:0,sp:0,skillTreeUnlocked:false,skillTree:{route:"",swarmLv:0,unlocked:{magicBolt:true},swarmUltimate:false,branch:{choice:{},door:false,opposite:{},specialId:"",specialLv:0}},shop:{},lastSeen:Date.now(),battleKills:0,bossDefeats:0,enhancedDefeats:0,enhancedBossDefeats:0,enhancedBossPoints:0,enhancedBossFirstRewards:{},challengeTickets:0,challengeProgress:0,challengeQueueId:"",challengeSelectedId:"",bestiaryDefeats:{},milestoneCleared:{},milestoneRewarded:{},milestoneQueue:[],milestoneFailed:"",milestoneLastDefeated:"",milestoneRepeatActive:false,timeShards:0,shardSkills:{linkedTap:0,facilityBoost:0,timeHarvest:0},facilityTimers:[0,0,0,0,0],facilityPendingMoney:[{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0}],facilityPendingXP:[{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0},{m:0,e:0}],facilityPayoutVersion:0,timeEnergy:0,milestoneChain:0,battleRebirthCarry:{m:1,e:0},battleEnemyHp:null,battleGroup:[],fl:[0,0,0,0],bl:[0,0,0,0,0]});
 let s=fresh(),last=performance.now(),shopDirty=true,rebirthShopDirty=true;
 const AUTO_SAVE_KEY="timeControlAutoSaveV1";
 let pendingLevelUps=0n,pendingReward=BigNum.from(0),pendingRewardedLevels=0n,pendingRewardFailures=0;
@@ -1030,7 +1030,7 @@ function collectFacilityPayouts(dt,moneyFactor=1,xpFactor=1){
  if(elapsed<=0)return {money:payoutMoney,xp:payoutXP};
  for(let i=0;i<buildings.length;i++){
   if(Math.max(0,Number(s.bl?.[i])||0)<=0){s.facilityTimers[i]=0;s.facilityPendingMoney[i]=BigNum.json(0);s.facilityPendingXP[i]=BigNum.json(0);continue;}
-  const interval=facilityPayoutInterval(i),moneyRate=facilityMoneyEarnBN(i),xpRate=facilityXPEarnBN(i);
+  const interval=facilityPayoutInterval(i),outputBoost=s.shardSkills?.facilityBoost?1.2:1,moneyRate=BigNum.mul(facilityMoneyEarnBN(i),outputBoost),xpRate=BigNum.mul(facilityXPEarnBN(i),outputBoost);
   let remaining=elapsed,timer=s.facilityTimers[i],pendingMoney=BigNum.from(s.facilityPendingMoney[i]),pendingXP=BigNum.from(s.facilityPendingXP[i]);
   const toNext=Math.max(0,interval-timer);
   if(remaining+1e-9>=toNext){
@@ -1396,31 +1396,31 @@ function battleUseSkill(id){
  render();saveAutoGame();
 }
 const battleMilestoneDefs=[
- {id:"m10",at:10,name:"時空の番人",variant:0,sp:0,hpMult:1,kind:"dragon",dedicated:true,dedicatedHp:600,shards:30,timer:90},
- {id:"m25",at:25,name:"古代の守護者",variant:0,sp:0,hpMult:1,kind:"demon",dedicated:true,dedicatedHp:2500,shards:5,timer:120},
- {id:"m50",at:50,name:"深淵の監視者",variant:0,sp:0,hpMult:1,kind:"titan",dedicated:true,dedicatedHp:10000,shards:8,timer:120},
- {id:"m100",at:100,name:"ドラゴンロード・覚醒",variant:1,sp:50,hpMult:1.15,kind:"dragon",shards:10},
- {id:"m1000",at:1000,name:"魔王・覚醒上位個体",variant:2,sp:200,hpMult:1.2,shards:15,kind:"demon"},
- {id:"m10000",at:10000,name:"古代巨人・超越個体",variant:3,sp:1000,hpMult:1.25,shards:40,kind:"titan"},
- {id:"m15000",at:15000,name:"ドラゴンロード・上位覚醒個体",variant:1,sp:250,hpMult:1.1,shards:50,kind:"dragon"},
- {id:"m20000",at:20000,name:"魔王・覚醒上位個体",variant:2,sp:500,hpMult:1.15,shards:60,kind:"demon"},
- {id:"m25000",at:25000,name:"最大強化個体・超越",variant:3,sp:1000,hpMult:1.25,shards:70,kind:"wolf",boss:false},
- {id:"m30000",at:30000,name:"古代巨人・覚醒個体",variant:1,sp:500,hpMult:1.1,shards:80,kind:"titan"},
- {id:"m40000",at:40000,name:"深淵竜・覚醒上位個体",variant:2,sp:750,hpMult:1.15,shards:90,kind:"ancientDragon"},
- {id:"m50000",at:50000,name:"最大強化個体・超越",variant:3,sp:1500,hpMult:1.35,shards:100,kind:"skeleton",boss:false},
- {id:"m60000",at:60000,name:"魔王・覚醒個体",variant:1,sp:1000,hpMult:1.1,shards:120,kind:"demon"},
- {id:"m70000",at:70000,name:"古代巨人・覚醒上位個体",variant:2,sp:1250,hpMult:1.15,shards:140,kind:"titan"},
- {id:"m80000",at:80000,name:"ドラゴンロード・覚醒個体・極",variant:1,sp:1500,hpMult:1.1,shards:160,kind:"dragon"},
- {id:"m90000v180",at:90000,name:"混沌の王・超越",variant:0,sp:5000,hpMult:15,kind:"chaos",dedicated:true,shards:500},
- {id:"m100000v180",at:100000,name:"ドラゴンロード・超越個体",variant:3,sp:6500,hpMult:3.5,shards:250,kind:"dragon"},
- {id:"m150000",at:150000,name:"魔王・超越個体・上位",variant:3,sp:8000,hpMult:2.5,shards:300,kind:"demon"},
- {id:"m200000",at:200000,name:"深淵竜・超越個体",variant:3,sp:10000,hpMult:2,shards:400,kind:"ancientDragon"},
- {id:"m250000",at:250000,name:"古代巨人・超越個体・上位",variant:3,sp:12000,hpMult:2.2,shards:500,kind:"titan"},
- {id:"m300000",at:300000,name:"混沌の王・極",variant:0,sp:16000,hpMult:21,kind:"chaos",dedicated:true,shards:1000},
- {id:"m400000",at:400000,name:"混沌の王・終末",variant:0,sp:25000,hpMult:25,kind:"chaos",dedicated:true,shards:1500},
- {id:"m500000",at:500000,name:"混沌の王・終末・極",variant:0,sp:35000,hpMult:35,kind:"chaos",dedicated:true,shards:2500},
- {id:"m750000",at:750000,name:"混沌の王・究極",variant:0,sp:40000,hpMult:40,kind:"chaos",dedicated:true,shards:4000},
- {id:"m1000000",at:1000000,name:"混沌の王・終焉",variant:0,sp:50000,hpMult:50,kind:"chaos",dedicated:true,shards:6000}
+ {id:"m10",at:10,name:"時空の番人",variant:0,sp:0,hpMult:1,kind:"dragon",dedicated:true,dedicatedHp:600,shards:100,timer:90},
+ {id:"m25",at:25,name:"古代の守護者",variant:0,sp:0,hpMult:1,kind:"demon",dedicated:true,dedicatedHp:2500,shards:1,timer:120},
+ {id:"m50",at:50,name:"深淵の監視者",variant:0,sp:0,hpMult:1,kind:"titan",dedicated:true,dedicatedHp:10000,shards:2,timer:120},
+ {id:"m100",at:100,name:"ドラゴンロード・覚醒",variant:1,sp:50,hpMult:1.15,kind:"dragon",shards:1},
+ {id:"m1000",at:1000,name:"魔王・覚醒上位個体",variant:2,sp:200,hpMult:1.2,shards:1,kind:"demon"},
+ {id:"m10000",at:10000,name:"古代巨人・超越個体",variant:3,sp:1000,hpMult:1.25,shards:2,kind:"titan"},
+ {id:"m15000",at:15000,name:"ドラゴンロード・上位覚醒個体",variant:1,sp:250,hpMult:1.1,shards:2,kind:"dragon"},
+ {id:"m20000",at:20000,name:"魔王・覚醒上位個体",variant:2,sp:500,hpMult:1.15,shards:2,kind:"demon"},
+ {id:"m25000",at:25000,name:"最大強化個体・超越",variant:3,sp:1000,hpMult:1.25,shards:2,kind:"wolf",boss:false},
+ {id:"m30000",at:30000,name:"古代巨人・覚醒個体",variant:1,sp:500,hpMult:1.1,shards:3,kind:"titan"},
+ {id:"m40000",at:40000,name:"深淵竜・覚醒上位個体",variant:2,sp:750,hpMult:1.15,shards:3,kind:"ancientDragon"},
+ {id:"m50000",at:50000,name:"最大強化個体・超越",variant:3,sp:1500,hpMult:1.35,shards:4,kind:"skeleton",boss:false},
+ {id:"m60000",at:60000,name:"魔王・覚醒個体",variant:1,sp:1000,hpMult:1.1,shards:4,kind:"demon"},
+ {id:"m70000",at:70000,name:"古代巨人・覚醒上位個体",variant:2,sp:1250,hpMult:1.15,shards:5,kind:"titan"},
+ {id:"m80000",at:80000,name:"ドラゴンロード・覚醒個体・極",variant:1,sp:1500,hpMult:1.1,shards:5,kind:"dragon"},
+ {id:"m90000v180",at:90000,name:"混沌の王・超越",variant:0,sp:5000,hpMult:15,kind:"chaos",dedicated:true,shards:10},
+ {id:"m100000v180",at:100000,name:"ドラゴンロード・超越個体",variant:3,sp:6500,hpMult:3.5,shards:40,kind:"dragon"},
+ {id:"m150000",at:150000,name:"魔王・超越個体・上位",variant:3,sp:8000,hpMult:2.5,shards:50,kind:"demon"},
+ {id:"m200000",at:200000,name:"深淵竜・超越個体",variant:3,sp:10000,hpMult:2,shards:60,kind:"ancientDragon"},
+ {id:"m250000",at:250000,name:"古代巨人・超越個体・上位",variant:3,sp:12000,hpMult:2.2,shards:75,kind:"titan"},
+ {id:"m300000",at:300000,name:"混沌の王・極",variant:0,sp:16000,hpMult:21,kind:"chaos",dedicated:true,shards:100},
+ {id:"m400000",at:400000,name:"混沌の王・終末",variant:0,sp:25000,hpMult:25,kind:"chaos",dedicated:true,shards:125},
+ {id:"m500000",at:500000,name:"混沌の王・終末・極",variant:0,sp:35000,hpMult:35,kind:"chaos",dedicated:true,shards:150},
+ {id:"m750000",at:750000,name:"混沌の王・究極",variant:0,sp:40000,hpMult:40,kind:"chaos",dedicated:true,shards:200},
+ {id:"m1000000",at:1000000,name:"混沌の王・終焉",variant:0,sp:50000,hpMult:50,kind:"chaos",dedicated:true,shards:250}
 ];
 function milestoneDef(id){return battleMilestoneDefs.find(x=>x.id===id)||null}
  function milestoneScheduleStatus(def){
@@ -1462,8 +1462,9 @@ function milestoneDef(id){return battleMilestoneDefs.find(x=>x.id===id)||null}
  if(milestoneScheduleClose)milestoneScheduleClose.onclick=window.closeMilestoneSchedule;
  if(milestoneScheduleOverlay)milestoneScheduleOverlay.addEventListener("click",e=>{if(e.target===milestoneScheduleOverlay)window.closeMilestoneSchedule();});
  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&milestoneScheduleOverlay&&!milestoneScheduleOverlay.hidden)window.closeMilestoneSchedule();});
-const shardSkillDefs=[{id:"linkedTap",name:"連動タップ",cost:20,desc:"手動攻撃を押すと、タップXPとタップ収入も同時に獲得する。"},{"id":"questBoost",name:"クエスト報酬強化",cost:40,desc:"施設クエストの収入・XP報酬が20%増加する。"},{"id":"timeHarvest",name:"時空採集",cost:80,desc:"マイルストーンと強化ボスからの時空の欠片が25%増加する。"}];
-function renderShardSkillShop(){const root=$("shardSkillList");if(!root)return;const key=shardSkillDefs.map(d=>d.id+":"+Number(s.shardSkills?.[d.id]||0)+":"+Number(s.timeShards||0)).join("|");if(root.dataset.key===key)return;root.dataset.key=key;root.innerHTML=shardSkillDefs.map(d=>{const owned=Number(s.shardSkills?.[d.id]||0)>0;const can=Number(s.timeShards||0)>=d.cost;return `<div class="small" style="margin-top:7px"><b>${d.name}</b>：${d.desc}<br>必要数 ${d.cost}個 ／ ${owned?"解放済み":can?"購入可能":"欠片不足"} <button data-shard-buy="${d.id}" ${owned||!can?"disabled":""}>${owned?"解放済み":"解放"}</button></div>`}).join("");root.querySelectorAll("[data-shard-buy]").forEach(b=>b.onclick=()=>{const d=shardSkillDefs.find(x=>x.id===b.dataset.shardBuy);if(!d||Number(s.shardSkills?.[d.id]||0)>0||Number(s.timeShards||0)<d.cost)return;s.timeShards-=d.cost;s.shardSkills={...(s.shardSkills||{}),[d.id]:1};root.dataset.key="";render();saveAutoGame();});}
+function normalizeShardSkills(value){const v=value&&typeof value==="object"?value:{};return {linkedTap:Number(v.linkedTap)>0?1:0,facilityBoost:Number(v.facilityBoost??v.questBoost)>0?1:0,timeHarvest:Number(v.timeHarvest)>0?1:0};}
+const shardSkillDefs=[{id:"linkedTap",name:"連動タップ",cost:20,desc:"手動攻撃を押すと、タップXPとタップ収入も同時に獲得する。"},{id:"facilityBoost",name:"施設報酬強化",cost:40,desc:"施設から受け取るお金・XPの報酬が20%増加する。"},{id:"timeHarvest",name:"時空採集",cost:50,desc:"マイルストーンと強化ボスからの時空の欠片が25%増加する。"}];
+function renderShardSkillShop(){const panel=$("shardSkillShop"),hint=$("shardMystery"),unlocked=skillTreeIsUnlocked();if(panel)panel.style.display=unlocked?"":"none";if(hint)hint.style.display=unlocked?"none":"block";const root=$("shardSkillList");if(!root||!unlocked)return;const key=shardSkillDefs.map(d=>d.id+":"+Number(s.shardSkills?.[d.id]||0)+":"+Number(s.timeShards||0)).join("|");if(root.dataset.key===key)return;root.dataset.key=key;root.innerHTML=shardSkillDefs.map(d=>{const owned=Number(s.shardSkills?.[d.id]||0)>0;const can=Number(s.timeShards||0)>=d.cost;return `<div class="small" style="margin-top:7px"><b>${d.name}</b>：${d.desc}<br>必要数 ${d.cost}個 ／ ${owned?"解放済み":can?"購入可能":"欠片不足"} <button data-shard-buy="${d.id}" ${owned||!can?"disabled":""}>${owned?"解放済み":"解放"}</button></div>`}).join("");root.querySelectorAll("[data-shard-buy]").forEach(b=>b.onclick=()=>{const d=shardSkillDefs.find(x=>x.id===b.dataset.shardBuy);if(!d||Number(s.shardSkills?.[d.id]||0)>0||Number(s.timeShards||0)<d.cost)return;s.timeShards-=d.cost;s.shardSkills=normalizeShardSkills({...s.shardSkills,[d.id]:1});root.dataset.key="";render();saveAutoGame();});}
 function milestoneEnsureState(){
  if(!s.milestoneCleared||typeof s.milestoneCleared!=="object")s.milestoneCleared={};
  if(!s.milestoneRewarded||typeof s.milestoneRewarded!=="object")s.milestoneRewarded={};
@@ -1476,7 +1477,7 @@ function milestoneEnsureState(){
  }
  s.milestoneQueue=s.milestoneQueue.filter((id,i,a)=>milestoneDef(id)&&(!s.milestoneCleared[id]||(s.milestoneRepeatActive&&id===s.milestoneLastDefeated))&&a.indexOf(id)===i);
  s.milestoneFailed=milestoneDef(s.milestoneFailed)?.id||"";
- s.timeShards=Math.max(0,Math.floor(Number(s.timeShards)||0));if(!s.shardSkills||typeof s.shardSkills!=="object")s.shardSkills={linkedTap:0,questBoost:0,timeHarvest:0};if(!Array.isArray(s.facilityQuestTimers))s.facilityQuestTimers=[0,0,0,0,0];s.facilityQuestTimers=[0,1,2,3,4].map(i=>Math.max(0,Number(s.facilityQuestTimers[i])||0));
+ s.timeShards=Math.max(0,Math.floor(Number(s.timeShards)||0));s.shardSkills=normalizeShardSkills(s.shardSkills);ensureFacilityPayoutState();
  s.timeEnergy=Math.max(0,Number(s.timeEnergy)||0);
  s.milestoneChain=Math.max(0,Number(s.milestoneChain)||0);
  s.challengeTickets=Math.max(0,Math.floor(Number(s.challengeTickets)||0));
@@ -1805,7 +1806,6 @@ function battleApplyDamage(mult=1,targetCount=1,bossMultiplier=1,deferSpawn=fals
     }else{
      showEnhancedRewardToast("🏆 "+milestone.name+" 再撃破！\n通常の再撃破報酬はありません。挑戦所から挑戦券を使うと追加報酬を獲得できます。");
     }
-    if(firstClear){s.battleKills=Math.max(Number(s.battleKills)||0,info.number);if(info.boss)s.bossDefeats=(Number(s.bossDefeats)||0)+1;recordBestiaryDefeat(info,Number(target.variant)||0);}
     s.milestoneCleared[milestoneId]=true;s.milestoneLastDefeated=milestoneId;s.milestoneRepeatActive=false;if(firstClear&&!target.adminTest&&!target.challengeMode){s.battleKills=Math.max(Number(s.battleKills)||0,info.number);if(info.boss)s.bossDefeats=(Number(s.bossDefeats)||0)+1;recordBestiaryDefeat(info,Number(target.variant)||0);}
     s.milestoneQueue=s.milestoneQueue.filter(id=>id!==milestoneId);
     if(info.boss)showBossVictory(info);
@@ -1997,7 +1997,7 @@ function applyOfflineProgress(){
  const mpBefore=Math.max(0,Number(s.mp)||0);
  const mpRecovered=elapsed*0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus());
  s.mp=Math.min(maxMP(),mpBefore+mpRecovered);
- $("log").textContent=`オフライン報酬：${moneyFmt(earnedMoney)}、${xpBNFmt(BigNum.mul(earnedXp,allXpMult()))} XP（${Math.floor(elapsed/60)}分）。MPは自然回復しました。`;
+ $("log").textContent=`オフライン報酬：${moneyFmt(earnedMoney)}、${xpBNFmt(earnedXp)} XP（${Math.floor(elapsed/60)}分）。MPは自然回復しました。`;
 }
 function saveAutoGame(){
  try{s.lastSeen=Date.now();localStorage.setItem(AUTO_SAVE_KEY,JSON.stringify(serializeGameState()));return true}
@@ -2009,7 +2009,7 @@ function loadAutoGame(){
   const data=JSON.parse(raw);if(!data||typeof data!=="object")return false;
   s={...fresh(),...data};
   s.timeShards=Math.max(0,Math.floor(Number(data.timeShards)||0));
-  s.shardSkills=data.shardSkills&&typeof data.shardSkills==="object"?{linkedTap:Math.max(0,Math.min(1,Math.floor(Number(data.shardSkills.linkedTap)||0)))}:{linkedTap:0};
+  s.shardSkills=normalizeShardSkills(data.shardSkills);
   s.level=levelToBigInt(data.levelBig??data.level??1);
   battleEnsureState();
   s.fl=Array.isArray(data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(data.fl[i])||0)):fresh().fl.slice();
@@ -2027,7 +2027,7 @@ function loadAutoGame(){
 function getSaveSlots(){try{const v=JSON.parse(localStorage.getItem(SAVE_SLOTS_KEY)||"[]");return Array.isArray(v)?v.slice(0,(window.getApSaveSlotCount?window.getApSaveSlotCount():3)):[]}catch(e){return []}}
 function drawSaveSlots(){const slots=getSaveSlots();const root=$("saveSlots");const slotCount=window.getApSaveSlotCount?window.getApSaveSlotCount():3;root.innerHTML=Array.from({length:slotCount},(_,i)=>i).map(i=>{const slot=slots[i]||{};return `<div class="save-slot"><b>セーブスロット ${i+1}</b><label for="saveName${i}">名前</label><input id="saveName${i}" maxlength="30" placeholder="例：メインデータ" value="${String(slot.name||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}"><div class="small">${slot.data?`保存済み：Lv ${formatStat("level",slot.data.levelBig??slot.data.level??1,0)}`:"空きスロット"}</div><div class="actions"><button data-slot-save="${i}">この枠に保存</button><button data-slot-load="${i}" ${slot.data?"":"disabled"}>読み込み</button><button data-slot-delete="${i}" ${slot.data?"":"disabled"}>削除</button></div></div>`}).join("");
 root.querySelectorAll("[data-slot-save]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotSave),all=getSaveSlots();while(all.length<(window.getApSaveSlotCount?window.getApSaveSlotCount():3))all.push({});const name=$("saveName"+i).value.trim()||`セーブ${i+1}`;s.lastSeen=Date.now();all[i]={name,data:serializeGameState(),savedAt:Date.now()};try{localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));saveAutoGame();$("log").textContent=`「${name}」に保存しました。`;drawSaveSlots()}catch(e){$("log").textContent="保存できませんでした。ブラウザの保存容量を確認してください。"}});
-root.querySelectorAll("[data-slot-load]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotLoad),slot=getSaveSlots()[i];if(!slot||!slot.data)return;if(!confirm(`「${slot.name||`セーブ${i+1}`}」を読み込みますか？現在の進行状況は置き換わります。`))return;try{s={...fresh(),...slot.data};s.level=levelToBigInt(slot.data.levelBig??slot.data.level??1);setRBMultBN(slot.data.rbMultBig||slot.data.rbMult||1);battleEnsureState();setXPBN(slot.data.xpBig||slot.data.xp||0);setMoneyBN(slot.data.moneyBig||slot.data.money||0);s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=Array.isArray(slot.data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(slot.data.fl[i])||0)):fresh().fl.slice();s.bl=Array.isArray(slot.data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(slot.data.bl[i])||0)):fresh().bl.slice();s.tp=Math.max(0,Number(slot.data.tp)||0);s.rebirth=Math.max(0,Number(slot.data.rebirth)||0);s.shop=slot.data.shop&&typeof slot.data.shop==="object"?slot.data.shop:{};s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;applyOfflineProgress();s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;const updatedSlots=getSaveSlots();if(updatedSlots[i]?.data){updatedSlots[i].data=serializeGameState();localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(updatedSlots));}saveAutoGame();shopDirty=true;rebirthShopDirty=true;autoTapTimer=0;$("log").textContent=`「${slot.name||`セーブ${i+1}`}」を読み込みました。`;render();drawSaveSlots()}catch(e){$("log").textContent="読み込みに失敗しました。"}});
+root.querySelectorAll("[data-slot-load]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotLoad),slot=getSaveSlots()[i];if(!slot||!slot.data)return;if(!confirm(`「${slot.name||`セーブ${i+1}`}」を読み込みますか？現在の進行状況は置き換わります。`))return;try{s={...fresh(),...slot.data};s.shardSkills=normalizeShardSkills(slot.data.shardSkills);s.level=levelToBigInt(slot.data.levelBig??slot.data.level??1);setRBMultBN(slot.data.rbMultBig||slot.data.rbMult||1);battleEnsureState();setXPBN(slot.data.xpBig||slot.data.xp||0);setMoneyBN(slot.data.moneyBig||slot.data.money||0);s.continuousUseSeconds=0;s.boostTarget=Number(s.boostTarget)||1.5;s.fl=Array.isArray(slot.data.fl)?[0,1,2,3].map(i=>Math.max(0,Number(slot.data.fl[i])||0)):fresh().fl.slice();s.bl=Array.isArray(slot.data.bl)?[0,1,2,3,4].map(i=>Math.max(0,Number(slot.data.bl[i])||0)):fresh().bl.slice();s.tp=Math.max(0,Number(slot.data.tp)||0);s.rebirth=Math.max(0,Number(slot.data.rebirth)||0);s.shop=slot.data.shop&&typeof slot.data.shop==="object"?slot.data.shop:{};s.admin=!!s.admin;s.mp=Math.min(maxMP(),Math.max(0,Number(s.mp)||0));if(!s.on){s.mpXpBoost=false;s.mpMoneyBoost=false}s.mpXpBoost=!!s.mpXpBoost;s.mpMoneyBoost=!!s.mpMoneyBoost;applyOfflineProgress();s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;const updatedSlots=getSaveSlots();if(updatedSlots[i]?.data){updatedSlots[i].data=serializeGameState();localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(updatedSlots));}saveAutoGame();shopDirty=true;rebirthShopDirty=true;autoTapTimer=0;$("log").textContent=`「${slot.name||`セーブ${i+1}`}」を読み込みました。`;render();drawSaveSlots()}catch(e){$("log").textContent="読み込みに失敗しました。"}});
 root.querySelectorAll("[data-slot-delete]").forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.slotDelete),all=getSaveSlots();if(!all[i]||!all[i].data)return;if(!confirm(`セーブスロット${i+1}を削除しますか？`))return;all[i]={};localStorage.setItem(SAVE_SLOTS_KEY,JSON.stringify(all));$("log").textContent="セーブデータを削除しました。";drawSaveSlots()})}
 $("adminVisibility").value=localStorage.getItem("timeControlAdminButtonVisibility")||"show";
 $("skillConfirmSetting").value=localStorage.getItem("timeControlSkillConfirm")||"show";
