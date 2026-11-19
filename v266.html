@@ -2120,6 +2120,7 @@ function tsEnsure(){
  t.sync.level=Math.max(0,Math.min(300,Math.floor(Number(t.sync.level)||0)));t.sync.wealth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.wealth)||0)));t.sync.growth=Math.max(0,Math.min(5,Math.floor(Number(t.sync.growth)||0)));
  t.echo.points=Math.max(0,Math.floor(Number(t.echo.points)||0));for(let i=0;i<3;i++)t.echo.levels[i]=Math.max(0,Math.min(5,Math.floor(Number(t.echo.levels[i])||0)));
  const d=t.distortion;d.region=Math.max(0,Math.min(2,Math.floor(Number(d.region)||0)));d.index=Math.max(0,Math.min(5,Math.floor(Number(d.index)||0)));
+ if(d.checkpointFinalBoss===false&&d.finalBoss&&d.region===2&&d.checkpointRegion===2&&d.checkpointIndex===5)d.checkpointFinalBoss=true;
  d.hp=Math.max(0,Number(d.hp)||1000);d.internalShards=Math.max(0,Math.floor(Number(d.internalShards)||0));d.defeats=Math.max(0,Math.floor(Number(d.defeats)||0));
  d.playerSlowSeconds=Math.max(0,Number(d.playerSlowSeconds)||0);d.bossShieldSeconds=Math.max(0,Number(d.bossShieldSeconds)||0);d.regionBoost=Math.max(0,Number(d.regionBoost)||0);
  return t;
@@ -2197,7 +2198,17 @@ function tsSetEnemy(){
  d.enemyTimer=0;d.playerTimer=0;d.bossPhase=0;d.enemyAttackCount=0;d.playerSlowSeconds=0;d.bossShieldSeconds=0;
  tsSyncEnemySummary();
 }
-function tsEnsureDistortionGroup(){const d=tsEnsure().distortion;if(d.active&&(!Array.isArray(d.enemyGroup)||!d.enemyGroup.length))tsSetEnemy()}
+function tsEnsureDistortionGroup(){
+ const d=tsEnsure().distortion;
+ if(!d.active||Array.isArray(d.enemyGroup)&&d.enemyGroup.length)return;
+ const previousHp=Math.max(0,Number(d.enemyHp)||0),previousMax=Math.max(0,Number(d.enemyMaxHp)||0);
+ tsSetEnemy();
+ if(previousMax>0&&previousHp<previousMax&&d.enemyGroup.length){
+  const ratio=Math.max(0,Math.min(1,previousHp/previousMax));
+  d.enemyGroup[0].hp=d.enemyGroup[0].maxHp*ratio;
+  tsSyncEnemySummary();
+ }
+}
 function tsPermanentLevel(id){return Math.max(0,Math.min(4,Math.floor(Number(tsEnsure().permanent.levels[id])||0)))}
 function tsPermanentEffect(id){
  const lv=tsPermanentLevel(id);
