@@ -2512,7 +2512,7 @@ function tsTick(dt){
  const t=tsEnsure(),d=t.distortion;
  if(t.recoverySeconds>0)t.recoverySeconds=Math.max(0,t.recoverySeconds-Math.max(0,Number(dt)||0));
  if(t.mpRecoveryDelay>0)t.mpRecoveryDelay=Math.max(0,t.mpRecoveryDelay-Math.max(0,Number(dt)||0));
- if(tsActive())tsEnemyAttack(dt);
+ if(tsActive()){tsEnsureDistortionGroup();tsEnemyAttack(dt)}
 }
 function tsFacilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(buildings[i].unlock)||(Number(t.upgrades.memory)>=1&&t.facilityUnlocks[i])}
 function tsAbilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(funcs[i].unlock)||(Number(t.upgrades.memory)>=3&&t.abilityUnlocks[i])}
