@@ -2479,7 +2479,7 @@ function tsRender(){
  const enter=$("tsEnter");if(enter)enter.onclick=()=>{if(tsStart()){tsRender();saveAutoGame();render()}};
  const craft=$("tsCraftOne");if(craft)craft.onclick=()=>{if(tsCraft(1)){tsRender();saveAutoGame()}};
  const craftMax=$("tsCraftMax");if(craftMax)craftMax.onclick=()=>{if(tsCraft(1000)){tsRender();saveAutoGame()}};
- const attack=$("tsManualAttack");if(attack)attack.onclick=()=>{tsPlayerAttack(true);if(Number(s.shardSkills?.linkedTap)>0)tapReward(false);saveAutoGame()};
+ const attack=$("tsManualAttack");if(attack)attack.onclick=()=>{tsPlayerAttack(true);saveAutoGame()};
  const reset=$("tsEchoReset");if(reset)reset.onclick=()=>{if(confirm("時空残響を振り直しますか？")&&tsEchoRespec()){tsRender();saveAutoGame()}};
  root.querySelectorAll("button[data-ts]").forEach(b=>b.onclick=()=>{
   let ok=false;const action=b.dataset.ts,id=b.dataset.id;
@@ -2506,8 +2506,15 @@ function tsUpdateStatus(){
  const next=$("tsNextEnemy");
  if(next){
   if(t.permanent.equipped.includes("observe")){
-   const nx=d.finalBoss?null:d.index<5?(d.index===4?tsBosses[d.region]:tsEnemySets[d.region][d.index+1]):null;
-   next.textContent=nx?"次の敵："+nx.n+" / HP "+nx.hp+" / 攻撃力 "+nx.dmg:(d.finalBoss?"時空の歪み最深部を攻略中":"次の敵情報はありません");
+   const lv=tsPermanentLevel("observe");let nx=null,isBoss=false,nextRegion=false;
+   if(!d.finalBoss&&d.index<4)nx=tsEnemySets[d.region][d.index+1];
+   else if(!d.finalBoss&&d.index===4){nx=tsBosses[d.region];isBoss=true}
+   else if(!d.finalBoss&&d.index===5&&d.region<2){nx=tsEnemySets[d.region+1][0];nextRegion=true}
+   next.textContent=lv>=1&&nx?"次の敵："+nx.n:"";
+   if(lv>=2&&nx)next.textContent+=" / HP "+nx.hp+" / 攻撃力 "+nx.dmg;
+   if(lv>=3&&isBoss)next.textContent+=" / 特殊行動："+["時間圧縮","結晶障壁","崩壊波"][d.region];
+   if(lv>=4&&nextRegion){const alteration=d.alterations[d.region+1];if(alteration)next.textContent+=" / 次領域変質："+alteration.n}
+   if(d.finalBoss)next.textContent=lv>=1?"最終ボスを攻略中："+tsBosses[3].n:"";
   }else next.textContent="";
   if(d.playerSlowSeconds>0)next.textContent+="　時間圧縮："+d.playerSlowSeconds.toFixed(1)+"秒";
   if(d.bossShieldSeconds>0)next.textContent+="　結晶障壁："+d.bossShieldSeconds.toFixed(1)+"秒";
