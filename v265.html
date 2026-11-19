@@ -2083,62 +2083,6 @@ $("skillConfirmSetting").value=localStorage.getItem("timeControlSkillConfirm")||
 $("skillConfirmSetting").onchange=()=>localStorage.setItem("timeControlSkillConfirm",$("skillConfirmSetting").value);
 function applyAdminVisibility(){const show=$("adminVisibility").value!=="hide";$("test1000").style.display=show?"":"none";localStorage.setItem("timeControlAdminButtonVisibility",show?"show":"hide")}
 $("adminVisibility").onchange=applyAdminVisibility;
-drawSaveSlots();applyAdminVisibility();loadAutoGame();
-window.addEventListener("beforeunload",saveAutoGame);
-window.addEventListener("pagehide",saveAutoGame);
-document.addEventListener("visibilitychange",()=>{
- if(document.visibilityState==="hidden")saveAutoGame();
- else{applyOfflineProgress();saveAutoGame();render();}
-});
-window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
-$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
-let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,lastXpProcess=0,battleAutoTimer=0;
-$("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
-
-function autoTapInterval(){return Math.max(0.5,1.5-Math.max(0,Number(s.fl[0])||0)*0.001)}
-let lastAutoSave=0,lastLoopErrorLog=0;
-function loop(now){
- try{
-  const dt=Math.min((now-last)/1000,1);last=now;tsTick(dt);tsTick(dt);
-  if(s.on){
-   if(!tsActive()){autoTapTimer+=dt;while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}}
-   if(!s.admin){const tsv=tsEnsure(),baseDrain=.1*(1-Math.min(80,s.fl[3]*2+(Number(tsv.abilityEvo[3].unique)||0)*2+shopEffect("mpCost",0.5))/100);const drain=baseDrain+mpBoostDrain(baseDrain)-precisionRegen(baseDrain);s.mp-=drain*dt;s.mp=Math.min(maxMP(),s.mp)}
-   if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();
-   if(!tsActive())gainXP(BigNum.mul(abilityXPPerSecondBN(),dt));
-   if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
-  }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus())*(1+tsEnsure().echo.levels[0]*.1)*(tsEnsure().recoverySeconds>0?2:1)))}
-  if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
-  try{if(!tsActive()){battleUpdateBossTimer(dt);battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
-   if(!tsActive())addMoneyBN(BigNum.mul(baseIncomeRateBN(),dt));
-  if(!tsActive()){const facilityPayout=collectFacilityPayouts(dt);if(BigNum.cmp(facilityPayout.money,0)>0)addMoneyBN(facilityPayout.money);if(BigNum.cmp(facilityPayout.xp,0)>0)gainXP(facilityPayout.xp);}
-  // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
-  // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
-  // 大量XP時の二分探索・報酬計算を毎フレーム実行しない。最大10回/秒に制限する。
-  if(now-lastXpProcess>=100){
-   lastXpProcess=now;
-   try{
-    processPendingXP();
-    updateLevelXPDisplay();
-   }catch(xpErr){
-    if(now-lastLoopErrorLog>=5000){
-     lastLoopErrorLog=now;
-     console.error("XP精算・表示更新エラー",xpErr);
-     const log=$("log");if(log)log.textContent="XP精算でエラーが発生しました。ほかの操作は継続しています。";
-    }
-   }
-  }
-  // XPバーは独立更新し、画面全体の再描画を待たない。
-  if(now-lastXpBarUpdate>=50){lastXpBarUpdate=now;updateXPBars()}
-  updateBattleManualCooldownUI();
-  if(now-lastRender>=500){lastRender=now;render();tsUpdateStatus()}
-  if(now-lastAutoSave>=5000){lastAutoSave=now;saveAutoGame()}
- }catch(err){
-  if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("ゲームループ内エラー",err);const log=$("log");if(log)log.textContent="一部の処理でエラーが発生しました。ゲームループは継続しています。";}
- }finally{requestAnimationFrame(loop)}
-}
-$("buyCountFacility").value=$("buyCount").value;$("buyCountFacility").addEventListener("change",e=>{$("buyCount").value=e.target.value});$("buyCount").addEventListener("change",e=>{$("buyCountFacility").value=e.target.value});
-document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.dataset.view;document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+target));document.querySelectorAll(".bottomnav button").forEach(b=>b.classList.toggle("active",b===btn));if(target==="rebirth"&&rebirthShopDirty){renderRebirthShop();rebirthShopDirty=false;}if(target==="skills")renderSkillTree();if(target==="timespace")tsRender();window.scrollTo({top:0,behavior:"smooth"});}));
-
 // TIME_SPACE_UPDATE_V265
 function tsFresh(){return {unlocked:false,boon:false,completedRuns:0,worldCycle:0,cores:0,upgrades:{},shardSense:0,shardAdapt:0,coreResearch:0,sync:{level:0,wealth:0,growth:0},echo:{points:0,levels:[0,0,0]},permanent:{unlocked:{},levels:{},equipped:[]},facilityEvo:Array.from({length:5},()=>({common:0,unique:0})),abilityEvo:Array.from({length:4},()=>({common:0,unique:0})),facilityUnlocks:[false,false,false,false,false],abilityUnlocks:[false,false,false,false],distortion:{active:false,run:0,region:0,index:0,finalBoss:false,hp:1000,enemyHp:0,enemyMaxHp:0,enemyDamage:0,internalShards:0,defeats:0,checkpointRegion:0,checkpointIndex:0,alterations:[],claimedBosses:{},claimedEnemies:{},enemyTimer:0,playerTimer:0,enteredAt:0}}}
 function tsEnsure(){
@@ -2253,6 +2197,63 @@ const __tsDrain=mpBoostDrain;mpBoostDrain=function(base){return __tsDrain(base)}
 const __tsOffline=applyOfflineProgress;applyOfflineProgress=function(){if(tsActive()){s.lastSeen=Date.now();return}return __tsOffline()};
 function tsFacilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(buildings[i].unlock)||(Number(t.upgrades.memory)>=1&&t.facilityUnlocks[i])}
 function tsAbilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(funcs[i].unlock)||(Number(t.upgrades.memory)>=3&&t.abilityUnlocks[i])}
+
+
+drawSaveSlots();applyAdminVisibility();loadAutoGame();
+window.addEventListener("beforeunload",saveAutoGame);
+window.addEventListener("pagehide",saveAutoGame);
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="hidden")saveAutoGame();
+ else{applyOfflineProgress();saveAutoGame();render();}
+});
+window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();}});
+$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
+let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,lastXpProcess=0,battleAutoTimer=0;
+$("test1000").onclick=()=>{s.admin=!s.admin;if(s.admin){s.mp=10;$("log").textContent="管理者モードON。能力・施設の費用が0になり、MPが無限になりました。";}else{$("log").textContent="管理者モードOFF。通常の費用とMP消費に戻りました。";}shopDirty=true;render()};
+
+function autoTapInterval(){return Math.max(0.5,1.5-Math.max(0,Number(s.fl[0])||0)*0.001)}
+let lastAutoSave=0,lastLoopErrorLog=0;
+function loop(now){
+ try{
+  const dt=Math.min((now-last)/1000,1);last=now;tsTick(dt);tsTick(dt);
+  if(s.on){
+   if(!tsActive()){autoTapTimer+=dt;while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}}
+   if(!s.admin){const tsv=tsEnsure(),baseDrain=.1*(1-Math.min(80,s.fl[3]*2+(Number(tsv.abilityEvo[3].unique)||0)*2+shopEffect("mpCost",0.5))/100);const drain=baseDrain+mpBoostDrain(baseDrain)-precisionRegen(baseDrain);s.mp-=drain*dt;s.mp=Math.min(maxMP(),s.mp)}
+   if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();
+   if(!tsActive())gainXP(BigNum.mul(abilityXPPerSecondBN(),dt));
+   if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
+  }else{autoTapTimer=0;if(!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus())*(1+tsEnsure().echo.levels[0]*.1)*(tsEnsure().recoverySeconds>0?2:1)))}
+  if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
+  try{if(!tsActive()){battleUpdateBossTimer(dt);battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
+   if(!tsActive())addMoneyBN(BigNum.mul(baseIncomeRateBN(),dt));
+  if(!tsActive()){const facilityPayout=collectFacilityPayouts(dt);if(BigNum.cmp(facilityPayout.money,0)>0)addMoneyBN(facilityPayout.money);if(BigNum.cmp(facilityPayout.xp,0)>0)gainXP(facilityPayout.xp);}
+  // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
+  // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
+  // 大量XP時の二分探索・報酬計算を毎フレーム実行しない。最大10回/秒に制限する。
+  if(now-lastXpProcess>=100){
+   lastXpProcess=now;
+   try{
+    processPendingXP();
+    updateLevelXPDisplay();
+   }catch(xpErr){
+    if(now-lastLoopErrorLog>=5000){
+     lastLoopErrorLog=now;
+     console.error("XP精算・表示更新エラー",xpErr);
+     const log=$("log");if(log)log.textContent="XP精算でエラーが発生しました。ほかの操作は継続しています。";
+    }
+   }
+  }
+  // XPバーは独立更新し、画面全体の再描画を待たない。
+  if(now-lastXpBarUpdate>=50){lastXpBarUpdate=now;updateXPBars()}
+  updateBattleManualCooldownUI();
+  if(now-lastRender>=500){lastRender=now;render();tsUpdateStatus()}
+  if(now-lastAutoSave>=5000){lastAutoSave=now;saveAutoGame()}
+ }catch(err){
+  if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("ゲームループ内エラー",err);const log=$("log");if(log)log.textContent="一部の処理でエラーが発生しました。ゲームループは継続しています。";}
+ }finally{requestAnimationFrame(loop)}
+}
+$("buyCountFacility").value=$("buyCount").value;$("buyCountFacility").addEventListener("change",e=>{$("buyCount").value=e.target.value});$("buyCount").addEventListener("change",e=>{$("buyCountFacility").value=e.target.value});
+document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.dataset.view;document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+target));document.querySelectorAll(".bottomnav button").forEach(b=>b.classList.toggle("active",b===btn));if(target==="rebirth"&&rebirthShopDirty){renderRebirthShop();rebirthShopDirty=false;}if(target==="skills")renderSkillTree();if(target==="timespace")tsRender();window.scrollTo({top:0,behavior:"smooth"});}));
 
 tsEnsure();battleEnsureState();render();tsRender();requestAnimationFrame(loop);
 </script>
