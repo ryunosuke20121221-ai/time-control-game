@@ -2307,7 +2307,7 @@ function tsEnemyAttack(dt){
 function tsEscape(){
  const t=tsEnsure(),d=t.distortion,first=t.completedRuns===0,noDefeat=d.defeats===0;
  const base=Math.floor((d.internalShards+(noDefeat&&t.echo.levels[1]>=2?3:0))*.30);
- let extra=0;while(Math.random()<.90)extra++;
+ let extra=0;while(extra<100000&&Math.random()<.90)extra++;
  const amount=Math.floor((base+extra)*(1+(Number(t.upgrades.shardBoost)||0)*.10));
  s.timeShards=(Number(s.timeShards)||0)+amount;s.timeShardsTotal=(Number(s.timeShardsTotal)||0)+amount;
  if(first)t.cores+=5;if(noDefeat)t.cores++;
