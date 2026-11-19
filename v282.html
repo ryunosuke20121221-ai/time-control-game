@@ -263,6 +263,7 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
 @media(max-width:520px){.ts-grid{grid-template-columns:1fr}.bottomnav{grid-template-columns:repeat(5,minmax(0,1fr))}}
 .bottomnav button[data-view="timespace"]{display:flex;align-items:center;justify-content:center;gap:4px}.bottomnav button[data-view="timespace"] img{width:19px;height:19px;flex:0 0 19px;object-fit:contain;display:block}
 .timespace-main-title{display:flex;align-items:center;gap:10px}.timespace-main-title img{width:34px;height:34px;flex:0 0 34px;object-fit:contain;display:block}
+.bestiary-slime-card{display:flex;flex-direction:column;align-items:flex-start}.bestiary-monster-art{width:100%;height:116px;display:block;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 7px 9px #24134d88);margin:5px 0}
 
 </style>
 <style id="v212-battle-skill-visibility">
@@ -394,7 +395,7 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
   <div class="grid" style="margin:8px 0 10px"><div class="item"><b>ボス討伐数</b><div class="stat-value" id="bestiaryBossDefeats">0体</div></div><div class="item"><b>強化個体討伐数</b><div class="stat-value" id="bestiaryEnhancedDefeats">0体</div></div><div class="item"><b>強化ボス討伐数</b><div class="stat-value" id="bestiaryEnhancedBossDefeats">0体</div></div></div>
   <div class="small">通常魔物4種類が順番に出現し、100体ごとに異なるボスが登場します。超越個体探知を解放すると強化個体が出現。強化雑魚は最上位のみSPを落とし、強化ボスは全ランクがSPを落とします。</div>
   <div class="grid" style="margin-top:10px">
-   <div class="item"><b>🔵 スライム</b><div class="small">HP基準 100</div><div class="small" id="bestiary-slime">討伐 0体・強化 0体</div></div>
+   <div class="item bestiary-slime-card"><b>スライム</b><img class="bestiary-monster-art" src="/time-control-game/assets/enemies/normal/slime-v3.webp?v=282" alt="スライム" loading="lazy" decoding="async"><div class="small">HP基準 100</div><div class="small" id="bestiary-slime">討伐 0体・強化 0体</div></div>
    <div class="item"><b>👺 ゴブリン</b><div class="small">HP基準 120</div><div class="small" id="bestiary-goblin">討伐 0体・強化 0体</div></div>
    <div class="item"><b>💀 スケルトン</b><div class="small">HP基準 150</div><div class="small" id="bestiary-skeleton">討伐 0体・強化 0体</div></div>
    <div class="item"><b>🐺 ダークウルフ</b><div class="small">HP基準 200</div><div class="small" id="bestiary-wolf">討伐 0体・強化 0体</div></div>
@@ -438,11 +439,11 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
 <section class="panel number-settings-panel" id="apNumberSettings" style="display:none"><h2>数字表示設定</h2><p class="small">項目ごとに表示形式・小数点・桁区切り・指数の有効桁数を個別に設定できます。設定は転生後も保存されます。</p><select id="apNumberFormat" style="display:none"><option value="jp">日本語単位</option><option value="short">短縮</option><option value="full">省略なし</option><option value="sci">指数</option></select><div id="apNumberSettingsBody"></div></section>
 <div class="actions"><button id="reset">最初から</button></div>
 <p class="small">管理者モードをONにすると能力・施設の購入費用が0になり、MPが無限になります。表示を「しない」にしても、すでにONの管理者モード自体は解除されません。</p></section></div>
-<div class="view" id="view-timespace"><section class="panel"><h2 class="timespace-main-title"><img src="assets/ui/tabs/timespace-hourglass.webp" alt="" aria-hidden="true"> 時空システム</h2><p class="small">未知の時空に関する情報が、ここに記録される。</p><div id="tsPageRoot"></div></section></div>
+<div class="view" id="view-timespace"><section class="panel"><h2 class="timespace-main-title"><img src="/time-control-game/assets/ui/tabs/timespace-hourglass.webp?v=282" alt="" aria-hidden="true"> 時空システム</h2><p class="small">未知の時空に関する情報が、ここに記録される。</p><div id="tsPageRoot"></div></section></div>
 <div class="view" id="view-achievements"><section class="panel"><div class="panel" style="margin-top:14px;border-color:#806a35"><h2 style="color:var(--gold)">実績・AP</h2><div class="stat"><span>達成数</span><b id="achCount">0 / 0</b></div><div class="stat"><span>達成率</span><b id="achRate">0%</b></div><div class="stat"><span>獲得AP</span><b id="apBalance">0 AP</b></div><div id="achievementList"></div></div>
 <section class="panel ap-shop-panel"><h2 style="color:var(--gold)">🛍 APショップ</h2><div class="stat"><span>利用可能AP</span><b id="shopApBalance">0 AP</b></div><p class="small">APは実績で獲得できます。購入した機能・スキンは転生後も保持されます。ゲームの基本性能を上げる商品はありません。</p><div id="apShopItems"></div><div id="apStatsExtra" style="display:none"></div><div id="apIncomeExtra" style="display:none"></div><div id="apTitleArea" style="display:none"><h3>称号コレクション</h3><p class="small">購入した称号をプロフィールに表示できます。</p><select id="apTitleSelect"></select><div id="apTitlePreview"></div></div></section>
 </section></div></div>
-</main><nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="battle">⚔️ 戦闘</button><button id="skillTreeNav" data-view="skills">🔒 ロック中</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="details">📊 詳細</button><button data-view="achievements">🏅 実績・AP</button><button data-view="timespace"><img src="assets/ui/tabs/timespace-hourglass.webp" alt="" aria-hidden="true"><span>時空</span></button></nav>
+</main><nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="battle">⚔️ 戦闘</button><button id="skillTreeNav" data-view="skills">🔒 ロック中</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="details">📊 詳細</button><button data-view="achievements">🏅 実績・AP</button><button data-view="timespace"><img src="/time-control-game/assets/ui/tabs/timespace-hourglass.webp?v=282" alt="" aria-hidden="true"><span>時空</span></button></nav>
 <div id="milestoneScheduleOverlay" class="milestone-overlay" hidden>
  <section class="milestone-modal" role="dialog" aria-modal="true" aria-labelledby="milestoneScheduleTitle">
   <header class="milestone-modal-head"><div><h2 id="milestoneScheduleTitle">📜 全マイルストーン出現予定</h2><p>全25件の出現条件・初回報酬・達成状況</p></div><button id="milestoneScheduleClose" class="milestone-modal-close" type="button">閉じる ✕</button></header>
