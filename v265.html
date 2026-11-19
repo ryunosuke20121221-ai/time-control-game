@@ -2199,6 +2199,22 @@ const __tsFacilityInterval=facilityPayoutInterval;facilityPayoutInterval=functio
 const __tsFacilityMoney=facilityMoneyEarnBN;facilityMoneyEarnBN=function(i){let v=__tsFacilityMoney(i);const t=tsEnsure();v=BigNum.mul(v,1+t.sync.wealth*.05);if(i===0)v=BigNum.mul(v,1+(Number(t.facilityEvo[i].unique)||0)*.1);if(i===1){}if(i===3)v=BigNum.mul(v,1+(Number(t.facilityEvo[i].unique)||0)*.05);v=BigNum.mul(v,1+(Number(t.abilityEvo[1].unique)||0)*[0,.03,.06,.10][Number(t.abilityEvo[1].unique)||0]);return v};
 const __tsFacilityCost=bCostBN;bCostBN=function(i){const v=__tsFacilityCost(i),lv=Number(tsEnsure().facilityEvo[1].unique)||0;return i===1?BigNum.mul(v,1-lv*.05):v};
 const __tsFacilityXP=facilityXPEarnBN;facilityXPEarnBN=function(i){let v=__tsFacilityXP(i);const t=tsEnsure();return BigNum.mul(v,(1+t.sync.wealth*.05)*(1+(Number(t.facilityEvo[i].unique)||0)*(i===2?.1:0)))};
+const __tsBattleApply=battleApplyDamage;
+battleApplyDamage=function(...args){
+ if(tsActive())return;
+ const before=(s.battleGroup||[]).map(x=>({...x})),shardsBefore=Number(s.timeShards)||0;
+ __tsBattleApply(...args);
+ const gained=Math.max(0,(Number(s.timeShards)||0)-shardsBefore),adapt=Number(tsEnsure().shardAdapt)||0;
+ if(gained&&adapt>0)tsAddShards(gained*adapt*.1,false);
+ if(!s.skillTreeUnlocked||s.admin)return;
+ const remaining=new Set((s.battleGroup||[]).map(x=>x.number)),chance=Math.min(.95,.01+tsEnsure().shardSense*.005);
+ for(const x of before){
+  if(remaining.has(x.number))continue;
+  const info=battleEnemyInfo(x.number);
+  if(info.boss||x.milestoneId||Number(x.variant)>0)continue;
+  if(Math.random()<chance)tsAddShards(1,true);
+ }
+};
 const __tsCollect=collectFacilityPayouts;collectFacilityPayouts=function(dt,mf=1,xf=1){const before=Array.isArray(s.facilityTimers)?s.facilityTimers.slice():[0,0,0,0,0],out=__tsCollect(dt,mf,xf);tsAfterFacility(Math.max(0,Number(dt)||0),before);const cp=Number(tsEnsure().upgrades.facilityCopy)||0;if(!tsActive()&&cp>0&&BigNum.cmp(out.money,0)>0&&Math.random()<cp*.05)out.money=BigNum.add(out.money,BigNum.mul(out.money,.5));return out};
 const __tsMoney=allMoneyMult;allMoneyMult=function(){const t=tsEnsure();return __tsMoney()*(t.boon?10:1)*(1+t.sync.level*.0025)};
 const __tsXP=allXpMult;allXpMult=function(){const t=tsEnsure();return __tsXP()*(t.boon?10:1)*(1+t.sync.level*.0025)};
