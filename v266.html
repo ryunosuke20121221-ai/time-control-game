@@ -2294,7 +2294,7 @@ function tsEnemyAttack(dt){
 function tsEscape(){
  const t=tsEnsure(),d=t.distortion,first=t.completedRuns===0,noDefeat=d.defeats===0;
  const base=Math.floor((d.internalShards+(noDefeat&&t.echo.levels[1]>=2?3:0))*.30);
- let extra=0;while(extra<100000&&Math.random()<.90)extra++;
+ let extra=0;while(Math.random()<.90)extra++;
  const amount=Math.floor((base+extra)*(1+(Number(t.upgrades.shardBoost)||0)*.10));
  s.timeShards=(Number(s.timeShards)||0)+amount;s.timeShardsTotal=(Number(s.timeShardsTotal)||0)+amount;
  if(first)t.cores+=5;if(noDefeat)t.cores++;
@@ -2421,7 +2421,7 @@ function tsRender(){
   const lv=Number(t.upgrades[x[0]])||0,cost=tsCoreCost(x[0]),memoryGate=x[0]==="memory"?(lv>=3||t.echo.levels[2]>=[1,2,3][lv]):true;
   const allowed=s.skillTreeUnlocked&&cost>0&&t.cores-cost>=coreReserve&&memoryGate&&!d.active;
   let note="次の強化費用：核"+cost;
-  if(x[0]==="memory"&&!memoryGate)note="存在強化Lv"+[1,2,3][lv]+"が必要";
+  if(x[0]==="memory"&&lv<3&&!memoryGate)note="存在強化Lv"+[1,2,3][lv]+"が必要";
   else if(!s.skillTreeUnlocked)note="スキルツリー解放後に利用可能";
   else if(cost&&t.cores-cost<coreReserve)note="次回侵入用の核を確保中";
   return '<div class="ts-item"><b>'+x[1]+' Lv'+lv+'/'+x[2]+'</b><p>'+x[4]+'</p><small>'+note+'</small><button data-ts="core" data-id="'+x[0]+'" '+(allowed?"":"disabled")+'>'+(cost?"核 "+cost+"個で強化":"最大")+'</button></div>';
