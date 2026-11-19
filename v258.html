@@ -1601,7 +1601,7 @@ if(!Array.isArray(s.battleGroup))s.battleGroup=[];
  if(s.milestoneQueue.length){
   const id=s.milestoneQueue[0],def=milestoneDef(id),number=battleEnemyNumber();
   if(def){
-   const baseTemplate=def.boss===false?(battleEnemies.find(x=>x.kind===def.kind)||battleEnemies[0]):(battleBosses.find(x=>x.kind===def.kind)||battleBosses[0]);const info={...battleEnemyInfo(number),...baseTemplate,number,name:def.name,kind:def.kind,variant:def.variant,boss:def.boss!==false,milestone:true,milestoneId:id,milestoneDedicated:!!def.dedicated};
+   const baseTemplate=def.boss===false?(battleEnemies.find(x=>x.kind===def.kind)||battleEnemies[0]):(battleBosses.find(x=>x.kind===def.kind)||battleBosses[0]);const info={...battleEnemyInfo(number),...baseTemplate,number,name:def.name,kind:def.kind,variant:def.variant,boss:def.boss!==false,milestone:true,milestoneId:id,milestoneDedicated:!!def.dedicated,dedicatedHp:def.dedicatedHp};
    const hp=BigNum.json(battleMaxHpBN(info));
    const timer=Number(def.timer)||120+(Math.max(1,Number(def.variant)||1)-1)*30;
    s.battleGroup=[{number,hp,variant:def.variant,rewardMultiplier:battleVariantMultiplier(def.variant),timer,timerMax:timer,timerPause:0,timerExpired:false,milestoneId:id}];
