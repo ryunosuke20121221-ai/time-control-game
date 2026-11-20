@@ -2736,7 +2736,7 @@ function showDoorStoryModal(title,paragraphs,prompt,acceptLabel,onAccept,closeAf
  const actions=document.createElement("div");actions.className="door-story-actions";
  const cancel=document.createElement("button");cancel.type="button";cancel.textContent=closeAfter?"閉じる":"戻る";
  const accept=document.createElement("button");accept.type="button";accept.className="primary";accept.textContent=acceptLabel;
- const close=()=>overlay.remove();cancel.onclick=close;accept.onclick=()=>{close();if(typeof onAccept==="function")onAccept()};
+ const close=()=>overlay.remove();cancel.onclick=()=>{close();if(closeAfter&&typeof onAccept==="function")onAccept()};accept.onclick=()=>{close();if(typeof onAccept==="function")onAccept()};
  actions.append(cancel,accept);dialog.appendChild(actions);overlay.appendChild(dialog);
  overlay.addEventListener("click",e=>{if(e.target===overlay&&!closeAfter)close()});document.body.appendChild(overlay);accept.focus();
 }
