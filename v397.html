@@ -845,6 +845,43 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  #view-battle .battle-stage .battle-boss .slime-monster-art{height:112px!important;max-height:112px!important}
 }
 </style>
+<style id="v397-battle-skill-fixed-compact">
+/* スキル数に関係なく外枠を固定し、増えた分は内部スクロール */
+#view-battle .battle-skill-actions{
+ height:148px!important;
+ min-height:148px!important;
+ max-height:148px!important;
+ box-sizing:border-box!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions .battle-skill-fold{
+ display:flex!important;
+ flex-direction:column!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions .battle-skill-fold>summary{
+ flex:0 0 36px!important;
+ height:36px!important;
+ min-height:36px!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list{
+ flex:1 1 auto!important;
+ height:auto!important;
+ min-height:0!important;
+ max-height:none!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ -webkit-overflow-scrolling:touch!important;
+ overscroll-behavior:contain!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button{
+ flex-shrink:0!important;
+}
+</style>
 <script>
 const $=id=>document.getElementById(id);
 const funcs=[
