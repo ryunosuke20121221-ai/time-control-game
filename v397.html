@@ -595,18 +595,40 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  box-sizing:border-box!important;
 }
 #view-battle .battle-skill-actions .battle-skill-list button{
- display:block!important;
+ display:flex!important;
+ align-items:center!important;
+ justify-content:flex-start!important;
+ gap:4px!important;
  width:100%!important;
  height:34px!important;
  min-height:34px!important;
  max-height:34px!important;
- padding:5px 6px!important;
+ padding:3px 5px!important;
  overflow:hidden!important;
  white-space:nowrap!important;
- text-overflow:ellipsis!important;
  box-sizing:border-box!important;
 }
-#view-battle .battle-skill-actions .battle-skill-list button small{display:none!important}
+#view-battle .battle-skill-actions .battle-skill-list button .battle-skill-name{
+ flex:0 1 auto!important;
+ min-width:0!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+ white-space:nowrap!important;
+ font-size:.68rem!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button small[data-skill-preview],
+#view-battle .battle-skill-actions .battle-skill-list button .battle-skill-targets{
+ display:inline!important;
+ flex:0 0 auto!important;
+ margin:0!important;
+ padding:0!important;
+ font-size:.55rem!important;
+ line-height:1!important;
+ color:#c9d9ef!important;
+ white-space:nowrap!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button small[data-mutation-cooldown],
+#view-battle .battle-skill-actions .battle-skill-list button small:not([data-skill-preview]):not([data-mutation-cooldown]):not(.battle-skill-targets){display:none!important}
 </style>
 </head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
@@ -2001,13 +2023,13 @@ function renderBattleSkills(){
  // スキル構成が変わった場合だけ更新し、通常の描画ではスクロール領域を維持する。
  if(root.dataset.skillSignature!==signature){
   const list=root.querySelector(".battle-skill-list"),oldScroll=list?list.scrollTop:0;
-  root.innerHTML='<details class="battle-skill-fold" open><summary>戦闘スキル ('+unlocked.length+')</summary><div class="battle-skill-list">'+unlocked.map(x=>'<button data-battle-skill="'+x.id+'">'+x.name+'<small>MP消費：'+skillMpCostLabel(x.mp)+'</small><small data-skill-preview="'+x.id+'">ダメージ目安（現在の敵）：計算中</small><small data-mutation-cooldown="'+x.id+'"></small>'+(x.targets>1?"・"+x.targets+"体":"")+"</button>").join("")+'</div></details>';
+  root.innerHTML='<details class="battle-skill-fold" open><summary>戦闘スキル ('+unlocked.length+')</summary><div class="battle-skill-list">'+unlocked.map(x=>'<button data-battle-skill="'+x.id+'"><span class="battle-skill-name">'+x.name+'</span><small data-skill-preview="'+x.id+'">ダメージ計算中</small>'+(x.targets>1?'<small class="battle-skill-targets">×'+x.targets+'体</small>':'')+'<small data-mutation-cooldown="'+x.id+'"></small></button>').join("")+'</div></details>';
   root.dataset.skillSignature=signature;
   const newList=root.querySelector(".battle-skill-list");if(newList)newList.scrollTop=oldScroll;
   root.querySelectorAll("[data-battle-skill]").forEach(b=>b.onclick=()=>battleUseSkill(b.dataset.battleSkill));
  }
  const activeTarget=s.battleGroup?.[0],skillCooldown=activeTarget?.mutationType==="skillInterference"?Math.max(0,Number(activeTarget.skillCooldown)||0):0;
- unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(preview){const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.maxHitsPerTarget>1?"集中攻撃："+p.maxHitsPerTarget+"回 ／ ダメージ目安："+xpBNFmt(p.total):p.count>1?(p.maxHitsPerTarget>1?"集中攻撃：最大"+p.maxHitsPerTarget+"回 ／ ":"")+"平均ダメージ目安："+xpBNFmt(p.perTarget)+" ／ 合計："+xpBNFmt(p.total):"ダメージ目安："+xpBNFmt(p.total)):"ダメージ目安：対象なし";}const button=root.querySelector('[data-battle-skill="'+skill.id+'"]'),cooldownLabel=root.querySelector('[data-mutation-cooldown="'+skill.id+'"]');if(button)button.disabled=!!s.battlePaused||skillCooldown>0;if(cooldownLabel)cooldownLabel.textContent=skillCooldown>0?"時空干渉：クールタイム "+skillCooldown.toFixed(1)+"秒":"";});
+ unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(preview){const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.maxHitsPerTarget>1?"集中"+p.maxHitsPerTarget+"回 "+xpBNFmt(p.total):p.count>1?(p.maxHitsPerTarget>1?"最大"+p.maxHitsPerTarget+"回 ":"")+xpBNFmt(p.perTarget)+"/体 合計"+xpBNFmt(p.total):xpBNFmt(p.total)):"対象なし";}const button=root.querySelector('[data-battle-skill="'+skill.id+'"]'),cooldownLabel=root.querySelector('[data-mutation-cooldown="'+skill.id+'"]');if(button)button.disabled=!!s.battlePaused||skillCooldown>0;if(cooldownLabel)cooldownLabel.textContent=skillCooldown>0?"時空干渉：クールタイム "+skillCooldown.toFixed(1)+"秒":"";});
 }
 function battleUseSkill(id){
  skillEnsureState();
