@@ -616,13 +616,25 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  white-space:nowrap!important;
  font-size:.68rem!important;
 }
-#view-battle .battle-skill-actions .battle-skill-list button small[data-skill-preview],
+#view-battle .battle-skill-actions .battle-skill-list button small[data-skill-preview]{
+ display:inline!important;
+ flex:1 1 auto!important;
+ min-width:0!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+ margin:0!important;
+ padding:0!important;
+ font-size:.49rem!important;
+ line-height:1!important;
+ color:#c9d9ef!important;
+ white-space:nowrap!important;
+}
 #view-battle .battle-skill-actions .battle-skill-list button .battle-skill-targets{
  display:inline!important;
  flex:0 0 auto!important;
  margin:0!important;
  padding:0!important;
- font-size:.55rem!important;
+ font-size:.52rem!important;
  line-height:1!important;
  color:#c9d9ef!important;
  white-space:nowrap!important;
@@ -2029,7 +2041,7 @@ function renderBattleSkills(){
   root.querySelectorAll("[data-battle-skill]").forEach(b=>b.onclick=()=>battleUseSkill(b.dataset.battleSkill));
  }
  const activeTarget=s.battleGroup?.[0],skillCooldown=activeTarget?.mutationType==="skillInterference"?Math.max(0,Number(activeTarget.skillCooldown)||0):0;
- unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(preview){const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.maxHitsPerTarget>1?"集中"+p.maxHitsPerTarget+"回 "+xpBNFmt(p.total):p.count>1?(p.maxHitsPerTarget>1?"最大"+p.maxHitsPerTarget+"回 ":"")+xpBNFmt(p.perTarget)+"/体 合計"+xpBNFmt(p.total):xpBNFmt(p.total)):"対象なし";}const button=root.querySelector('[data-battle-skill="'+skill.id+'"]'),cooldownLabel=root.querySelector('[data-mutation-cooldown="'+skill.id+'"]');if(button)button.disabled=!!s.battlePaused||skillCooldown>0;if(cooldownLabel)cooldownLabel.textContent=skillCooldown>0?"時空干渉：クールタイム "+skillCooldown.toFixed(1)+"秒":"";});
+ unlocked.forEach(skill=>{const preview=root.querySelector('[data-skill-preview="'+skill.id+'"]');if(preview){const p=battlePreviewSkillDamage(skill);preview.textContent=p.count?(p.count===1&&p.maxHitsPerTarget>1?"ダメージ：集中"+p.maxHitsPerTarget+"回 "+xpBNFmt(p.total):p.count>1?(p.maxHitsPerTarget>1?"ダメージ：最大"+p.maxHitsPerTarget+"回／体平均 "+xpBNFmt(p.perTarget)+" 合計"+xpBNFmt(p.total):"ダメージ："+xpBNFmt(p.perTarget)+"/体 合計"+xpBNFmt(p.total)):"ダメージ："+xpBNFmt(p.total)):"ダメージ：敵なし";}const button=root.querySelector('[data-battle-skill="'+skill.id+'"]'),cooldownLabel=root.querySelector('[data-mutation-cooldown="'+skill.id+'"]');if(button)button.disabled=!!s.battlePaused||skillCooldown>0;if(cooldownLabel)cooldownLabel.textContent=skillCooldown>0?"時空干渉：クールタイム "+skillCooldown.toFixed(1)+"秒":"";});
 }
 function battleUseSkill(id){
  skillEnsureState();
