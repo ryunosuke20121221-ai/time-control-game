@@ -4700,6 +4700,8 @@ let previous=null;const baseRender=window.render;if(typeof baseRender==="functio
   combatLegacyRenderBattle();
   combatRenderPanel();
  };
+ const combatBulkSelect=$("buyCount");
+ if(combatBulkSelect)combatBulkSelect.addEventListener("change",()=>{combatLastRenderKey="";combatRenderPanel();});
  const rebirthButton=$("rebirthBtn");
  if(rebirthButton&&typeof rebirthButton.onclick==="function"){
   const combatLegacyRebirthClick=rebirthButton.onclick;
