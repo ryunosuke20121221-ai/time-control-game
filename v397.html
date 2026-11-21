@@ -559,7 +559,56 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  .topstat span{font-size:.57rem!important}
  .topstat b{font-size:.67rem!important}
 }
-</style></head><body><main>
+</style><style id="v397-battle-skill-two-across">
+/* 戦闘スキルは「スキル1」「スキル2」のように横一列に2個並べる */
+#view-battle .battle-skill-actions{
+ height:48px!important;
+ min-height:48px!important;
+ max-height:48px!important;
+ padding:5px 6px!important;
+ box-sizing:border-box!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions:before{display:none!important}
+#view-battle .battle-skill-actions .battle-skill-fold{
+ display:block!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ padding:0!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions .battle-skill-fold>summary{display:none!important}
+#view-battle .battle-skill-actions .battle-skill-list{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ grid-auto-flow:row!important;
+ grid-auto-rows:34px!important;
+ gap:4px!important;
+ height:34px!important;
+ min-height:34px!important;
+ max-height:34px!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ padding:0!important;
+ margin:0!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button{
+ display:block!important;
+ width:100%!important;
+ height:34px!important;
+ min-height:34px!important;
+ max-height:34px!important;
+ padding:5px 6px!important;
+ overflow:hidden!important;
+ white-space:nowrap!important;
+ text-overflow:ellipsis!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button small{display:none!important}
+</style>
+</head><body><main>
 <div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
 <h1>時間操作ゲーム <span class="tag">v262</span></h1>
 
