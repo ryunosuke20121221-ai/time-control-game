@@ -466,6 +466,33 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
 #view-battle .battle-attack-stats span{font-size:.7rem;line-height:1.15}
 #view-battle .battle-attack-stats b{line-height:1.2}
 </style>
+<style id="v397-fixed-battle-skill-frame">
+/* スキル数が増えても戦闘スキル枠の外寸を固定 */
+.battle-skill-actions{
+ height:150px!important;
+ max-height:150px!important;
+ box-sizing:border-box!important;
+}
+.battle-skill-actions .battle-skill-fold{
+ height:100%!important;
+ min-height:0!important;
+}
+.battle-skill-actions .battle-skill-fold>summary{
+ min-height:40px!important;
+ height:40px!important;
+ box-sizing:border-box!important;
+}
+.battle-skill-actions .battle-skill-list{
+ height:calc(100% - 40px)!important;
+ max-height:none!important;
+ min-height:0!important;
+ overflow-y:auto!important;
+ box-sizing:border-box!important;
+}
+@media(max-width:520px){
+ .battle-skill-actions{height:148px!important;max-height:148px!important}
+}
+</style>
 <style id="v212-battle-skill-visibility">
 /* 戦闘スキル欄を下部タブの上に固定し、常に前面へ */
 .battle-skill-actions{
