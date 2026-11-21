@@ -1423,7 +1423,7 @@ const FLOOR_SQ250_BLOCK_BIG=floorSq250PrefixBig[250];
 function floor100SumPrefixBig(n){const q=n/100n,r=n%100n;return 100n*q*(q-1n)/2n+q*r}
 function floorSq250SumPrefixBig(n){const q=n/250n,r=n%250n;return 62500n*q*(q-1n)*(2n*q-1n)/6n+62250n*q*(q-1n)/2n+q*FLOOR_SQ250_BLOCK_BIG+250n*q*q*r+q*r*(r-1n)+floorSq250PrefixBig[Number(r)]}
 function requiredXPSum(startN,count){const start=toLevelInteger(startN),amount=toLevelInteger(count);if(amount<=0n)return BigNum.from(0);const end=start+amount,sum=amount*(2n*start+amount-1n)/2n,f100=floor100SumPrefixBig(end)-floor100SumPrefixBig(start),f250=floorSq250SumPrefixBig(end)-floorSq250SumPrefixBig(start),total=100n*amount+(9n*sum)/2n+f100+f250,discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;return BigNum.mul(BigNum.from(total),discount)}
-function affordableLevelCount(){const xp=xpBN();if(BigNum.cmp(xp,needBN())<0)return 0n;const start=s.level-1n;let low=0n,high=1n,loops=0;while(loops<4096&&BigNum.cmp(requiredXPSum(start,high),xp)<=0){low=high;high*=2n;loops++}if(loops>=4096)throw new RangeError("XPレベル探索上限を超過");while(high-low>1n){const mid=(low+high)/2n;if(BigNum.cmp(requiredXPSum(start,mid),xp)<=0)low=mid;else high=mid}return low}
+function affordableLevelCount(maxCount=100n){const xp=xpBN();if(BigNum.cmp(xp,needBN())<0)return 0n;const start=s.level-1n,limit=BigInt(maxCount);if(limit<=0n)return 0n;if(BigNum.cmp(requiredXPSum(start,limit),xp)<=0)return limit;let low=0n,high=limit;while(high-low>1n){const mid=(low+high)/2n;if(BigNum.cmp(requiredXPSum(start,mid),xp)<=0)low=mid;else high=mid}return low}
 
 function totalIncomeAtLevelBN(level){
  const levelMoney=levelMoneyMultBN(level);
@@ -1605,7 +1605,7 @@ function processPendingXP(){
  // 巨大数の境界ではNumberの丸めで1回の探索後にも次レベル分のXPが残ることがあるため、残量が必要量を下回るまで連続処理する。
  // 1フレームあたり最大2回に制限し、残りのXPは次フレームへ分散する。
  for(let pass=0;pass<2;pass++){
-  const oldLevel=s.level,ups=affordableLevelCount();if(ups<=0n)break;
+  const oldLevel=s.level,ups=affordableLevelCount(100n);if(ups<=0n)break;
   const cost=requiredXPSum(oldLevel-1n,ups),currentXP=xpBN();
   if(BigNum.cmp(currentXP,cost)<0)break;
   const newLevel=oldLevel+ups;
@@ -3484,11 +3484,25 @@ document.addEventListener("visibilitychange",()=>{
 });
 window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();if(tsActive())tsRender();}});
 $("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
-let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,lastXpProcess=0,battleAutoTimer=0;
+let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,battleAutoTimer=0,lastXpProcess=0;
 
 
 function autoTapInterval(){return Math.max(0.5,1.5-Math.max(0,Number(s.fl[0])||0)*0.001)}
 let lastAutoSave=0,lastLoopErrorLog=0;
+function xpLoop(now){
+ try{
+  if(now-lastXpProcess>=100){
+   lastXpProcess=now;
+   try{
+    processPendingXP();
+    updateLevelXPDisplay();
+   }catch(xpErr){
+    console.error("XP精算・表示更新エラー",xpErr);
+    const log=$("log");if(log)log.textContent="XP精算でエラーが発生しました。戦闘処理は独立して継続しています。";
+   }
+  }
+ }finally{requestAnimationFrame(xpLoop)}
+}
 function loop(now){
  try{
   const dt=Math.min((now-last)/1000,1);last=now;tsTick(dt);
@@ -3503,22 +3517,6 @@ function loop(now){
   try{if(!tsActive()&&!s.battlePaused){battleUpdateBossTimer(dt);battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
    if(!tsActive())addMoneyBN(BigNum.mul(baseIncomeRateBN(),dt));
   if(!tsActive()){const facilityPayout=collectFacilityPayouts(dt);if(BigNum.cmp(facilityPayout.money,0)>0)addMoneyBN(facilityPayout.money);if(BigNum.cmp(facilityPayout.xp,0)>0)gainXP(facilityPayout.xp);}
-  // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
-  // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
-  // 大量XP時の二分探索・報酬計算を毎フレーム実行しない。最大10回/秒に制限する。
-  if(now-lastXpProcess>=100){
-   lastXpProcess=now;
-   try{
-    processPendingXP();
-    updateLevelXPDisplay();
-   }catch(xpErr){
-    if(now-lastLoopErrorLog>=5000){
-     lastLoopErrorLog=now;
-     console.error("XP精算・表示更新エラー",xpErr);
-     const log=$("log");if(log)log.textContent="XP精算でエラーが発生しました。ほかの操作は継続しています。";
-    }
-   }
-  }
   // XPバーは独立更新し、画面全体の再描画を待たない。
   if(now-lastXpBarUpdate>=50){lastXpBarUpdate=now;updateXPBars()}
   updateBattleManualCooldownUI();
@@ -3531,7 +3529,7 @@ function loop(now){
 $("buyCountFacility").value=$("buyCount").value;$("buyCountFacility").addEventListener("change",e=>{$("buyCount").value=e.target.value});$("buyCount").addEventListener("change",e=>{$("buyCountFacility").value=e.target.value});
 document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.dataset.view;if(target==="abilities"||target==="facilities"){shopDirty=true;render();}document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+target));document.querySelectorAll(".bottomnav button").forEach(b=>b.classList.toggle("active",b===btn));if(target==="rebirth"&&rebirthShopDirty){renderRebirthShop();rebirthShopDirty=false;}if(target==="skills")renderSkillTree();if(target==="timespace")tsRender();if(target==="developer"){refreshAdminInputs();$("adminModeBtn").textContent=s.admin?"管理者モード：ON（解除）":"管理者モード：OFF（有効化）";$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;}window.scrollTo({top:0,behavior:"smooth"});}));
 
-tsEnsure();battleEnsureState();render();tsRender();if(tsActive()){const nav=document.querySelector(".bottomnav button[data-view=\"battle\"]");if(nav)nav.click();showFirstDistortionBattleStory();}requestAnimationFrame(loop);
+tsEnsure();battleEnsureState();render();tsRender();if(tsActive()){const nav=document.querySelector(".bottomnav button[data-view=\"battle\"]");if(nav)nav.click();showFirstDistortionBattleStory();}requestAnimationFrame(loop);requestAnimationFrame(xpLoop);
 </script>
 <script>
 (()=>{
@@ -3645,11 +3643,11 @@ tsEnsure();battleEnsureState();render();tsRender();if(tsActive()){const nav=docu
    // これにより管理者ボタン操作中の長時間ブロックを避け、他の操作・描画を継続させる。
    persist();shopDirty=true;rebirthShopDirty=true;render();saveAutoGame();
    $("log").textContent=BigNum.cmp(xpBN(),needBN())>=0
-    ?"管理者設定を適用しました。XPは次のゲーム更新で一括精算します。"
+    ?"管理者設定を適用しました。XPは独立処理で最大100レベルずつ精算します。"
     :"管理者設定を適用しました。";
   };
   const preset=(kind)=>{
-   const cfg={early:[50,10000,1e5,100,100,5],mid:[400,1e7,1e9,500,1000,10],late:[10000,1e12,1e15,5000,1e6,50],max:[1e6,1e100,1e100,1e6,1e100,100]}[kind];
+   const cfg={early:[50,10000,1e5,100,100,5],mid:[400,1e7,1e9,500,1000,10],late:[10000,1e12,1e15,5000,1e6,50],max:[1e6,0,1e100,1e6,1e100,100]}[kind];
    $("admLevel").value=cfg[0];$("admXp").value=cfg[1];$("admMoney").value=cfg[2];$("admMp").value=cfg[3];$("admTP").value=cfg[4];$("admRbMult").value=cfg[5];
    $("admRebirth").value=kind==="early"?0:kind==="mid"?5:kind==="late"?20:100;
    $("admAP").value=ach.ap;
