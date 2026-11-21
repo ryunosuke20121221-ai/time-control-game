@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>時間操作ゲーム v295</title>
+<style>
+html,body,button{touch-action:manipulation}html,body{overflow-anchor:none}
+:root{color-scheme:dark;--bg:#080f20;--panel:#111d33;--line:#263b5b;--accent:#38c9f5;--muted:#a9bad3;--gold:#f4c65e;--purple:#aa8cff;--xp:#49a9ff;--mp:#f5ca58}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#18345a 0%,var(--bg) 58%);color:#edf6ff;font:15px system-ui,sans-serif}
+main{max-width:900px;margin:auto;padding:18px}h1{font-size:1.35rem;margin:0 0 5px}p{color:var(--muted);margin:5px 0 14px}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(16,19,27,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:6px max(10px,calc((100vw - 900px)/2));margin:0 -18px 12px}
+.topstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:88%;margin-left:auto;margin-right:auto}.topstat{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 5px}.topstat span{display:block;color:var(--muted);font-size:.68rem}.topstat b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.84rem}.topbar progress{height:4px;margin-top:3px}
+.view{display:none}.view.active{display:block}.viewgrid{display:grid;grid-template-columns:1fr;gap:12px}.viewgrid>.panel{min-width:0}
+.bottomnav{position:fixed;bottom:0;top:auto;left:0;right:0;z-index:1000;transform:translateZ(0);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow-y:hidden;overflow-x:hidden;max-height:22vh;gap:4px;padding:5px max(8px,calc((100vw - 900px)/2));padding-bottom:calc(6px + env(safe-area-inset-bottom));background:rgba(8,15,32,.98);border-top:1px solid var(--line);}.bottomnav button{margin:0;min-width:0;padding:7px 1px;border-radius:9px;font-size:.68rem;white-space:nowrap;background:#20283a}.bottomnav button.active{background:linear-gradient(135deg,#087eae,#315cdb);border-color:#48c9f5}main{padding-bottom:calc(22vh + 18px)}
+#functions,#facilities{display:grid;grid-template-columns:1fr;gap:10px}#functions .item,#facilities .item{border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#172842,#101a2d);padding:12px;margin:0}#functions .item>button,#facilities .item>button{margin-top:8px}.facility-progress{height:9px;margin:7px 0 4px;background:#26364e;border:1px solid #3a4d69;border-radius:99px;overflow:hidden}.facility-progress-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#19a6c9,#58d6a2);transition:width .2s linear}.facility-progress[aria-label]{display:block}.item details{margin-top:8px}.item summary{cursor:pointer;color:#cbd4ff;font-weight:650;padding:5px 0}.item .detail-copy{padding:5px 0;color:var(--muted);font-size:.88rem}
+@media(min-width:650px){.viewgrid.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}#functions,#facilities{grid-template-columns:repeat(2,minmax(0,1fr))}.topstat b{font-size:1.05rem}}
+@media(max-width:420px){main{padding:12px;padding-bottom:calc(22vh + 18px)}.topbar{margin:0 -12px 12px}.topstats{gap:3px}.topstat{padding:4px 4px}.topstat span{font-size:.64rem}.topstat b{font-size:.76rem}.bottomnav button{font-size:.64rem;padding:7px 1px}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.panel{background:linear-gradient(155deg,#14233d,var(--panel) 62%);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 8px 26px #0004}
+h2{font-size:1.05rem;margin:0 0 10px}.stat{display:flex;justify-content:space-between;gap:12px;margin:7px 0;min-width:0}.stat b{min-width:0}#money{white-space:nowrap;display:block;width:100%;max-width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:right;font-size:clamp(.85rem,3.5vw,1rem);line-height:1.15;overflow-wrap:normal;word-break:keep-all}.stat:has(>#money){display:grid;grid-template-columns:minmax(0,1fr);gap:3px}#topMoney{white-space:nowrap;word-break:keep-all;overflow-wrap:normal;display:block;min-width:0;width:100%;font-size:clamp(.85rem,3.5vw,1rem)}.big{font-size:1.4rem;font-weight:750}
+select{background:#252d40;color:#fff;border:1px solid #596585;border-radius:8px;padding:8px}button{background:#333d58;color:white;border:1px solid #596585;border-radius:10px;padding:10px 12px;font-weight:650;cursor:pointer;margin:4px 3px 4px 0}
+button.primary{background:linear-gradient(135deg,#087eae,#315cdb);border-color:#48c9f5;box-shadow:0 0 14px #27b8e533}button{transition:filter .15s,transform .15s}button:active{transform:scale(.98)}button:focus-visible{outline:2px solid #55d7ff;outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed}
+progress{width:100%;height:14px;accent-color:var(--accent)}.item{padding:10px 0;border-top:1px solid var(--line)}.item:first-of-type{border-top:0}
+.small{font-size:.88rem;color:var(--muted)}.tag{display:inline-block;border-radius:6px;background:#30394c;padding:3px 7px;font-size:.8rem}
+#log{min-height:2em;color:#bfcaff}.actions{display:flex;flex-wrap:wrap;gap:4px}
+.save-slot{border:1px solid var(--line,#3a4350);border-radius:12px;padding:12px;margin:12px 0}.save-slot input{width:100%;margin:6px 0 10px;padding:10px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.save-slot .actions{display:flex;gap:8px;flex-wrap:wrap}.save-slot .actions button{flex:1;min-width:100px}
+.number-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.number-setting-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.82rem}.number-setting-grid select{width:100%;min-width:0}.number-setting-row{padding:10px 0}.ap-shop-panel{margin-top:14px;border-color:#806a35}.ap-shop-panel .achievement{background:#171d2a}.ap-shop-panel .actions button{min-width:100px}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.85rem}.admin-grid input{min-width:0;width:100%;padding:9px;border-radius:8px;background:#0b1425;color:#fff;border:1px solid #526481}.admin-grid input[type=checkbox]{width:auto}.achievement{border:1px solid #574b30;border-radius:11px;padding:10px;margin:8px 0;background:#1e1d28}.achievement.done{border-color:#b18a3b;background:linear-gradient(120deg,#3a3020,#202333)}.achievement .reward{color:var(--gold);font-size:.85rem}.achievement .progress{height:5px;background:#30394c;border-radius:8px;overflow:hidden;margin-top:7px}.achievement .progress span{display:block;height:100%;background:linear-gradient(90deg,#d59c37,#ffe28b)}.achievement.locked{opacity:.78}.milestone-schedule{display:grid;gap:7px;margin-top:9px}.milestone-schedule[hidden]{display:none}.milestone-section-title{margin:10px 0 2px;padding:8px 10px;border-left:3px solid #f4c65e;background:#292719;color:#f4c65e;font-weight:800}.milestone-fight-label{font-weight:700;color:#f4c65e;margin-top:5px}.milestone-schedule-item{padding:9px;border:1px solid #344a68;border-radius:10px;background:#0d192d}.milestone-schedule-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.milestone-schedule-item small{display:block;color:var(--muted);margin-top:4px}.milestone-schedule-item.done{border-color:#4b9c79}.milestone-schedule-item.next{border-color:#d9ad50;background:#292719}.ach-head{display:flex;justify-content:space-between;gap:8px}.ach-cat{color:#aabbd5;font-size:.78rem}.achievement-hero h2{font-size:1.3rem;margin:5px 0}.number-settings-panel h2{color:var(--accent)}@media(max-width:420px){.admin-grid{grid-template-columns:1fr 1fr}}
+#view-battle,.battle-panel,.battle-stage{overflow-anchor:none}.battle-panel{border-color:#34527d;background:radial-gradient(ellipse at 50% 0%,#1b3157,#101a2d 72%)}
+.battle-stage{position:relative;overflow:hidden;height:300px;min-height:300px;box-sizing:border-box;border:1px solid #34527d;border-radius:14px;background:linear-gradient(180deg,#111b37,#090f20);display:flex;align-items:center;justify-content:center;padding:14px}
+.battle-stage:before{content:"";position:absolute;left:0;right:0;bottom:0;height:35%;background:linear-gradient(180deg,transparent,#263a56);border-top:1px solid #405578}
+.monster-art{position:relative;z-index:1;width:min(72%,320px);height:190px;image-rendering:pixelated;filter:drop-shadow(0 12px 12px #0009)}.slime-monster-art{object-fit:contain;image-rendering:auto;filter:drop-shadow(0 8px 10px #24134d88)}.battle-mob .slime-monster-art{width:100%;height:105px;max-width:125px}.battle-boss .slime-monster-art{width:min(90%,390px);height:170px}
+.battle-boss .monster-art{width:min(90%,390px);height:170px;filter:drop-shadow(0 0 18px #ef754b88)}
+.battle-mob-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px;width:100%;height:100%;align-items:center;align-content:stretch;position:relative;z-index:1}.battle-mob{min-width:0;text-align:center;background:#101b31bb;border:1px solid #405578;border-radius:9px;padding:4px}.battle-mob .monster-art{width:100%;height:105px;max-width:125px;display:block;margin:auto}.battle-mob.boss{grid-column:1/-1;border-color:#ff9a57;background:#321c26}.battle-mob-name{font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.boss-victory{display:none;margin:10px 0;padding:12px;text-align:center;font-weight:900;letter-spacing:.08em;color:#ffe8a1;background:linear-gradient(90deg,#4b1c25,#8b3b27,#4b1c25);border:1px solid #ffc46a;border-radius:12px;text-shadow:0 0 12px #ffbd5c;box-shadow:0 0 22px #ff853c66}.boss-victory.show{display:block;animation:bossVictory 1.8s ease both}@keyframes bossVictory{0%{opacity:0;transform:scale(.75) translateY(15px);filter:brightness(2)}18%{opacity:1;transform:scale(1.06) translateY(0)}35%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
+.tree-route-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.tree-route-pick button{min-height:54px;background:linear-gradient(145deg,#29466d,#172842);border-color:#678dbd}.tree-route-banner{margin:12px 0;padding:10px;border:1px solid #678dbd;border-radius:10px;background:#12243c;font-weight:700}.tree-columns{align-items:start}.tree-branch{position:relative;min-width:0;border:1px solid #385577;border-radius:15px;padding:12px;background:linear-gradient(180deg,#132a45,#0d182b)}.tree-branch h3{margin:0 0 4px}.tree-branch>p{font-size:.8rem;color:var(--muted);min-height:2.5em}.skill-tree-groups{display:grid;gap:10px;margin-top:12px}
+.skill-fold{border:1px solid var(--line);border-radius:12px;background:#0d192d;padding:0 11px;overflow:hidden}
+.skill-fold>summary,.battle-skill-fold>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:48px;cursor:pointer;list-style:none;font-weight:700}
+.skill-fold>summary::-webkit-details-marker,.battle-skill-fold>summary::-webkit-details-marker{display:none}
+.skill-fold>summary:after,.battle-skill-fold>summary:after{content:"＋";color:var(--accent);font-size:1.1rem}
+.skill-fold[open]>summary:after,.battle-skill-fold[open]>summary:after{content:"−"}
+.skill-fold>summary small{color:var(--muted);font-weight:500;white-space:nowrap}
+.skill-fold>p{margin:0 0 10px;font-size:.82rem}
+.battle-skill-actions{display:none;position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(876px,calc(100vw - 20px));max-height:min(148px,24vh);overflow:hidden;z-index:900;padding:6px 8px;border:1px solid #52719b;border-radius:14px;background:rgba(9,18,35,.97);box-shadow:0 8px 28px #0009;backdrop-filter:blur(12px)}#view-battle.active .battle-skill-actions{display:block}#view-battle.active .battle-panel{padding-bottom:190px}.battle-skill-fold{border:1px solid var(--line);border-radius:10px;background:#0d192d;padding:0 10px}.battle-skill-actions:before{content:'⚡ 戦闘スキル';display:block;font-size:.82rem;font-weight:750;color:#dceaff;padding:0 2px 5px}.battle-skill-actions .battle-skill-fold>summary{display:none}.battle-skill-actions .battle-skill-fold{border:0;background:transparent;padding:0}.battle-skill-actions .battle-skill-list{max-height:88px;padding-bottom:1px}
+.battle-skill-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:0 1px 4px;max-height:88px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;scrollbar-width:thin}
+.battle-skill-list button{min-width:0;min-height:30px;margin:0;padding:4px 5px;font-size:.74rem;line-height:1.15;white-space:normal}.battle-skill-list button small{display:block;margin-top:2px;font-size:.64rem;line-height:1.1;color:#b8cbe4}
+.battle-skill-fold[open]{margin-bottom:4px}
+.battle-skill-fold>summary{min-height:40px}
+@media(max-width:520px){.battle-skill-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:82px}}
+.tree-node{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;margin:16px 0 0;padding:10px;border:1px solid #344a68;border-radius:12px;background:#101d31}.tree-node:before{content:"";position:absolute;left:26px;bottom:100%;height:17px;border-left:2px solid #526b8d}.tree-orb{width:32px;height:32px;display:grid;place-items:center;border:2px solid #667d9d;border-radius:50%;background:#253a56;color:#dceaff;font-weight:900}.tree-node-info{min-width:0}.tree-node-info b,.tree-node-info small{display:block}.tree-node-info small{font-size:.75rem;color:var(--muted);margin-top:3px}.tree-node .tree-cost{color:#f4cf75}.tree-node.owned{border-color:#4aa77b;background:#102b29}.tree-node.owned .tree-orb{background:#176b4b;border-color:#67d6a0}.tree-node.ready{border-color:#c99a43;box-shadow:0 0 12px #e9b44a22}.tree-node.ready .tree-orb{border-color:#e7bd63;color:#ffe6a4}.tree-node.locked{opacity:.72}.tree-node button{margin:0;padding:7px 9px;font-size:.78rem}.tree-node button:disabled{opacity:.38}.tree-state{font-size:.72rem;color:#82e0ad;white-space:nowrap}@media(max-width:520px){.tree-route-pick{grid-template-columns:1fr}.tree-columns{grid-template-columns:1fr}.tree-node{grid-template-columns:30px minmax(0,1fr)}.tree-node button,.tree-state{grid-column:2}.tree-node button{width:100%}}.skill-card{border:1px solid var(--line);border-radius:13px;padding:12px;margin:10px 0;background:linear-gradient(145deg,#172842,#101a2d)}.skill-card.primary-route{border-color:#d9a441;box-shadow:0 0 12px #d9a44122}.skill-card h3{margin:0 0 6px}.skill-node{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #2a3e5e}.skill-node>div{min-width:0}.skill-node button{flex-shrink:0}.skill-route-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.skill-radial-map{position:relative;width:min(100%,360px);aspect-ratio:1;margin:18px auto 8px;border-radius:50%;background:radial-gradient(circle,#1a3454 0,#101d32 48%,#0b1424 75%);border:1px solid #344d70;overflow:hidden;isolation:isolate}.radial-lines{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}.radial-core{position:absolute;z-index:1;left:50%;top:50%;transform:translate(-50%,-50%);width:94px;height:94px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:radial-gradient(circle at 35% 25%,#80602b,#392c21 72%);border:3px solid #f1cb68;box-shadow:0 0 22px #dcae4d66;color:#fff1c3;text-align:center}.radial-core span{font-size:1.35rem}.radial-core b{font-size:.78rem}.radial-core small{font-size:.62rem;color:#f3d99c}.radial-branch{position:absolute;z-index:2;transform:translate(-50%,-50%);width:90px;min-height:56px;margin:0;padding:5px 3px;border:1px solid #6486ad;border-radius:13px;background:linear-gradient(145deg,#203b5d,#14243b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#eef6ff;font-size:.7rem;box-shadow:0 4px 12px #0008;z-index:2}.radial-branch span{font-size:1.1rem}.radial-branch b{font-size:.67rem;line-height:1.1}.radial-branch:disabled{opacity:1;filter:saturate(.8)}.radial-branch.top{left:50%;top:15%}.radial-branch.topRight{left:75%;top:25%}.radial-branch.right{left:85%;top:50%}.radial-branch.bottomRight{left:75%;top:75%}.radial-branch.bottom{left:50%;top:85%}.radial-echo{position:absolute;z-index:1;width:48px;height:34px;display:flex;align-items:center;justify-content:center;border:1px dashed #7185a0;border-radius:10px;background:#1a2940;color:#b9c9df;font-size:.64rem;opacity:.8}.echoLeft{left:4%;top:46%}.echoTopLeft{left:13%;top:19%}.echoBottomLeft{left:13%;top:73%}.radial-hint{text-align:center;color:var(--muted);font-size:.78rem;margin:5px 0 12px}.tree-route-banner{border-color:#d9ad50!important;background:linear-gradient(90deg,#332b1d,#18253a)!important}@media(max-width:390px){.skill-radial-map{width:100%;max-width:330px}.radial-branch{width:78px;min-height:52px}.radial-core{width:84px;height:84px}.radial-echo{width:40px;font-size:.58rem}}/* skill-map-pan-zoom-v74 */.skill-map-toolbar{display:flex;align-items:center;gap:7px;margin:10px 0}.skill-map-toolbar b{margin-right:auto}.skill-map-toolbar button{min-width:38px;padding:7px 10px;margin:0}.skill-map-zoom-label{font-size:.78rem;color:var(--muted);min-width:42px;text-align:center}.skill-map-viewport{height:min(68vh,720px);min-height:480px;overflow:auto;border:1px solid #3a5275;border-radius:14px;background:radial-gradient(circle at center,#1c2d48,#0b1425 72%);overscroll-behavior:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}.skill-map-sizer{position:relative}.skill-map-world{position:absolute;left:0;top:0;width:2800px;height:2800px;transform-origin:top left;background:radial-gradient(circle at 50% 50%,#20395855,transparent 35%)}.skill-map-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.skill-map-core{position:absolute;left:800px;top:850px;transform:translate(-50%,-50%);width:132px;height:132px;border:4px solid #f1cb68;border-radius:50%;background:radial-gradient(circle at 35% 25%,#80602b,#392c21 72%);box-shadow:0 0 28px #dcae4d66;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff1c3;z-index:2}.skill-map-core span{font-size:1.6rem}.skill-map-core b{font-size:1rem}.skill-map-core small{font-size:.75rem}.skill-map-branch{position:absolute;width:360px;padding:12px;border:1px solid #456487;border-radius:15px;background:linear-gradient(145deg,#172b45f5,#0d192bf5);box-shadow:0 8px 24px #0008;z-index:1}.skill-map-branch h3{margin:0 0 4px;font-size:1rem}.skill-map-branch>p{margin:0 0 8px;color:var(--muted);font-size:.78rem}.skill-map-branch .tree-node{margin-top:9px}.skill-map-branch .tree-node:before{height:10px}.skill-map-echo{position:absolute;padding:10px 15px;border:1px dashed #7185a0;border-radius:12px;background:#17253a;color:#aebfd5;opacity:.8}.skill-map-legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;color:var(--muted);font-size:.75rem}.skill-map-legend span{display:flex;align-items:center;gap:5px}.skill-map-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#667d9d}.skill-map-legend i.owned{background:#4aa77b}.skill-map-legend i.ready{background:#c99a43}.skill-map-legend i.locked{background:#667d9d}@media(max-width:520px){.skill-map-viewport{height:62vh;min-height:430px}.skill-map-toolbar{gap:5px}.skill-map-toolbar button{min-width:34px;padding:7px}.skill-map-branch{width:340px}.skill-map-branch .tree-node{grid-template-columns:30px minmax(0,1fr)}.skill-map-branch .tree-node button,.skill-map-branch .tree-state{grid-column:2}.skill-map-branch .tree-node button{width:100%}}.skill-route-progress{margin:12px 0;padding:10px;border:1px solid #344a68;border-radius:12px;background:#0c172a}.skill-route-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:7px}.skill-route-progress-grid>div{display:flex;justify-content:space-between;gap:5px;padding:7px;border-radius:8px;background:#172842;font-size:.78rem}.skill-route-progress-grid span{color:var(--muted)}.skill-route-progress-grid b{white-space:nowrap}.skill-route-progress small{display:block;margin-top:7px;color:var(--muted)}.skill-balance{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skill-balance>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px}.skill-balance span{display:block;color:var(--muted);font-size:.75rem}.skill-balance b{display:block;overflow-wrap:anywhere}.skill-note{font-size:.82rem;color:var(--muted)}@media(max-width:420px){.skill-route-grid{grid-template-columns:1fr}.skill-node{align-items:flex-start;flex-direction:column}.skill-node button{width:100%}}
+.battle-hp{height:15px;border-radius:99px;background:#263348;overflow:hidden;border:1px solid #526582}
+.battle-hp>span{display:block;height:100%;width:100%;background:linear-gradient(90deg,#23b86b,#a6ef76);transition:width .12s linear}
+.battle-boss .battle-hp>span{background:linear-gradient(90deg,#b92739,#ff8c52)}
+.battle-action{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.battle-action button{min-height:54px;font-size:1rem;margin:0}
+.battle-manual{background:linear-gradient(135deg,#9c3d35,#e36b3d);border-color:#ffad78;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 6px;line-height:1.15}.battle-manual-title{font-size:1.05em;font-weight:800}.battle-manual-damage{font-size:.82em;font-weight:700;white-space:normal;overflow-wrap:anywhere}.battle-manual-cooldown{font-size:1.05em;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05}
+.battle-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.battle-meta>div{background:#0c172a;border:1px solid #2a3e5e;border-radius:10px;padding:9px;min-width:0}
+.battle-meta span{display:block;color:var(--muted);font-size:.75rem}
+.battle-meta b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.battle-log{min-height:2.5em;padding:9px;border-radius:9px;background:#0b1425;color:#c9d9f5;font-size:.88rem}
+.battle-mutation .battle-mob{border:2px solid #b78cff;box-shadow:0 0 14px #9a6bff66}.battle-mutation .monster-art{filter:drop-shadow(0 0 10px #9d73ff) saturate(1.12)}
+.battle-mob.elite-1{border:2px solid #55d8ff;box-shadow:0 0 12px #28bfff77}.battle-mob.elite-2{border:2px solid #ffbd4a;box-shadow:0 0 16px #ff9f3677}.battle-mob.elite-3{border:2px solid #ed6cff;box-shadow:0 0 22px #d44cffaa;animation:elitePulse 1.4s ease-in-out infinite alternate}
+.battle-mob.elite-1 .monster-art{filter:drop-shadow(0 0 8px #4bdcff)}.battle-mob.elite-2 .monster-art{filter:drop-shadow(0 0 12px #ffb12e) saturate(1.35)}.battle-mob.elite-3 .monster-art{filter:drop-shadow(0 0 18px #e45cff) saturate(1.7)}
+@keyframes elitePulse{from{transform:scale(.99);filter:brightness(1)}to{transform:scale(1.02);filter:brightness(1.25)}}
+.boss-timer{display:none;margin:10px 0;padding:9px 11px;border:1px solid #ffb65d;border-radius:10px;background:#392719;color:#ffe2a6}.boss-timer.show{display:block}.boss-timer b{font-variant-numeric:tabular-nums}.boss-timer progress{height:7px;margin-top:5px}
+.battle-elite-label{font-size:.65rem;font-weight:900;letter-spacing:.04em;color:#fff;padding:2px 5px;border-radius:5px;background:#18243b}
+
+/* skill nodes redesigned as round RPG orbs */
+.skill-map-branch .tree-node{
+ width:132px;height:132px;min-height:132px;box-sizing:border-box;
+ margin:22px auto 18px;padding:9px 8px;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:4px;border-radius:50%;text-align:center;position:relative;
+ background:radial-gradient(circle at 35% 25%,#304969,#101d31 72%);
+ border:3px solid #7189a9;box-shadow:inset 0 0 0 3px #0a142455,0 5px 15px #0008;
+}
+.skill-map-branch .tree-node:before{
+ left:50%;bottom:100%;height:22px;border-left:2px solid #607da1;
+}
+.skill-map-branch .tree-node .tree-orb{
+ width:25px;height:25px;min-width:25px;border-width:2px;font-size:.8rem;
+}
+.skill-map-branch .tree-node-info{width:100%;min-width:0}
+.skill-map-branch .tree-node-info b{
+ display:block;font-size:.78rem;line-height:1.18;overflow-wrap:anywhere;
+}
+.skill-map-branch .tree-node-info small:not(.tree-cost){display:none}
+.skill-map-branch .tree-node .tree-cost{
+ display:block;margin-top:3px;font-size:.66rem;line-height:1.15;white-space:normal;
+}
+.skill-map-branch .tree-node button{
+ margin:3px 0 0;padding:4px 10px;min-height:25px;font-size:.68rem;
+ border-radius:999px;width:auto;max-width:90%;
+}
+.skill-map-branch .tree-node.owned{background:radial-gradient(circle at 35% 25%,#267453,#102b29 72%);border-color:#69d6a0}
+.skill-map-branch .tree-node.ready{background:radial-gradient(circle at 35% 25%,#80612c,#302617 72%);border-color:#f0c76a;box-shadow:0 0 18px #e9b44a33,inset 0 0 0 3px #0a142455}
+.skill-map-branch .tree-node.locked{filter:saturate(.55);opacity:.78}
+@media(max-width:520px){
+ .skill-map-branch{width:340px}
+ .skill-map-branch .tree-node{width:124px;height:124px;min-height:124px;margin:20px auto 16px;padding:8px}
+ .skill-map-branch .tree-node button{grid-column:auto;width:auto}
+}
+
+
+/* v85: concentric circular skill tree layout */
+.skill-map-viewport{height:min(76vh,820px);min-height:540px;touch-action:pan-x pan-y pinch-zoom}
+.skill-map-world{width:1800px;height:1800px;background:
+ radial-gradient(circle at 50% 50%,transparent 0 145px,#42658a55 146px 149px,transparent 150px 300px,#42658a44 301px 304px,transparent 305px 500px,#42658a33 501px 504px,transparent 505px 690px,#42658a22 691px 694px,transparent 695px),
+ radial-gradient(circle at center,#20395855,transparent 65%)}
+.skill-map-connectors{width:1800px;height:1800px}
+.skill-map-core{left:900px;top:900px;width:118px;height:118px;z-index:5}
+.skill-map-branch{width:340px!important;padding:8px!important;border:0!important;background:transparent!important;box-shadow:none!important;z-index:3}
+.skill-map-branch h3{text-align:center;margin:0 0 6px;padding:7px 9px;border:1px solid #668bb6;border-radius:999px;background:#142943ee;font-size:.9rem}
+.skill-map-branch>p{display:none}
+.skill-map-branch .tree-node{
+ width:100px;height:100px;min-height:100px;box-sizing:border-box;margin:7px auto;padding:7px 5px;
+ display:inline-flex;vertical-align:top;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ border-radius:50%;text-align:center;position:relative;border:2px solid #7189a9;
+ background:radial-gradient(circle at 35% 25%,#304969,#101d31 72%);
+ box-shadow:inset 0 0 0 3px #0a142455,0 4px 13px #0008;
+}
+.skill-map-branch .tree-node:before{display:none}
+.skill-map-branch .tree-orb{width:20px;height:20px;min-width:20px;font-size:.7rem;border-width:1px}
+.skill-map-branch .tree-node-info{width:100%;min-width:0}
+.skill-map-branch .tree-node-info b{display:block;font-size:.67rem;line-height:1.12;overflow-wrap:anywhere}
+.skill-map-branch .tree-node-info small:not(.tree-cost){display:none}
+.skill-map-branch .tree-node .tree-cost{display:block;margin-top:2px;font-size:.58rem;line-height:1.1;white-space:normal}
+.skill-map-branch .tree-node button{margin:2px 0 0;padding:3px 7px;min-height:20px;font-size:.58rem;border-radius:999px;width:auto;max-width:90%}
+.skill-map-branch .tree-node.owned{background:radial-gradient(circle at 35% 25%,#267453,#102b29 72%);border-color:#69d6a0}
+.skill-map-branch .tree-node.ready{background:radial-gradient(circle at 35% 25%,#80612c,#302617 72%);border-color:#f0c76a;box-shadow:0 0 16px #e9b44a44,inset 0 0 0 3px #0a142455}
+.skill-map-branch .tree-node.locked{filter:saturate(.55);opacity:.8}
+.skill-map-branch.swarm-branch{left:730px!important;top:120px!important}
+.skill-map-branch.boss-branch{left:1120px!important;top:570px!important}
+.skill-map-branch:not(.swarm-branch):not(.boss-branch):not(.special-branch){left:125px!important;top:var(--unused-top,0)!important}
+.skill-map-branch:nth-of-type(4){left:125px!important;top:570px!important}
+.skill-map-branch:nth-of-type(5){left:730px!important;top:1160px!important}
+.skill-map-branch.special-branch{left:1120px!important;top:1120px!important}
+.skill-map-branch .tree-node{margin:6px 3px}
+.skill-map-echo{border-radius:50%;width:92px;height:92px;display:flex;align-items:center;justify-content:center;text-align:center;border-color:#9d83d8;background:#261d42;opacity:.95}
+@media(max-width:520px){
+ .skill-map-viewport{height:68vh;min-height:500px}
+ .skill-map-branch{width:310px!important}
+ .skill-map-branch .tree-node{width:88px;height:88px;min-height:88px;margin:5px 2px;padding:5px}
+ .skill-map-branch .tree-node-info b{font-size:.61rem}
+ .skill-map-branch .tree-node .tree-cost{font-size:.53rem}
+ .skill-map-branch .tree-node button{font-size:.53rem;min-height:18px;padding:2px 5px}
+}
+
+
+/* v88 isolated circular connected skill nodes */
+.skill-map-viewport{height:min(72vh,760px)!important;min-height:480px!important;overflow:auto!important;overscroll-behavior:contain!important;touch-action:pan-x pan-y pinch-zoom!important;-webkit-overflow-scrolling:touch}
+.skill-map-world.skill-map-orbit-world{width:2800px!important;height:2800px!important;position:absolute;left:0;top:0;transform-origin:top left;background:radial-gradient(circle at center,#20395866 0,transparent 68%)!important}
+.skill-map-orbit-world .skill-map-connectors{position:absolute;inset:0;width:2800px;height:2800px;z-index:1;pointer-events:none;overflow:visible}
+.skill-orbit-guide{fill:none;stroke:#52769e;stroke-width:3;opacity:.19;stroke-dasharray:10 13}
+.skill-edge{stroke:#6f91ba;stroke-width:5;stroke-linecap:round;opacity:.78}.skill-edge-owned{stroke:#63d9a0;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 0 5px #39d88c);opacity:.98}
+.skill-map-orbit-world .skill-map-core{left:1000px!important;top:1000px!important;width:130px;height:130px;z-index:3}
+.skill-map-route-label{position:absolute;z-index:2;transform:translate(-50%,-50%);padding:8px 15px;border:1px solid #668bb6;border-radius:999px;background:#142943ed;color:#e7f2ff;font-size:17px;font-weight:800;white-space:nowrap}
+.skill-node-point{position:absolute;z-index:4;transform:translate(-50%,-50%);width:148px;height:148px}
+.skill-node-point .tree-node{position:relative!important;width:148px!important;height:148px!important;min-height:148px!important;margin:0!important;padding:9px 7px!important;border:3px solid #7189a9!important;border-radius:50%!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;text-align:center!important;box-sizing:border-box!important;background:radial-gradient(circle at 35% 25%,#304969,#101d31 72%)!important;box-shadow:inset 0 0 0 3px #0a142455,0 5px 15px #0009!important;overflow:hidden}
+.skill-node-point .tree-node:before{display:none!important}.skill-node-point .tree-orb{width:24px;height:24px;min-width:24px;display:grid;place-items:center;border-radius:50%;font-size:12px;flex:none}
+.skill-node-point .tree-node-info{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}.skill-node-point .tree-node-info b{font-size:12px;line-height:1.12;overflow-wrap:anywhere}.skill-node-point .tree-node-info small{font-size:9px;line-height:1.12;max-width:100%;overflow-wrap:anywhere;margin-top:1px}
+.skill-node-point .tree-node button{margin:2px 0 0!important;padding:3px 9px!important;min-height:22px!important;border-radius:999px!important;font-size:10px!important;line-height:1!important;flex:none}.skill-node-point .tree-state{font-size:10px;white-space:normal}
+.skill-node-point .tree-node.owned{border-color:#69d6a0!important;background:radial-gradient(circle at 35% 25%,#267453,#102b29 72%)!important;box-shadow:0 0 18px #3bc98755!important}
+.skill-node-point .tree-node.ready{border-color:#f0c76a!important;background:radial-gradient(circle at 35% 25%,#80612c,#302617 72%)!important;box-shadow:0 0 20px #e9b44a44!important}
+.skill-node-point .tree-node.locked{border-color:#65758c!important;opacity:.9}.skill-node-point .tree-node.composite{border-color:#bd8cff!important;box-shadow:0 0 22px #a879ff55!important}.skill-node-point .tree-node.special{border-color:#f2d16f!important;box-shadow:0 0 24px #f2d16f66!important}
+@media(max-width:520px){.skill-map-viewport{height:68vh!important;min-height:460px!important;touch-action:pan-x pan-y!important}.skill-node-point,.skill-node-point .tree-node{width:140px!important;height:140px!important;min-height:140px!important}.skill-node-point .tree-node-info b{font-size:11px}.skill-node-point .tree-node-info small{font-size:8px}.skill-map-route-label{font-size:14px;padding:7px 11px}}
+
+
+/* v89: compact battle-skill buttons and dock */
+.battle-skill-actions{width:min(700px,calc(100vw - 28px));max-height:min(148px,23vh);padding:6px 8px}
+.battle-skill-actions:before{font-size:.76rem;padding:0 2px 3px}
+.battle-skill-actions .battle-skill-list{max-height:88px;gap:5px;padding:0 2px 4px}
+.battle-skill-list{gap:5px;max-height:88px}
+.battle-skill-list button{min-height:32px;padding:4px 5px;font-size:.72rem;line-height:1.12;border-radius:10px}
+#view-battle.active .battle-panel{padding-bottom:164px}
+@media(max-width:520px){
+ .battle-skill-actions{width:calc(100vw - 24px);max-height:min(138px,22vh);padding:5px 7px}
+ .battle-skill-actions .battle-skill-list,.battle-skill-list{max-height:78px;gap:4px}
+ .battle-skill-list button{min-height:29px;padding:3px 4px;font-size:.68rem;line-height:1.1}
+ #view-battle.active .battle-panel{padding-bottom:152px}
+}
+
+
+/* v90: shrink the entire battle-skill frame */
+.battle-skill-actions{
+ width:min(620px,88vw);
+ max-height:min(126px,20vh);
+ padding:5px 7px;
+ border-radius:12px;
+}
+.battle-skill-actions:before{font-size:.72rem;padding:0 2px 2px}
+.battle-skill-actions .battle-skill-list,
+.battle-skill-list{max-height:74px;gap:4px;padding:0 2px 3px}
+.battle-skill-list button{min-height:28px;padding:3px 4px;font-size:.66rem}
+#view-battle.active .battle-panel{padding-bottom:140px}
+@media(max-width:520px){
+ .battle-skill-actions{width:88vw;max-height:min(118px,19vh);padding:4px 6px;border-radius:11px}
+ .battle-skill-actions .battle-skill-list,.battle-skill-list{max-height:68px;gap:4px}
+ .battle-skill-list button{min-height:26px;padding:2px 3px;font-size:.64rem}
+ #view-battle.active .battle-panel{padding-bottom:132px}
+}
+
+
+/* v92: slightly larger skill controls inside a slightly smaller frame */
+.battle-skill-actions{
+ width:min(590px,84vw);
+ max-height:min(116px,18vh);
+ padding:4px 6px;
+ border-radius:11px;
+}
+.battle-skill-actions:before{font-size:.72rem;padding:0 2px 2px}
+.battle-skill-actions .battle-skill-list,
+.battle-skill-list{max-height:72px;gap:4px;padding:0 2px 3px}
+.battle-skill-list button{min-height:31px;padding:4px 5px;font-size:.72rem;line-height:1.12}
+#view-battle.active .battle-panel{padding-bottom:130px}
+@media(max-width:520px){
+ .battle-skill-actions{width:84vw;max-height:min(108px,17vh);padding:4px 5px;border-radius:10px}
+ .battle-skill-actions .battle-skill-list,.battle-skill-list{max-height:64px;gap:4px}
+ .battle-skill-list button{min-height:29px;padding:3px 4px;font-size:.70rem;line-height:1.1}
+ #view-battle.active .battle-panel{padding-bottom:122px}
+}
+
+
+/* v201: premium visual refresh inserted into the document's main stylesheet */
+:root{--bg:#070b16;--panel:#111a2b;--line:#293b56;--accent:#66d9ff;--muted:#9eafc8;--gold:#f2c66d;--purple:#b69aff}
+html{background:#070b16}
+body{background:radial-gradient(ellipse at 50% -18%,#24476d 0%,transparent 48%),linear-gradient(180deg,#080e1b,#060a13 72%);letter-spacing:.005em}
+main{max-width:940px;padding-top:14px}
+h1{font-size:1.42rem;letter-spacing:.025em;font-weight:850}
+h1:before{content:"CHRONOS  /  TIME CONTROL";display:block;margin-bottom:5px;color:#83dfff;font-size:.62rem;letter-spacing:.22em;font-weight:850;opacity:.86}
+.topbar{background:#091321;border-bottom:1px solid #38506d;box-shadow:0 6px 18px #0005}
+.topstat{padding:7px 9px;border-radius:11px;background:linear-gradient(145deg,#1a2b43,#101a2b);border:1px solid #344a66}
+.topstat span{color:#9eb6d2}
+.panel{background:linear-gradient(155deg,#192a42,#0c1524 75%);border:1px solid #344c6b;border-radius:16px;box-shadow:0 8px 20px #0003;padding:15px}
+h2{font-size:1.02rem;font-weight:800;letter-spacing:.02em}
+.stat span{color:#aebed4}
+button{min-height:42px;padding:9px 13px;border-radius:11px;border:1px solid #526987;background:linear-gradient(145deg,#2b3d59,#1a2940);box-shadow:inset 0 1px #ffffff12,0 3px 8px #0003;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button.primary,.bottomnav button.active{background:linear-gradient(135deg,#087fa9,#315fcb 65%,#554ab5);border-color:#6bdcff}
+button:disabled{box-shadow:none}
+button.battle-manual{background:linear-gradient(135deg,#8c3b42,#d45b49);border-color:#ffad88}
+select,input,textarea{background:#0b1423;color:#f2f7ff;border:1px solid #435a78;border-radius:9px;padding:10px}
+progress{height:9px;border-radius:99px;overflow:hidden;background:#26364c}
+progress::-webkit-progress-bar{background:#26364c;border-radius:99px}
+progress::-webkit-progress-value{background:linear-gradient(90deg,#36a8ee,#72ddff);border-radius:99px}
+progress::-moz-progress-bar{background:linear-gradient(90deg,#36a8ee,#72ddff);border-radius:99px}
+.bottomnav{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:7px 9px calc(8px + env(safe-area-inset-bottom));background:#070d18;border-top:1px solid #344a67;max-height:none}
+.bottomnav button{min-height:42px;padding:6px 3px;margin:0;border-radius:10px;font-size:.7rem;white-space:normal;touch-action:manipulation}
+main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.battle-panel{border-color:#4b6486;background:linear-gradient(155deg,#1b2e49,#101a2b)}
+.battle-stage{border-color:#47678d;border-radius:16px;background:radial-gradient(ellipse at 50% 68%,#28466b88,transparent 54%),linear-gradient(180deg,#14243d,#080f1c)}
+.battle-hp{height:13px;border:1px solid #60728b;background:#26364c}
+.battle-hp>span{background:linear-gradient(90deg,#1eaa78,#8ce6a4)}
+.battle-boss .battle-hp>span{background:linear-gradient(90deg,#b52c45,#ff9562)}
+.battle-log{background:#0a1423;border:1px solid #2e4563;border-radius:11px}
+.skill-map-viewport{border-color:#3e5a7d;border-radius:16px;background:radial-gradient(circle at center,#1a3454,#091322 74%)}
+.tree-node{border-color:#405a7b}
+.achievement.done{border-color:#c6a45c}
+@media(max-width:520px){main{padding-left:11px;padding-right:11px}.topbar{margin-left:-11px;margin-right:-11px}.topstat{padding:6px}.topstat b{font-size:.78rem}.bottomnav button{font-size:.66rem;min-height:40px;padding:5px 2px}.panel{padding:12px;border-radius:15px}.battle-stage{height:270px;min-height:270px}}
+@media(min-width:650px){.bottomnav{grid-template-columns:repeat(8,minmax(0,1fr))}main{padding-bottom:90px}}
+
+
+.ts-panel{margin:12px 0;padding:13px;border:1px solid #385577;border-radius:14px;background:linear-gradient(145deg,#172842,#101a2d)}
+.ts-panel h2,.ts-panel h3{margin:0 0 9px}.ts-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ts-stats>div{padding:8px;border:1px solid #344a68;border-radius:9px;background:#0d192d}.ts-stats b{display:block;font-size:1.15rem;color:#8de0ff}
+.ts-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ts-item{min-width:0;padding:10px;border:1px solid #344a68;border-radius:10px;background:#0d192d}.ts-item p{font-size:.8rem;min-height:2.4em;margin:5px 0;color:#a9bad3}.ts-item button{font-size:.76rem;padding:7px;margin:3px 2px 0 0}
+#view-timespace.active .ts-panel{scroll-margin-top:10px}
+@media(max-width:520px){.ts-grid{grid-template-columns:1fr}.bottomnav{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.bottomnav button[data-view="timespace"]{display:flex;align-items:center;justify-content:center;gap:4px}.bottomnav button[data-view="timespace"] img{width:19px;height:19px;flex:0 0 19px;object-fit:contain;display:block}
+ .timespace-hourglass-icon{display:block;width:34px;height:34px;flex:0 0 34px;overflow:visible;filter:drop-shadow(0 1px 3px #7667bd66)} .bottomnav button[data-view="timespace"] .timespace-hourglass-icon{width:19px;height:19px;flex:0 0 19px}
+.timespace-main-title{display:flex;align-items:center;gap:10px}.timespace-main-title img{width:34px;height:34px;flex:0 0 34px;object-fit:contain;display:block}
+.bestiary-slime-card{display:flex;flex-direction:column;align-items:flex-start}.bestiary-monster-art{width:100%;height:116px;display:block;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 7px 9px #24134d88);margin:5px 0}
+
+
+/* v310 skill tree redesign: clean sci-fi + minimal */
+:root{--tree-cyan:#55e7f5;--tree-blue:#4a9fff;--tree-violet:#b58cff;--tree-muted:#8fa8c7}
+.skill-map-viewport{
+ border-color:#315b7d!important;
+ background:
+  radial-gradient(ellipse at 50% 45%,#153a5266,transparent 58%),
+  linear-gradient(145deg,#071321,#0a1728 58%,#0b1022)!important;
+ box-shadow:inset 0 0 34px #02091699,0 8px 24px #0005;
+}
+.skill-map-world{
+ background:
+  radial-gradient(circle at 50% 50%,#2a789022,transparent 38%),
+  radial-gradient(circle at 50% 50%,transparent 0 18%,#52c8ee0a 18.1% 18.3%,transparent 18.4% 36%,#52c8ee0a 36.1% 36.25%,transparent 36.4%)!important;
+}
+.skill-orbit-guide{stroke:#4bbbd4!important;stroke-width:2!important;opacity:.13!important;stroke-dasharray:4 15!important}
+.skill-edge{stroke:#4387ad!important;stroke-width:4!important;opacity:.62!important}
+.skill-edge-owned{stroke:#54e2dc!important;stroke-width:5!important;filter:drop-shadow(0 0 6px #35dce0)!important}
+.skill-map-orbit-world .skill-map-core{
+ border:2px solid #66e8f5!important;
+ border-radius:28px!important;
+ background:radial-gradient(circle at 35% 25%,#176c82,#10263e 72%)!important;
+ box-shadow:0 0 25px #27d7ef55,inset 0 0 18px #4deaff22!important;
+ color:#d9fbff!important;
+}
+.skill-map-orbit-world .skill-map-core span{color:#75f1ff!important;text-shadow:0 0 12px #49eaff}
+.skill-map-route-label{
+ border:1px solid #376783!important;
+ border-radius:9px!important;
+ background:#0c2034ed!important;
+ color:#bdeeff!important;
+ box-shadow:0 3px 12px #0006,inset 0 0 12px #3dc9e611!important;
+ font-size:14px!important;
+ letter-spacing:.025em;
+}
+.skill-node-point .tree-node{
+ border:2px solid #42617e!important;
+ background:radial-gradient(circle at 35% 22%,#1d3c59,#0b192b 74%)!important;
+ box-shadow:inset 0 0 0 2px #6acde20b,0 5px 16px #0009!important;
+ transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.skill-node-point .tree-orb{
+ border:1px solid #5c9cbb!important;
+ background:linear-gradient(145deg,#19445e,#10243a)!important;
+ color:#b9f5ff!important;
+ box-shadow:0 0 10px #42c8e522;
+}
+.skill-node-point .tree-node.owned{
+ border-color:#55dfcf!important;
+ background:radial-gradient(circle at 35% 22%,#155b59,#0a292e 74%)!important;
+ box-shadow:0 0 20px #31d9c044,inset 0 0 18px #31d9c018!important;
+}
+.skill-node-point .tree-node.owned .tree-orb{
+ border-color:#64f0dc!important;background:#12645d!important;color:#e2fffa!important;
+}
+.skill-node-point .tree-node.ready{
+ border-color:#58c9f4!important;
+ background:radial-gradient(circle at 35% 22%,#174d70,#0b2034 74%)!important;
+ box-shadow:0 0 22px #35bff044,inset 0 0 18px #35bff018!important;
+}
+.skill-node-point .tree-node.ready .tree-orb{
+ border-color:#6bdfff!important;background:#145579!important;color:#e4faff!important;
+}
+.skill-node-point .tree-node.locked{
+ border-color:#40516a!important;
+ background:radial-gradient(circle at 35% 22%,#26364a,#111b2a 74%)!important;
+ opacity:.82!important;
+}
+.skill-node-point .tree-node.locked .tree-orb{
+ border-color:#596b81!important;background:#27364a!important;color:#a4b5c9!important;
+}
+.skill-node-point .tree-node.composite{
+ border-color:#a98af0!important;
+ background:radial-gradient(circle at 35% 22%,#40356a,#171a35 74%)!important;
+ box-shadow:0 0 22px #9c79f044!important;
+}
+.skill-node-point .tree-node.special{
+ border-color:#c0a0ff!important;
+ background:radial-gradient(circle at 35% 22%,#40356a,#171a35 74%)!important;
+ box-shadow:0 0 24px #9c79f055!important;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+}
+.skill-node-point .tree-node.special .tree-orb,
+.skill-node-point .tree-node.composite .tree-orb{
+ border-radius:7px!important;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+ border-color:#c5a8ff!important;background:#473778!important;color:#f1e8ff!important;
+}
+.skill-node-point .tree-node button{
+ border:1px solid #4ca9ca!important;
+ background:linear-gradient(135deg,#155879,#17438a)!important;
+ box-shadow:0 0 10px #39c5e522;
+}
+.skill-node-point .tree-node button:disabled{filter:saturate(.35);box-shadow:none}
+.skill-node-point .tree-node-info b{color:#e4f5ff!important}
+.skill-node-point .tree-node-info small{color:#a8bfd7!important}
+.skill-node-point .tree-node-info .tree-cost{color:#8edcf0!important}
+.skill-node-point .tree-state{color:#83f0dc!important}
+.skill-map-legend{color:#a9bfd7!important}
+.skill-map-legend i.owned{background:#55dfcf!important;box-shadow:0 0 8px #55dfcf88}
+.skill-map-legend i.ready{background:#58c9f4!important;box-shadow:0 0 8px #58c9f488}
+.skill-map-legend i.locked{background:#596b81!important}
+.skill-map-toolbar b{color:#d9f5ff;letter-spacing:.04em}
+.skill-map-toolbar button{border-color:#365e7c!important;background:#142c43!important}
+.skill-map-zoom-label{color:#8edcf0!important}
+.skill-note{color:#9fb6cf!important}
+@media(prefers-reduced-motion:no-preference){
+ .skill-node-point .tree-node.ready{animation:treeReadyGlow 3.2s ease-in-out infinite alternate}
+ @keyframes treeReadyGlow{from{filter:brightness(.96)}to{filter:brightness(1.12)}}
+}
+@media(max-width:520px){
+ .skill-map-route-label{font-size:12px!important;padding:6px 9px!important}
+ .skill-node-point .tree-node.special{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+}
+
+
+/* v311: remove inherited circular shape from branch capstones and redesign origin core */
+.skill-node-point .tree-node.special{
+ border-radius:0!important;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)!important;
+ border:2px solid #c3a2ff!important;
+ box-shadow:0 0 24px #9c79f055!important;
+ background:radial-gradient(circle at 50% 38%,#514080,#211b43 72%)!important;
+}
+.skill-node-point .tree-node.special:before{
+ display:none!important;
+}
+.skill-node-point .tree-node.special .tree-orb{
+ border-radius:0!important;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)!important;
+}
+.skill-node-point .tree-node.special .tree-node-info,
+.skill-node-point .tree-node.special .tree-node button,
+.skill-node-point .tree-node.special .tree-state{
+ clip-path:none!important;
+}
+.skill-map-orbit-world .skill-map-core{
+ position:absolute!important;
+ width:150px!important;height:150px!important;
+ border:2px solid #65e9f4!important;
+ border-radius:0!important;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)!important;
+ background:radial-gradient(circle at 50% 38%,#216c83 0%,#12364f 48%,#0a1d32 78%)!important;
+ box-shadow:none!important;
+ filter:drop-shadow(0 0 12px #35dff0aa) drop-shadow(0 0 28px #218fb866);
+ color:#e5fcff!important;
+}
+.skill-map-orbit-world .skill-map-core:before{
+ content:"";
+ position:absolute;inset:13px;
+ border:1px solid #8af4ff99;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+ background:linear-gradient(145deg,#72efff12,#2bb9dc08);
+ pointer-events:none;
+}
+.skill-map-orbit-world .skill-map-core:after{
+ content:"";
+ position:absolute;inset:25px;
+ border:1px dashed #78e8f277;
+ clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+ pointer-events:none;
+}
+.skill-map-orbit-world .skill-map-core span{
+ position:relative;z-index:1;
+ color:#a8f7ff!important;font-size:2rem!important;
+ text-shadow:0 0 8px #58efff,0 0 18px #2dd6ff!important;
+}
+.skill-map-orbit-world .skill-map-core b{
+ position:relative;z-index:1;color:#edfdff!important;
+ font-size:.9rem!important;letter-spacing:.08em;
+ text-shadow:0 1px 8px #00111d;
+}
+.skill-map-orbit-world .skill-map-core small{
+ position:relative;z-index:1;color:#9edce8!important;
+ font-size:.68rem!important;
+}
+
+
+/* v312: improve access to upper edge of the skill map */
+.skill-map-viewport{
+ overflow-x:auto!important;overflow-y:scroll!important;
+ touch-action:pan-x pan-y!important;
+ overscroll-behavior-x:contain;overscroll-behavior-y:auto!important;
+ -webkit-overflow-scrolling:touch!important;
+}
+.skill-map-sizer{min-height:100%!important}
+.skill-map-toolbar button[data-skill-zoom="top"]{
+ border-color:#397d9a!important;background:#102b40!important;color:#b9f3ff!important;
+}
+
+.door-story-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:18px;background:#020713ef;backdrop-filter:blur(8px);animation:doorStoryFade .25s ease both}.door-story-dialog{width:min(100%,560px);max-height:85vh;overflow:auto;padding:22px 18px;border:1px solid #806ac5;border-radius:18px;background:radial-gradient(ellipse at 50% 0%,#302653,#111b31 68%);box-shadow:0 0 38px #8c6bff33}.door-story-dialog h2{text-align:center;color:#c3a5ff;margin:0 0 18px;font-size:1.35rem}.door-story-dialog p{color:#d5def0;line-height:1.85;margin:10px 0}.door-story-dialog .door-story-emphasis{color:#e5d5ff;font-weight:800;text-align:center;margin-top:18px}.door-story-prompt{text-align:center!important;color:#a9bad3!important;font-weight:700}.door-story-actions{display:flex;justify-content:center;gap:10px;margin-top:20px}.door-story-actions button{min-width:105px}.distortion-battle-heading{padding:9px 11px;margin-bottom:10px;border:1px solid #956ed0;border-radius:10px;background:linear-gradient(100deg,#34244e,#192c49);color:#d7baff;font-weight:800;text-align:center;letter-spacing:.04em}.distortion-battle-panel{border-color:#8561bd;background:radial-gradient(ellipse at 50% 0%,#30234b,#101a2d 72%)}.distortion-active #view-battle .battle-panel>:not(#distortionBattlePanel){display:none!important}.distortion-active #view-battle .battle-panel{border-color:#8561bd}@keyframes doorStoryFade{from{opacity:0}to{opacity:1}}</style>
+<style id="v212-battle-skill-visibility">
+/* 戦闘スキル欄を下部タブの上に固定し、常に前面へ */
+.battle-skill-actions{
+ position:fixed!important;
+ left:50%!important;
+ bottom:calc(88px + env(safe-area-inset-bottom))!important;
+ z-index:1101!important;
+ width:min(700px,calc(100vw - 16px))!important;
+ max-height:min(150px,22vh)!important;
+ overflow:hidden!important;
+ padding:6px 8px!important;
+}
+#view-battle.active .battle-skill-actions{display:block!important}
+#view-battle.active .battle-panel{padding-bottom:164px!important}
+.battle-skill-actions .battle-skill-list,
+.battle-skill-list{
+ max-height:min(106px,15vh)!important;
+ overflow-y:auto!important;
+ -webkit-overflow-scrolling:touch!important;
+ overscroll-behavior:contain!important;
+}
+.battle-skill-list button{min-height:34px!important;padding:4px 5px!important;font-size:.70rem!important;line-height:1.12!important}
+/* 2段ナビの高さを抑え、戦闘スキル欄の表示面積を確保 */
+.bottomnav{
+ gap:3px!important;
+ padding:4px 7px calc(5px + env(safe-area-inset-bottom))!important;
+}
+.bottomnav button{
+ min-height:34px!important;
+ padding:3px 2px!important;
+ font-size:.62rem!important;
+ line-height:1.1!important;
+ border-radius:8px!important;
+}
+.topbar{padding-top:1px!important;padding-bottom:2px!important;margin-bottom:6px!important}
+.topstats{gap:3px!important}
+.topstat{padding:3px 4px!important}
+.topstat span{font-size:.61rem!important;line-height:1.1}
+.topstat b{font-size:.74rem!important;line-height:1.15}
+@media(max-width:520px){
+ .battle-skill-actions{width:calc(100vw - 12px)!important;bottom:calc(84px + env(safe-area-inset-bottom))!important;max-height:min(148px,22vh)!important;padding:5px 6px!important}
+ #view-battle.active .battle-panel{padding-bottom:158px!important}
+ .battle-skill-actions .battle-skill-list,.battle-skill-list{max-height:min(104px,15vh)!important;gap:4px!important}
+ .battle-skill-list button{min-height:33px!important;font-size:.68rem!important}
+ .bottomnav{gap:3px!important;padding:3px 5px calc(4px + env(safe-area-inset-bottom))!important}
+ .bottomnav button{min-height:32px!important;padding:2px 1px!important;font-size:.60rem!important}
+}
+@media(min-width:650px){
+ .battle-skill-actions{bottom:calc(52px + env(safe-area-inset-bottom))!important}
+ .bottomnav{padding:3px 9px calc(4px + env(safe-area-inset-bottom))!important}
+ .bottomnav button{min-height:34px!important}
+}
+<style>
+/* v332: 戦闘研究・プレイヤーHP・通常世界の敵攻撃を追加。上部UI配置は維持 */
+.topbar{top:0!important;padding-top:0!important;padding-bottom:0!important;margin-bottom:3px!important}
+.topstats{gap:2px!important}
+.topstat{padding:2px 3px!important}
+.topstat span{font-size:.59rem!important;line-height:1.05!important}
+.topstat b{font-size:.70rem!important;line-height:1.05!important}
+.topbar progress{height:3px!important;margin-top:1px!important}
+@media(max-width:520px){
+ .topbar{margin-bottom:2px!important}
+ .topstat{padding:2px!important}
+ .topstat span{font-size:.57rem!important}
+ .topstat b{font-size:.67rem!important}
+}
+</style></head><body><main>
+<div class="topbar"><div class="topstats"><div class="topstat"><span>レベル</span><b id="topLevel">1</b></div><div class="topstat"><span>所持金</span><b id="topMoney">¥100</b></div><div class="topstat"><span>XP</span><b id="topXp">0 / 100</b><progress id="topXpbar" value="0" max="100"></progress></div><div class="topstat"><span>MP</span><b id="topMp">10 / 10</b><progress id="topMpbar" value="10" max="10"></progress></div></div></div>
+<h1>時間操作ゲーム <span class="tag">v262</span></h1>
+
+<div class="view active" id="view-home"><div class="viewgrid two-col">
+<section class="panel"><h2>プレイヤー</h2>
+<div class="stat"><span>レベル</span><b id="level">1</b></div>
+<div class="stat"><span>XP</span><b id="xp">0 / 500</b></div><progress id="xpbar" value="0" max="500"></progress>
+<div class="stat"><span>所持金</span><b id="money">¥0</b></div>
+<div class="stat"><span>基本収入</span><b id="income">¥1 / 秒</b></div>
+<div class="stat"><span>施設などからのXP収入</span><b id="passiveXp">+0.00 XP / 秒</b></div>
+<div class="stat"><span>XP倍率</span><b id="xpMult">×1.00</b></div>
+<div class="stat"><span>お金倍率</span><b id="moneyMult">×1.00</b></div>
+<div class="stat"><span>タップXP</span><b id="tapXp">1.00</b></div>
+<div class="stat"><span>タップ収入</span><b id="tapMoney">¥0.50</b></div>
+<div class="stat"><span>転生回数</span><b id="rebirth">0</b></div>
+<button class="primary" id="tap">タップしてXPとお金を獲得</button>
+
+<button type="button" class="help-info-btn" id="tapIncomeHelp" aria-label="タップ報酬の説明">?</button><div id="skillTreeUnlockNotice" class="small" style="margin-top:10px;padding:10px;border:1px solid #52617a;border-radius:10px;background:#202b3d">🌳 スキルツリー解放条件を確認中...</div></section></section>
+<section class="panel"><h2>時間操作</h2>
+<div class="stat"><span>能力状態</span><b id="abilityState">停止中</b></div>
+<div class="stat"><span>MP</span><b id="mp">10 / 10</b></div><progress id="mpbar" value="10" max="10"></progress>
+<div class="stat"><span>能力使用中XP</span><b id="abilityXp">+1.00 / 秒</b></div><div class="stat"><span>連続使用時間</span><b id="continuousTime">0秒</b></div><div class="stat"><span>連続使用XPボーナス</span><b id="continuousBonus">×1.00</b></div><div class="stat"><span>ボーナス成長速度</span><b id="continuousRate">×1.00</b></div><div class="stat"><span>自動タップ間隔</span><b id="autoTapInterval">1.50秒</b></div>
+<div class="stat"><span>能力使用中お金</span><b id="abilityMoney">×1.00</b></div>
+<div class="stat"><span>自動タップ倍率（時間適応）</span><b id="autoTapMult">×1.00</b></div>
+<div class="stat"><span>MPブースト</span><b id="boostStatus">なし</b></div>
+<button class="primary" id="toggle">能力を使う</button>
+<div class="stat"><label for="boostSelect">ブースト倍率を選択</label><select id="boostSelect"></select></div><button id="xpBoostBtn">XPブースト：OFF</button> <button id="moneyBoostBtn">収入ブースト：OFF</button>
+<button type="button" class="help-info-btn" id="boostHelp" aria-label="ブーストと連続使用の説明">?</button><div id="log">ゲーム開始！</div></section>
+</div></div>
+
+<div class="view" id="view-battle">
+ <section class="panel battle-panel">
+  <h2>⚔️ 魔物討伐</h2>
+  
+  <div class="battle-meta">
+   <div><span>撃破数</span><b id="battleKills">0体</b></div>
+   <div><span>次のボス</span><b id="battleNextBoss">100体目</b></div>
+   <div><span>同時出現数</span><b id="battleEnemyCount">1体</b></div>
+   <div><span>強化ボスポイント</span><b id="enhancedBossPoints">0</b></div>
+  </div>
+  <section class="panel" style="margin-top:12px;padding:12px">
+   <div class="milestone-heading">
+    <b>🏆 討伐マイルストーン</b>
+    <details class="milestone-help-pop">
+     <summary aria-label="討伐マイルストーンの説明" title="説明を見る">?</summary>
+     <div class="milestone-help-content">
+      <div class="small">マイルストーンボスは節目ごとに出現する特別な敵です。</div>
+      <div class="small">魂の収穫者：初回撃破で最大MPの10%回復 ／ 時空略奪：時空エネルギー1点につき攻撃力+0.1%（最大+50%）</div>
+      <div class="small">竜王の財宝：初回報酬のお金・XP・SPが1.5倍 ／ 超越の連鎖：初回撃破ごとに攻撃力+0.5%（最大+25%）</div>
+     </div>
+    </details>
+   </div>
+   <div id="milestoneStatus" class="small" style="margin-top:6px">次のマイルストーン：10体</div>
+    <button id="milestoneScheduleToggle" type="button" aria-expanded="false" style="margin-top:8px;width:100%">📜 マイルストーンボス出現予定を見る</button>
+    
+   <div class="small">連鎖補正：<b id="milestoneChainValue">0%</b></div>
+   <button id="milestoneRetry" style="display:none;margin-top:8px">失敗したマイルストーン敵に再挑戦</button>
+   <div class="item" style="margin-top:10px"><div style="display:flex;align-items:center;gap:7px"><b>🎟️ マイルストーン再挑戦所</b><button type="button" class="help-info-btn" id="milestoneChallengeHelp" aria-label="マイルストーン再挑戦所の説明">?</button></div><div class="stat"><span>所持挑戦券</span><b id="challengeTicketCount">0枚</b></div><div class="small" id="challengeProgressText">次の挑戦券まで 100体</div><label class="small" for="challengeTargetSelect">挑戦する敵</label><select id="challengeTargetSelect" style="width:100%;margin:5px 0"><option value="">未解放</option></select><div class="small" id="challengeRewardInfo">初回報酬とは別に、再挑戦用の少量報酬を獲得できます。</div><button id="challengeStartBtn" style="width:100%;margin-top:8px" disabled>挑戦券1枚で選択した敵に挑戦</button><div class="small" id="challengeQueueInfo"></div></div>
+  </section>
+  <div id="battleStage" class="battle-stage" style="margin-top:12px">
+   <svg class="monster-art" viewBox="0 0 320 220" aria-label="スライム"><ellipse cx="160" cy="190" rx="105" ry="14" fill="#0008"/><path d="M55 170 Q60 65 160 55 Q260 65 265 170 Q260 195 160 195 Q60 195 55 170" fill="#1688ed" stroke="#6de4ff" stroke-width="9"/><ellipse cx="125" cy="135" rx="10" ry="15" fill="#07162b"/><ellipse cx="195" cy="135" rx="10" ry="15" fill="#07162b"/><path d="M140 158 Q160 176 180 158" fill="none" stroke="#07162b" stroke-width="7" stroke-linecap="round"/></svg>
+  </div>
+  <div id="bossVictory" class="boss-victory">BOSS 撃破！</div>
+  <div id="bossTimerPanel" class="boss-timer"><b id="bossTimerText">強化ボス制限時間 120秒</b><progress id="bossTimerBar" value="120" max="120"></progress><div class="small" id="bossTimerHint">制限時間内の討伐で追加報酬。時間切れでもボスは弱体化して戦闘継続。</div></div>
+  <h2 id="battleEnemyName" style="text-align:center;margin:12px 0 5px">スライム</h2>
+  <div class="stat"><span>敵HP</span><b id="battleHpText">100 / 100</b></div>
+  <div class="battle-hp"><span id="battleHpBar"></span></div>
+  <div class="battle-meta" style="margin-top:12px">
+   <div><span>自動攻撃力</span><b id="battleAutoDamage">10</b></div>
+   <div><span>攻撃間隔</span><b id="battleInterval">1.50秒</b></div>
+  </div>
+  <div class="battle-action" style="margin-top:12px">
+   <button class="primary" id="battleAutoState" disabled>自動攻撃：稼働中</button>
+   <button class="battle-manual" id="battleManual"><span class="battle-manual-title">手動攻撃</span><span class="battle-manual-damage" id="battleManualDamage">ダメージ：-</span><span class="battle-manual-cooldown" id="battleManualCooldown">0.0</span></button>
+  </div>
+  <div id="battleSkillActions" class="battle-action"></div>
+  <div class="item" id="combatSurvivalPanel" style="margin-top:10px"></div>
+  <div id="battleLog" class="battle-log" style="margin-top:10px">魔物が現れた！</div>
+  <div class="milestone-heading battle-effect-heading" style="margin-top:10px">
+   <b>⚔️ 戦闘効果</b>
+   <details class="milestone-help-pop"><summary aria-label="戦闘効果の説明" title="説明を見る">?</summary><div class="milestone-help-content"><div class="small">時間操作中は攻撃速度×1.33、攻撃力×1.5になります。</div><div class="small">手動攻撃は威力1.25倍になります。攻撃速度強化に応じて攻撃間隔が短縮されます（最低間隔あり）。</div><div class="small">スキルの予測ダメージは現在のMP残量・ボス補正・取得効果を反映し、ランダム発動のエコー分は含みません。</div></div></details>
+  </div>
+ </section>
+ <section class="panel" style="margin-top:12px">
+  <h2>魔物図鑑</h2>
+  <div class="grid" style="margin:8px 0 10px"><div class="item"><b>ボス討伐数</b><div class="stat-value" id="bestiaryBossDefeats">0体</div></div><div class="item"><b>強化個体討伐数</b><div class="stat-value" id="bestiaryEnhancedDefeats">0体</div></div><div class="item"><b>強化ボス討伐数</b><div class="stat-value" id="bestiaryEnhancedBossDefeats">0体</div></div></div>
+  <div class="small">通常魔物4種類が順番に出現し、100体ごとに異なるボスが登場します。超越個体探知を解放すると強化個体が出現。強化雑魚は最上位のみSPを落とし、強化ボスは全ランクがSPを落とします。</div>
+  <div class="grid" style="margin-top:10px">
+   <div class="item bestiary-slime-card"><b>スライム</b><img class="bestiary-monster-art" src="/time-control-game/assets/enemies/normal/slime-v3.webp?v=282" alt="スライム" loading="lazy" decoding="async"><div class="small">HP基準 100</div><div class="small" id="bestiary-slime">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>👺 ゴブリン</b><div class="small">HP基準 120</div><div class="small" id="bestiary-goblin">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>💀 スケルトン</b><div class="small">HP基準 150</div><div class="small" id="bestiary-skeleton">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>🐺 ダークウルフ</b><div class="small">HP基準 200</div><div class="small" id="bestiary-wolf">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>🐉 ドラゴンロード</b><div class="small">100体目のボス</div><div class="small" id="bestiary-dragon">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>👿 魔王</b><div class="small">200体目のボス</div><div class="small" id="bestiary-demon">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>🗿 古代巨人</b><div class="small">300体目のボス</div><div class="small" id="bestiary-titan">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>🐲 深淵竜</b><div class="small">400体目のボス</div><div class="small" id="bestiary-ancientDragon">討伐 0体・強化 0体</div></div>
+   <div class="item"><b>👑 混沌の王</b><div class="small">500体目以降も登場</div><div class="small" id="bestiary-chaos">討伐 0体・強化 0体</div></div>
+  </div>
+ </section>
+</div>
+<div class="view" id="view-skills"><section class="panel"><div id="skillTreeLocked" class="skill-card" style="text-align:center;padding:36px 12px;font-size:1.25em">🔒 ロック中</div><div id="skillTreeUnlockedContent"><h2>🌳 戦闘スキルツリー</h2><div class="skill-balance"><div><span>所持SP</span><b id="skillPointBalance">0 SP</b></div><div><span>所持TP</span><b id="skillTpBalance">0 TP</b></div></div><div class="skill-card"><h3>TP → SP交換</h3><div class="skill-note">1 SP = 100,000 TP。交換レートは固定です。</div><div class="actions"><button data-sp-exchange="1">1 SPに交換</button><button data-sp-exchange="10">10 SPに交換</button><button data-sp-exchange="max">交換できるだけ交換</button></div></div><div id="skillTreeRoot"></div></div></section></div>
+<div class="view" id="view-abilities"><section class="panel"><h2>能力強化</h2><div class="stat"><label for="buyCount">まとめ買い数</label><select id="buyCount"><option value="5">5レベル</option><option value="10">10レベル</option><option value="50">50レベル</option><option value="100">100レベル</option><option value="1000" data-ap-bulk="1" hidden>1,000レベル</option><option value="10000" data-ap-bulk="2" hidden>10,000レベル</option></select></div><section class="panel" id="abilitiesCombatData" style="margin:10px 0;padding:12px"><div class="milestone-heading"><b>⚔️ 討伐データ</b><details class="milestone-help-pop"><summary aria-label="討伐データの説明" title="説明を見る">?</summary><div class="milestone-help-content"><div class="small">敵を倒すと獲得できる、戦闘研究専用の強化通貨です。</div><div class="small">攻撃研究で与ダメージ、耐久研究で最大HP・自然回復・防御力、討伐研究で通常の討伐データ獲得量を強化できます。</div><div class="small">初めて討伐データを獲得すると戦闘研究が解放されます。討伐データと研究レベルは転生後も保持されます。</div><div class="small">討伐研究は初回報酬や節目報酬の量には影響しません。</div></div></details></div><div class="stat" style="margin-top:8px"><span>所持討伐データ</span><b id="abilitiesCombatDataValue">0</b></div><div class="small">魔物討伐で獲得し、戦闘研究の強化に使用します。</div></section><section class="panel" id="abilitiesCombatResearch" style="margin:10px 0;padding:12px"><div class="milestone-heading" style="justify-content:flex-start"><h3 style="margin:0">⚔️ 戦闘研究</h3><button type="button" class="help-info-btn" id="combatResearchHelp" aria-label="戦闘研究の説明">?</button></div><div class="small" id="combatUnlockText" style="display:none">通常世界の敵を倒して討伐データを初めて獲得すると、戦闘研究が解放されます。</div><div id="combatResearchCards" class="grid" style="margin-top:8px"></div></section><div id="functions"></div></section>
+</div>
+<div class="view" id="view-facilities"><section class="panel"><h2>収入施設</h2><div class="stat"><label for="buyCountFacility">まとめ買い数</label><select id="buyCountFacility"><option value="5">5レベル</option><option value="10">10レベル</option><option value="50">50レベル</option><option value="100">100レベル</option><option value="1000" data-ap-bulk="1" hidden>1,000レベル</option><option value="10000" data-ap-bulk="2" hidden>10,000レベル</option></select></div><div class="small">まとめ買い数で購入数を選択できます。「所持金で最大10000Lv買う」は動作を軽くするため、1回につき最大10000レベルまで購入します。</div><div id="facilities"></div></section>
+</div>
+<div class="view" id="view-rebirth"><section class="panel"><h2>転生</h2><div class="stat"><span>転生倍率</span><b id="mult">×1.00</b></div><div class="stat"><span>能力レベル上限</span><b id="levelCap">50</b></div><div class="stat"><span>転生ポイント</span><b id="rebirthPoints">0</b></div><button id="rebirthBtn" disabled>転生する（レベル400で解放）</button></section><section class="panel"><h2>転生ショップ</h2><p class="small">転生ポイントを使って永続強化を購入できます。強化レベルと効果は転生しても維持されます。</p><div id="rebirthShop"></div></section>
+</div>
+<div class="view" id="view-details"><section class="panel"><h2>セーブ・詳細</h2>
+
+<div class="stat"><label for="skillConfirmSetting">スキル購入時の確認画面</label><select id="skillConfirmSetting"><option value="show">表示する</option><option value="hide">表示しない</option></select></div>
+
+<div id="saveSlots"></div>
+<section class="panel number-settings-panel" id="apNumberSettings" style="display:none"><h2>数字表示設定</h2><p class="small">項目ごとに表示形式・小数点・桁区切り・指数の有効桁数を個別に設定できます。設定は転生後も保存されます。</p><select id="apNumberFormat" style="display:none"><option value="jp">日本語単位</option><option value="short">短縮</option><option value="full">省略なし</option><option value="sci">指数</option></select><div id="apNumberSettingsBody"></div></section>
+<div class="actions"><button id="reset">最初から</button></div>
+</section></div>
+<div class="view" id="view-developer"><div class="panel" id="adminPanel" style="margin-top:14px;border-color:#a85c43;background:linear-gradient(145deg,#35221f,#1a1c2b)">
+<h2 style="color:#ffb18b">管理者テストパネル</h2>
+<div class="actions"><button id="adminModeBtn">管理者モード ON/OFF</button><button id="adminPresetEarly">序盤プリセット</button><button id="adminPresetMid">中盤プリセット</button><button id="adminPresetLate">終盤プリセット</button><button id="adminPresetMax">最大プリセット</button></div>
+<div class="actions"><label><input type="checkbox" id="adminMoneyInf"> お金無限</label><label><input type="checkbox" id="adminTPInf"> TP無限</label><label><input type="checkbox" id="adminAPInf"> AP無限</label></div>
+<div class="admin-grid">
+<label>レベル<input id="admLevel" type="number" min="1" step="1"></label><label>XP<input id="admXp" type="number" min="0" step="any"></label>
+<label>所持金<input id="admMoney" type="number" min="0" step="any"></label><label>MP<input id="admMp" type="number" min="0" step="any"></label>
+<label>TP<input id="admTP" type="number" min="0" step="any"></label><label>AP<input id="admAP" type="number" min="0" step="1"></label>
+<label>転生回数<input id="admRebirth" type="number" min="0" step="1"></label><label>転生倍率<input id="admRbMult" type="text" inputmode="decimal" autocomplete="off" value="1"></label>
+</div>
+<h3>能力レベル（時間適応 / 局所減速 / 身体適応 / 精密制御）</h3><div class="admin-grid" id="admAbilities"></div>
+<h3>施設レベル（5施設）</h3><div class="admin-grid" id="admFacilities"></div>
+<h3>転生ショップ強化レベル</h3><div class="admin-grid" id="admShop"></div>
+<h3>戦闘テスト</h3><div class="admin-grid"><label>ボス<select id="admBattleBoss"></select></label><label>強化段階<select id="admBattleTier"><option value="1">覚醒個体</option><option value="2">災厄個体</option><option value="3">超越個体</option></select></label></div><div class="actions"><button id="adminSummonEnhancedBoss" class="primary">選択した強化ボスを召喚</button><button id="adminSummonNormalBoss">通常ボスを召喚</button><button id="adminClearBattle">戦闘をリセット</button></div>
+<div class="actions"><button class="primary" id="adminApply">数値を適用</button><button id="adminMaxShop">転生ショップ全強化を最大</button><button id="adminMaxAbilities">能力を上限まで強化</button><button id="adminMaxFacilities">全施設をLv10000</button><button class="primary" id="adminTimeSpaceUnlock">時空システム全開放・最大強化</button></div>
+</div>
+
+</div>
+<div class="view" id="view-timespace"><section class="panel"><h2 class="timespace-main-title"><img class="timespace-hourglass-icon" src="/time-control-game/assets/ui/tabs/timespace-hourglass.webp?v=287" alt="" aria-hidden="true"> 時空システム</h2><p class="small">未知の時空に関する情報が、ここに記録される。</p><div id="tsPageRoot"></div></section></div>
+<div class="view" id="view-achievements"><section class="panel"><div class="panel" style="margin-top:14px;border-color:#806a35"><h2 style="color:var(--gold)">実績・AP</h2><div class="stat"><span>達成数</span><b id="achCount">0 / 0</b></div><div class="stat"><span>達成率</span><b id="achRate">0%</b></div><div class="stat"><span>獲得AP</span><b id="apBalance">0 AP</b></div><div id="achievementList"></div></div>
+<section class="panel ap-shop-panel"><h2 style="color:var(--gold)">🛍 APショップ</h2><div class="stat"><span>利用可能AP</span><b id="shopApBalance">0 AP</b></div><p class="small">APは実績で獲得できます。購入した機能・スキンは転生後も保持されます。ゲームの基本性能を上げる商品はありません。</p><div id="apShopItems"></div><div id="apStatsExtra" style="display:none"></div><div id="apIncomeExtra" style="display:none"></div><div id="apTitleArea" style="display:none"><h3>称号コレクション</h3><p class="small">購入した称号をプロフィールに表示できます。</p><select id="apTitleSelect"></select><div id="apTitlePreview"></div></div></section>
+</section></div></div>
+</main><nav class="bottomnav" aria-label="メインメニュー"><button class="active" data-view="home">🏠 ホーム</button><button data-view="battle">⚔️ 戦闘</button><button id="skillTreeNav" data-view="skills">🔒 ロック中</button><button data-view="abilities">⚡ 能力</button><button data-view="facilities">🏭 施設</button><button data-view="rebirth">🔄 転生</button><button data-view="timespace"><img class="timespace-hourglass-icon" src="/time-control-game/assets/ui/tabs/timespace-hourglass.webp?v=287" alt="" aria-hidden="true"><span>時空</span></button><button data-view="achievements">🏅 実績・AP</button><button data-view="details">📊 詳細</button><button data-view="developer">🛠 開発者</button></nav>
+<div id="milestoneScheduleOverlay" class="milestone-overlay" hidden>
+ <section class="milestone-modal" role="dialog" aria-modal="true" aria-labelledby="milestoneScheduleTitle">
+  <header class="milestone-modal-head"><div><h2 id="milestoneScheduleTitle">📜 全マイルストーン出現予定</h2><p>全25件の出現条件・初回報酬・達成状況</p></div><button id="milestoneScheduleClose" class="milestone-modal-close" type="button">閉じる ✕</button></header>
+  <div id="milestoneSchedule" class="milestone-schedule" aria-live="polite"></div>
+ </section>
+</div>
+<style>.number-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.number-setting-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.82rem}.number-setting-grid select{width:100%;min-width:0}.number-setting-row{padding:10px 0}.ap-shop-panel{margin-top:14px;border-color:#806a35}.ap-shop-panel .achievement{background:var(--panel)}.ap-shop-panel .actions button{min-width:100px}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-grid label{display:flex;flex-direction:column;gap:4px;color:#c7d6ed;font-size:.85rem}.admin-grid input{min-width:0;width:100%;padding:9px;border-radius:8px;background:#252d40;color:#fff;border:1px solid #566176}.admin-grid input[type=checkbox]{width:auto}.achievement{border:1px solid var(--line);border-radius:11px;padding:10px;margin:8px 0;background:var(--panel)}.achievement.done{border-color:#8b9cff;background:#252d40}.achievement .reward{color:var(--gold);font-size:.85rem}.achievement .progress{height:5px;background:#30394c;border-radius:8px;overflow:hidden;margin-top:7px}.achievement .progress span{display:block;height:100%;background:var(--accent)}.achievement.locked{opacity:.78}.ach-head{display:flex;justify-content:space-between;gap:8px}.ach-cat{color:var(--muted);font-size:.78rem}.number-settings-panel{margin-top:12px}@media(max-width:420px){.admin-grid{grid-template-columns:1fr 1fr}}
+.skill-confirm-overlay{position:fixed;inset:0;z-index:100000;background:#050914d9;display:flex;align-items:center;justify-content:center;padding:18px}
+.skill-confirm-panel{width:min(460px,100%);max-height:82vh;overflow:auto;background:#111d32;border:1px solid #6d86ad;border-radius:18px;padding:20px;color:#f2f5ff;box-shadow:0 18px 60px #000a}
+.skill-confirm-panel h3{margin:0 0 12px;font-size:1.15rem}.skill-confirm-panel p{margin:8px 0;line-height:1.55;white-space:pre-wrap}
+.skill-confirm-warning{color:#ffd27a;background:#4b351d66;border:1px solid #9d713d;border-radius:10px;padding:10px;margin:12px 0!important;font-weight:700}
+.skill-confirm-cost{color:#9fe7cf;font-weight:700}.skill-confirm-actions{display:flex;gap:10px;margin-top:18px}.skill-confirm-actions button{flex:1;min-height:44px;border-radius:10px;font-weight:700}
+.skill-confirm-cancel{background:#303b52;color:#fff;border:1px solid #63718b}.skill-confirm-accept{background:#2677c9;color:#fff;border:1px solid #63b4ff}
+
+.milestone-overlay{position:fixed;inset:0;z-index:100001;background:#050914e8;display:flex;align-items:center;justify-content:center;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+.milestone-overlay[hidden]{display:none}
+.milestone-modal{width:min(720px,100%);height:min(88vh,900px);height:min(88dvh,900px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);display:flex;flex-direction:column;overflow:hidden;background:#111d32;border:1px solid #6d86ad;border-radius:18px;color:#f2f5ff;box-shadow:0 18px 60px #000b}
+.milestone-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #344a68;flex:0 0 auto}
+.milestone-modal-head h2{margin:0;font-size:1.05rem}.milestone-modal-head p{margin:4px 0 0;color:#aebdd3;font-size:.8rem}
+.milestone-modal-close{flex:0 0 auto;min-height:40px;padding:8px 12px;background:#303b52;color:#fff;border:1px solid #63718b;border-radius:10px;font-weight:700}
+#milestoneSchedule.milestone-schedule{display:grid;gap:7px;margin:0;padding:12px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;flex:1}
+@media(max-width:480px){.milestone-modal{width:100%;height:88vh;height:88dvh;border-radius:14px}.milestone-modal-head{padding:12px}.milestone-modal-close{min-height:38px;padding:7px 10px}}
+
+
+/* v334: slime enhanced-variant aura layer; artwork remains the original sprite */
+.slime-elite-art{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;width:100%;height:105px;max-width:125px;margin:0 auto;overflow:visible}
+.slime-elite-art .slime-monster-art{position:relative;z-index:2;width:100%;height:105px;max-width:125px;object-fit:contain;transition:filter .25s ease}
+.slime-elite-art:before,.slime-elite-art:after{content:"";position:absolute;pointer-events:none;opacity:0;z-index:1}
+.slime-elite-art.slime-elite-1:before{inset:12% 8% 8%;border-radius:48% 48% 42% 42%;background:radial-gradient(ellipse at 50% 60%,#54f0a52b 0%,#54f0a51b 42%,transparent 72%);filter:blur(8px);opacity:1;animation:slimeAwakenPulse 3.4s ease-in-out infinite}
+.slime-elite-art.slime-elite-1 .slime-monster-art{filter:drop-shadow(0 0 5px #62e9a5aa) drop-shadow(0 8px 10px #24134d88)}
+.slime-elite-art.slime-elite-2:before{inset:8% 3% 4%;border-radius:50%;background:radial-gradient(ellipse at 50% 58%,#d34dff3d 0%,#9b42ed25 45%,transparent 73%);filter:blur(9px);opacity:1;animation:slimeDisasterPulse 2.4s ease-in-out infinite}
+.slime-elite-art.slime-elite-2:after{width:72%;height:82%;border:1px solid #d77bff88;border-left-color:transparent;border-right-color:#ed63f277;border-radius:48%;transform:rotate(-18deg);filter:drop-shadow(0 0 5px #c34aff);opacity:.75;animation:slimeDisasterOrbit 7s linear infinite}
+.slime-elite-art.slime-elite-2 .slime-monster-art{filter:sepia(.12) saturate(1.25) hue-rotate(9deg) drop-shadow(0 0 7px #c04bffb8) drop-shadow(0 8px 10px #24134d88)}
+.slime-elite-art.slime-elite-3:before{inset:4% 0 0;border-radius:50%;background:radial-gradient(ellipse at 50% 58%,#ffd86b4a 0%,#fff0a51f 44%,transparent 72%);filter:blur(10px);opacity:1;animation:slimeTranscendPulse 3s ease-in-out infinite}
+.slime-elite-art.slime-elite-3:after{width:78%;height:88%;border:2px solid #f6d77a99;border-top-color:#fff4c9;border-bottom-color:#d9a83e55;border-radius:50%;transform:rotate(-24deg);filter:drop-shadow(0 0 5px #ffe18b);opacity:.9;animation:slimeTranscendOrbit 9s linear infinite}
+.slime-elite-art.slime-elite-3 .slime-monster-art{filter:sepia(.2) saturate(1.3) hue-rotate(345deg) brightness(1.08) drop-shadow(0 0 9px #f5d477c9) drop-shadow(0 8px 10px #24134d88)}
+@keyframes slimeAwakenPulse{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.04)}}
+@keyframes slimeDisasterPulse{0%,100%{opacity:.58;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes slimeDisasterOrbit{to{transform:rotate(342deg)}}
+@keyframes slimeTranscendPulse{0%,100%{opacity:.62;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes slimeTranscendOrbit{to{transform:rotate(336deg)}}
+.battle-boss .slime-elite-art{width:min(90%,390px);height:170px;max-width:390px}
+.battle-boss .slime-elite-art .slime-monster-art{width:100%;height:170px;max-width:390px}
+@media(prefers-reduced-motion:reduce){.slime-elite-art:before,.slime-elite-art:after{animation:none!important}}
+
+
+/* v336: prioritize player HP visibility in the battle panel */
+.battle-effect-help{padding:9px 11px;border:1px solid var(--border,#405578);border-radius:10px;background:#0b1528}
+.battle-effect-help summary{cursor:pointer;font-weight:700;color:var(--muted,#aebbd0);font-size:.9rem}
+#combatSurvivalPanel{margin-top:10px!important}
+#combatSurvivalPanel .divider{margin:8px 0!important}
+#combatSurvivalPanel #combatResearchCards{gap:7px}
+
+
+/* v337: keep milestone counters visible and fold explanatory text */
+.milestone-effect-help{margin-top:8px}
+.milestone-effect-help[open]{padding-bottom:10px}
+.milestone-effect-help .small{line-height:1.55}
+
+
+/* v338: compact question-mark help beside milestone heading */
+.milestone-heading{display:flex;align-items:center;gap:9px;min-height:30px}
+.milestone-help-pop{position:relative;margin-left:auto;flex:0 0 auto}
+.milestone-help-pop>summary{list-style:none;cursor:pointer;width:27px;height:27px;border:1px solid var(--border,#405578);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:var(--muted,#c3d1e5);background:#101c31;user-select:none}
+.milestone-help-pop>summary::-webkit-details-marker{display:none}
+.milestone-help-content{position:absolute;z-index:30;right:0;top:calc(100% + 8px);width:min( min(78vw,360px), calc(100vw - 64px));padding:12px;border:1px solid var(--border,#405578);border-radius:12px;background:#101c31;box-shadow:0 10px 28px #0009;display:grid;gap:8px}
+.milestone-help-pop[open]>summary{border-color:var(--accent,#62a8ff);color:#fff}
+
+#view-battle .battle-panel{padding-bottom:3px}
+#view-battle .battle-effect-heading{margin-bottom:-8px}
+</style>
+<script>
+const $=id=>document.getElementById(id);
+const funcs=[
+ {name:"時間適応",unlock:3,base:500,rate:1.15,desc:"能力使用中のXP獲得 +2% / Lv。Lvごとに自動タップ・戦闘の基本攻撃間隔 -0.001秒（最低0.5秒、スキル等の速度補正を除く）。自動タップ報酬は50Lvごとに×2、×4、×6…"},
+ {name:"局所減速",unlock:8,base:800,rate:1.18,desc:"施設収入 +2% / Lv、XP倍率 +0.2% / Lv（XPへの効果は控えめ）"},
+ {name:"身体適応",unlock:12,base:500,rate:1.15,desc:"タップXP倍率がレベルに応じて上昇。戦闘攻撃力 +5% / Lv。Lv100以降は自動タップXPにも追加ボーナス"},
+ {name:"精密制御",unlock:20,base:1000,rate:1.20,desc:"MP消費を最大80%減少。10Lvごとに使用中のMP回復+0.001/秒、50Lvごとに最大MP+5とXP/収入ブースト倍率+0.1"}
+];
+const buildings=[
+ {name:"自動収入装置",unlock:1,cost:500,income:1,xpIncome:0.02},
+ {name:"高効率収入装置",unlock:20,cost:2500,income:5,xpIncome:0.1},
+ {name:"エネルギー収益炉",unlock:50,cost:12000,income:20,xpIncome:0.4},
+ {name:"大型収益プラント",unlock:100,cost:60000,income:100,xpIncome:2},
+ {name:"時空収益コア",unlock:250,cost:300000,income:500,xpIncome:10}
+];
+const rebirthUpgrades=[
+ {cat:"施設効率化",items:[
+  {id:"facilityMoney",name:"施設お金収益",desc:"施設のお金収益 +2% / Lv",base:2,cap:100},
+  {id:"facilityXp",name:"施設XP収益",desc:"施設XP収益 +2% / Lv",base:2,cap:100},
+  {id:"facilityDiscount",name:"施設購入費用割引",desc:"施設の購入費用 -0.5% / Lv（最大25%）",base:5,cap:50}]},
+ {cat:"タップ性能",items:[
+  {id:"tapMoney",name:"タップお金",desc:"タップのお金獲得 +2% / Lv",base:2,cap:100},
+  {id:"tapXp",name:"タップXP",desc:"タップXP獲得 +2% / Lv",base:2,cap:100}]},
+ {cat:"スキル効率化",items:[
+  {id:"abilityXp",name:"能力使用XP",desc:"能力使用中のXP獲得 +2% / Lv",base:3,cap:100},
+  {id:"abilityMoney",name:"能力使用収益",desc:"能力使用中のお金倍率 +1% / Lv",base:3,cap:100}]},
+ {cat:"MP効率化",items:[
+  {id:"mpCapacity",name:"MP最大容量",desc:"最大MP +5 / Lv",base:3,cap:100},
+  {id:"mpRegen",name:"MP自然回復",desc:"MP自然回復 +5% / Lv",base:3,cap:100},
+  {id:"mpCost",name:"MP自然消費軽減",desc:"時間操作中の自然MP消費 -0.5% / Lv（最大25%）",base:4,cap:50}]},
+ {cat:"放置効率化",items:[
+  {id:"offlineMoney",name:"オフラインお金",desc:"オフライン中も毎秒収入の割合分を獲得。最大100%。Lv20で8時間、Lv30で12時間。",base:4,cap:20},
+  {id:"offlineXp",name:"オフラインXP",desc:"オフライン中も施設XPの割合分を獲得。最大100%。Lv20で8時間、Lv30で12時間。",base:4,cap:20}]},
+ {cat:"レベル成長",items:[
+  {id:"needDiscount",name:"必要XP軽減",desc:"次レベルに必要なXP -0.5% / Lv（最大25%）",base:5,cap:50},
+  {id:"levelReward",name:"レベル報酬",desc:"レベルアップ報酬 +2% / Lv",base:3,cap:100}]},
+ {cat:"転生効率化",items:[
+  {id:"startMoney",name:"転生後初期資金",desc:"転生後の初期資金 +100 / Lv",base:2,cap:100},
+  {id:"startMp",name:"転生後初期MP",desc:"転生後の初期MP +1 / Lv",base:2,cap:100}]},
+ {cat:"自動化・便利",items:[
+  {id:"autoTapPower",name:"自動タップ強化",desc:"自動タップ報酬 +1% / Lv",base:4,cap:100},
+  {id:"bulkLimit",name:"一括購入上限",desc:"最大まとめ買い数 +1000 / Lv（最大+100000）",base:5,cap:100}]},
+ {cat:"追加報酬",items:[
+  {id:"allMoney",name:"全体お金獲得",desc:"すべてのお金獲得 +1% / Lv",base:4,cap:100},
+  {id:"allXp",name:"全体XP獲得",desc:"すべてのXP獲得 +1% / Lv",base:4,cap:100}]},
+ {cat:"特殊強化",items:[
+  {id:"abilityCap",name:"能力上限突破",desc:"能力レベル上限を拡張。Lv100までは+10 / Lv、Lv101以降は+5 / Lv（最大Lv200）。価格はLv100まで1.06倍 / Lv、Lv101以降1.015倍 / Lv。",base:8,cap:200},
+  {id:"boostCap",name:"ブースト上限",desc:"ブースト倍率上限 +0.1 / Lv",base:8,cap:100}]},
+ {cat:"戦闘基礎強化",items:[
+  {id:"battleDamage",name:"基礎攻撃力",desc:"戦闘ダメージ +2% / Lv（最大+200%）",base:8,cap:100},
+  {id:"bossDamage",name:"ボス特効",desc:"ボスへのダメージ +1.5% / Lv（最大+150%）",base:10,cap:100},
+  {id:"battleHaste",name:"攻撃速度",desc:"攻撃速度 +1% / Lv（最大+50%）",base:8,cap:50},
+  {id:"ticketBonus",name:"挑戦券獲得量",desc:"雑魚敵100体ごとの挑戦券 +1枚 / 10Lv（最大+5枚）",base:12,cap:50}]},
+ {cat:"時空系TPショップ",unlockDoor:10,items:[
+  {id:"timeShardGain",name:"時空欠片収集",desc:"歪み内部の欠片獲得量 +2% / Lv",base:10,cap:50},
+  {id:"timeCoreDiscount",name:"核生成効率",desc:"時空の核の制作費用 -1% / Lv（最大25%）",base:15,cap:25},
+  {id:"distortionAttack",name:"歪み戦闘強化",desc:"歪み内部の攻撃力 +1% / Lv",base:12,cap:50},
+  {id:"distortionGuard",name:"歪み防護",desc:"歪み内部の被ダメージ -0.5% / Lv",base:12,cap:50}]}
+];
+function shopLv(id){const lv=Math.max(0,Number(s.shop?.[id])||0);return id==="offlineMoney"||id==="offlineXp"?Math.min(30,lv):lv}
+function shopCost(item){const lv=shopLv(item.id);if(item.id==="abilityCap")return Math.floor(item.base*Math.pow(1.06,Math.min(lv,100))*Math.pow(1.015,Math.max(0,lv-100)));const rate=item.cap===100?1.06:item.cap===50?1.08:1.12;return Math.floor(item.base*Math.pow(rate,lv))}
+function shopEffect(id,per=1){return shopLv(id)*per}
+function shopCap(item){
+ const group=rebirthUpgrades.find(g=>g.items.includes(item)),door=s.timeSpace?.adminFullUnlock?10:(Number(s.timeSpace?.doorClearCount)||0);
+ if(group?.cat==="転生効率化"&&door>=5)return item.cap+25;
+ if(group?.cat==="時空系TPショップ"&&door>=10)return item.cap+25;
+ return item.cap;
+}
+function renderRebirthShop(){
+ const root=$("rebirthShop");if(!root)return;const door=s.timeSpace?.adminFullUnlock?10:(Number(s.timeSpace?.doorClearCount)||0);
+ root.innerHTML=
+  '<section class="ts-panel"><h2>時空システム</h2><div class="ts-stats"><div>通常'+shardName+' <b id="tsShardBalance">'+s.timeShards+'</b></div><div>時空エネルギー <b id="tsEnergyBalance">'+formatStat("level",s.timeEnergy,0)+'</b></div><div>'+coreName+' <b id="tsCoreBalance">'+t.cores+'</b></div>'+(t.doorClearCount>=1?'<div>扉突破 <b>'+t.doorClearCount+'</b>回</div>':'')+(t.completedRuns>=1?'<div>歪み脱出 <b id="tsRunBalance">'+t.completedRuns+'</b>回</div>':'')+(t.adminFullUnlock||t.completedRuns>=1?'<div>時空残響ポイント <b id="tsEchoBalance">'+t.echo.points+'</b></div>':'')+'</div><p>'+(t.adminFullUnlock||t.doorClearCount>=1?(t.boon?(t.coreCrafted?"時空の恩恵：お金・XP獲得量×10":"特別な恩恵：お金・XP獲得量×10"):"スキルツリー解放前でも？？？？を制作して進行できる。"):"")+'</p></section>'+
+  '<div class="ts-category-tabs" role="tablist" aria-label="時空カテゴリ" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:10px 0">'+
+  '<button type="button" data-ts-tab="shard" role="tab">欠片</button><button type="button" data-ts-tab="core" role="tab">核・同調</button><button type="button" data-ts-tab="distortion" role="tab">歪み領域</button><button type="button" data-ts-tab="permanent" role="tab">永久強化</button></div>'+
+  '<div class="ts-category-content" data-ts-category="shard" role="tabpanel">'+
+  '<section class="ts-panel"><h3 style="display:flex;align-items:center;gap:7px">欠片スキル <button type="button" id="shardSkillHelp" class="help-info-btn" aria-label="欠片スキルの説明">?</button></h3><p>時空の欠片を使ってスキルを習得する。最初の「連動タップ」はスキルツリー解放前から習得できる。</p><div id="shardMystery" class="small" style="margin-top:8px"></div><div id="shardSkillShop" class="item" style="margin-top:10px"><b><span id="shardSkillShopTitle">時？？？？による強化</span></b><div id="shardSkillList"></div></div></section>'+
+  '<section class="ts-panel"><h3>欠片強化</h3><p>'+(s.skillTreeUnlocked?"敵・施設から欠片を入手できる。施設の欠片抽選は全施設共通の5分周期。":"スキルツリー解放後に利用可能。")+'</p><div class="ts-grid">'+shardHtml+'</div></section></div>'+
+  '<div class="ts-category-content" data-ts-category="core" role="tabpanel" hidden>'+
+  '<section class="ts-panel"><h3>時空の核</h3><small>'+coreName+'制作費：'+craftCost+'個 / 1個</small><br><button id="tsCraftOne" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>'+coreName+'を1個制作</button><button id="tsCraftMax" '+(!d.active&&Number(s.timeShards)>=craftCost?"":"disabled")+'>'+"作れるだけ制作"+'</button></section>'+
+  (t.coreDiscovered?'<section class="ts-panel"><h3>核強化</h3><p>次回侵入用の核'+coreReserve+'個は購入に使えない。すべての核強化はスキルツリー解放後。</p><div class="ts-grid">'+coreHtml+'</div></section>':"")+
+  '<section class="ts-panel"><h3>時空同調</h3><p>時空同調 '+t.sync.level+'/300・豊穣 '+t.sync.wealth+'/5・成長 '+t.sync.growth+'/5</p><div class="ts-grid">'+syncHtml+'</div></section></div>'+
+  '<div class="ts-category-content" data-ts-category="distortion" role="tabpanel" hidden>'+
+  fight+
+  (t.adminFullUnlock||t.completedRuns>=1?'<section class="ts-panel"><h3>時空残響</h3><p>2回目の脱出成功後に解放。各分岐5段階。</p><div class="ts-grid">'+echoHtml+'</div><p>振り直し：投資ポイント'+spent+'点 ×20＝欠片'+respecCost+'個相当。現在使える核は'+availableCores+'個。</p><button id="tsEchoReset" '+(t.completedRuns>=2&&spent>0&&!d.active&&((Number(s.timeShards)||0)+t.cores*200>=respecCost)?"":"disabled")+'>時空残響を振り直す</button></section>':"")+
+  (t.adminFullUnlock||t.completedRuns>=2?(()=>{const a=tsDistortionAdaptation();return '<section class="ts-panel"><h3>歪み適応</h3><p>時空残響の累計強化量：'+a.spent+'ポイント。強化を振り直しても適応の成長記録は維持されます。</p><div class="ts-grid"><div class="ts-item"><b>時間干渉への適応</b><p>突然変異マイルストーンボスの時間干渉を軽減。</p><small>軽減率：'+(a.time*100).toFixed(1)+'%（重点成長）</small></div><div class="ts-item"><b>戦闘への適応</b><p>歪み内の攻撃力を強化。</p><small>強化率：'+(a.combat*100).toFixed(1)+'%</small></div><div class="ts-item"><b>探索への適応</b><p>歪み内の追加欠片発見率を上昇。</p><small>発見率補正：+'+(a.explore*100).toFixed(1)+'ポイント</small></div><div class="ts-item"><b>環境への適応</b><p>歪み内で受けるダメージを軽減。</p><small>軽減率：'+(a.environment*100).toFixed(1)+'%</small></div></div></section>'})():"")+
+  (d.active?"":'<section class="ts-panel"><p>'+(t.coreCrafted?"通常の通過では低確率で異常領域に引き込まれる。特殊侵入も可能。":"")+'</p>'+(t.coreCrafted?'<small>通常扉：核'+normalCost+'個・特殊侵入：核'+specialCost+'個</small><br>':'')+'<small>'+(t.coreCrafted?"扉の入場条件":"進行条件")+'：'+(t.doorClearCount>=1?"前回突破後にLv4000到達・転生1回以上":"Lv400以上・転生1回以上")+(doorRequirement?'（未達成：'+doorRequirement+'）':'（達成済み）')+'</small><br><button class="primary" id="tsEnter" '+(t.cores>=normalCost&&!doorRequirement?"":"disabled")+'>'+(t.coreCrafted?(firstDoor?"時空の扉を開く":"通常の扉を通過する"):"先へ進む")+'</button> '+(t.coreCrafted&&!firstDoor?'<br><small>特殊侵入条件：扉1回突破・歪みから1回脱出'+(specialRequirement?'（未達成：'+specialRequirement+'）':'（達成済み）')+'</small><br><button id="tsSpecialEnter" '+(t.cores>=specialCost&&!specialRequirement?"":"disabled")+'>核を犠牲にして歪みへ侵入</button>':"")+'</section>')+
+  '</div>'+
+  '<div class="ts-category-content" data-ts-category="permanent" role="tabpanel" hidden>'+
+  '<section class="ts-panel"><h3>永久能力</h3><p>装備枠：'+(t.adminFullUnlock?3:t.completedRuns>=5?3:t.completedRuns>=3?2:1)+'。装備変更は通常世界のみ。</p><div class="ts-grid">'+permHtml+'</div></section>'+
+  '<section class="ts-panel"><h3>施設進化</h3><p>時空同調Lv50・豊穣同調Lv5で解放。段階IIはLv150、IIIはLv300。</p><div class="ts-grid">'+facHtml+'</div></section>'+
+  '<section class="ts-panel"><h3>能力進化</h3><p>時空同調Lv50・成長同調Lv5で解放。段階IIはLv150、IIIはLv300。</p><div class="ts-grid">'+abilHtml+'</div></section></div>';
+ root.querySelectorAll("[data-ts-tab]").forEach(button=>button.onclick=()=>{
+  const selected=button.dataset.tsTab;window.tsSelectedCategory=selected;
+  root.querySelectorAll("[data-ts-tab]").forEach(tab=>{const active=tab===button;tab.setAttribute("aria-selected",active?"true":"false");tab.classList.toggle("primary",active);});
+  root.querySelectorAll("[data-ts-category]").forEach(panel=>{panel.hidden=panel.dataset.tsCategory!==selected;});
+ });
+ const selectedTab=root.querySelector('[data-ts-tab="'+(window.tsSelectedCategory||"shard")+'"]');
+ if(selectedTab)selectedTab.click();
+ renderShardSkillShop();
+ const distortionPanel=$("distortionBattlePanel");if(distortionPanel){const battleRoot=document.querySelector("#view-battle .battle-panel");if(battleRoot)battleRoot.appendChild(distortionPanel);}
+ const enter=$("tsEnter");if(enter)enter.onclick=()=>{
+  const t=tsEnsure(),first=t.doorClearCount===0&&t.distortionClearCount===0&&!t.adminFullUnlock,cost=first?9:10;
+  if(first){
+   showDoorStoryModal("時空の扉",["九つの時空の核が共鳴する。","その反応は次第に強まり、目の前の空間に巨大な扉が姿を現した。","扉の向こう側を観測することはできない。核から伝わる反応も、扉の向こうで途切れている。","これまで集めてきた時空の力が、この扉を開いた。","しかし、その先に何が待っているのかは分からない。","一度進めば、今までと同じ場所に戻れる保証はない。"],"この扉を開き、先へ進みますか？","進む",()=>{
+    if(!tsStart("door"))return;tsRender();saveAutoGame();render();
+    showDoorStoryModal("異常発生",["扉をくぐった、その瞬間。","周囲の空間が大きく歪み始めた。","視界が揺れ、時間の流れさえも正常ではなくなっていく。","何が起きているのか理解する間もなく、あなたは見知らぬ領域へと引きずり込まれた。","そこは、知っている世界とは明らかに違う場所だった。","ここは一体、どこなのだろうか。"],"歪みの内部へ進む","続ける",()=>{const nav=document.querySelector('.bottomnav button[data-view="battle"]');if(nav)nav.click();showFirstDistortionBattleStory();},true);
+   });return;
+  }
+  const warning="【扉への入場確認】\n核を"+cost+"個消費します。\n通常通過では大型リセットが発生し、現在のレベル・お金・能力・施設などの一部進行がリセットされます。また、通過中に5%の確率で歪みに引き込まれます。\n入場しますか？";
+  if(!confirm(warning))return;if(tsStart("door")){tsRender();saveAutoGame();render()}
+ };
+ const specialEnter=$("tsSpecialEnter");if(specialEnter)specialEnter.onclick=()=>{
+  if(!confirm("【歪みへの特殊侵入確認】\n時空の核を11個消費して歪みに直接侵入します。\nこの特殊侵入は扉クリア回数に加算されず、扉突破による大型リセットや時空の恩恵も発生しません。歪み内部の戦闘に挑戦します。\n侵入しますか？"))return;
+  if(tsStart("special")){tsRender();saveAutoGame();render()}
+ };
+ const craft=$("tsCraftOne");if(craft)craft.onclick=()=>{if(tsCraft(1)){tsRender();saveAutoGame()}};
+ const craftMax=$("tsCraftMax");if(craftMax)craftMax.onclick=()=>{if(tsCraft(1000)){tsRender();saveAutoGame()}};
+ const attack=$("tsManualAttack");if(attack)attack.onclick=()=>{tsPlayerAttack(true);saveAutoGame()};
+ const reset=$("tsEchoReset");if(reset)reset.onclick=()=>{if(confirm("時空残響を振り直しますか？")&&tsEchoRespec()){tsRender();saveAutoGame()}};
+ root.querySelectorAll("button[data-ts]").forEach(b=>b.onclick=()=>{
+  let ok=false;const action=b.dataset.ts,id=b.dataset.id;
+  if(action==="core")ok=tsCoreUpgrade(id);if(action==="shard")ok=tsShardUpgrade(id);
+  if(action==="sync")ok=tsSyncBuy(id);if(action==="echo")ok=tsEchoBuy(Number(id));
+  if(action==="perm")ok=tsUpgradePermanent(id);if(action==="equip")ok=tsEquip(id);
+  if(action==="evo")ok=tsEvolutionBuy(b.dataset.type,Number(b.dataset.index),b.dataset.kind);
+  if(ok){tsRender();saveAutoGame();shopDirty=true;render()}
+ });
+ tsUpdateStatus();
+}
+function tsUpdateStatus(){
+ const t=tsEnsure(),d=t.distortion;
+ if(tsActive()){
+  const battleRoot=document.querySelector("#view-battle .battle-panel"),panel=$("distortionBattlePanel");
+  if(battleRoot&&(!panel||panel.parentElement!==battleRoot)){tsRender();return}
+ }
+ const shard=$("tsShardBalance"),energy=$("tsEnergyBalance"),core=$("tsCoreBalance"),runs=$("tsRunBalance"),echo=$("tsEchoBalance");
+ if(shard)shard.textContent=String(s.timeShards);if(energy)energy.textContent=formatStat("level",s.timeEnergy,0);if(core)core.textContent=String(t.cores);if(runs)runs.textContent=String(t.completedRuns);if(echo)echo.textContent=String(t.echo.points);
+ if(!tsActive())return;
+ const e=tsCurrentEnemy(),name=$("tsEnemyName");
+ const alive=d.enemyGroup.filter(x=>Number(x.hp)>0).length,total=d.enemyGroup.length;
+ if(name)name.textContent=e.n+"　残り"+alive+"/"+total+"体　HP "+Math.ceil(d.enemyHp)+"/"+Math.ceil(d.enemyMaxHp)+(d.bossPhase?"　段階"+(d.bossPhase+1):"");
+ const bar=$("tsEnemyBar");if(bar){bar.max=Math.max(1,d.enemyMaxHp);bar.value=d.enemyHp}
+ const player=$("tsPlayerHp");if(player)player.textContent="プレイヤーHP "+Math.ceil(d.hp)+"/1000　内部欠片 "+d.internalShards+"　敗北 "+d.defeats;
+ const playerBar=$("tsPlayerBar");if(playerBar)playerBar.value=d.hp;
+ const alteration=$("tsAlteration");if(alteration){const a=d.alterations[d.region];alteration.textContent=a?"領域変質："+a.n+"（"+a.d+"）":""}
+ const next=$("tsNextEnemy");
+ if(next){
+  if(t.permanent.equipped.includes("observe")){
+   const lv=tsPermanentLevel("observe");let nx=null,isBoss=false,nextRegion=false;
+   if(!d.finalBoss&&d.index<4)nx=tsEnemySets[d.region][d.index+1];
+   else if(!d.finalBoss&&d.index===4){nx=tsBosses[d.region];isBoss=true}
+   else if(!d.finalBoss&&d.index===5&&d.region<2){nx=tsEnemySets[d.region+1][0];nextRegion=true}
+   next.textContent=lv>=1&&nx?"次の敵："+nx.n:"";
+   if(lv>=2&&nx)next.textContent+=" / HP "+nx.hp+" / 攻撃力 "+nx.dmg;
+   if(lv>=3&&isBoss)next.textContent+=" / 特殊行動："+["時間圧縮","結晶障壁","崩壊波"][d.region];
+   if(lv>=4&&nextRegion){const alteration=d.alterations[d.region+1];if(alteration)next.textContent+=" / 次領域変質："+alteration.n}
+   if(d.finalBoss)next.textContent=lv>=1?"最終ボスを攻略中："+tsBosses[3].n:"";
+  }else next.textContent="";
+  if(d.playerSlowSeconds>0)next.textContent+="　時間圧縮："+d.playerSlowSeconds.toFixed(1)+"秒";
+  if(d.bossShieldSeconds>0)next.textContent+="　結晶障壁："+d.bossShieldSeconds.toFixed(1)+"秒";
+  if(d.regionBoost>0)next.textContent+="　残響強化："+Math.round(d.regionBoost*100)+"%";
+ }
+}
+function tsTick(dt){
+ const t=tsEnsure(),d=t.distortion;
+ if(t.recoverySeconds>0)t.recoverySeconds=Math.max(0,t.recoverySeconds-Math.max(0,Number(dt)||0));
+ if(t.mpRecoveryDelay>0)t.mpRecoveryDelay=Math.max(0,t.mpRecoveryDelay-Math.max(0,Number(dt)||0));
+ if(tsActive()){tsEnsureDistortionGroup();tsEnemyAttack(dt)}
+}
+function tsFacilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(buildings[i].unlock)||(Number(t.upgrades.memory)>=1&&t.facilityUnlocks[i])}
+function tsAbilityUnlocked(i){const t=tsEnsure();return s.level>=BigInt(funcs[i].unlock)||(Number(t.upgrades.memory)>=3&&t.abilityUnlocks[i])}
+const __tsBaseFacilityInterval=facilityPayoutInterval;
+facilityPayoutInterval=function(i){
+ const t=tsEnsure(),base=__tsBaseFacilityInterval(i),core=Number(t.upgrades.timeCompression)||0,evo=Number(t.facilityEvo?.[i]?.common)||0;
+ return Math.max(base*.5,base*(1-Math.min(.35,core*.05))*(1-Math.min(.15,evo*.05)));
+};
+const __tsBaseFacilityMoney=facilityMoneyEarnBN;
+facilityMoneyEarnBN=function(i){
+ let value=__tsBaseFacilityMoney(i);const t=tsEnsure(),local=tsPercent[Number(t.abilityEvo[1].unique)||0]||0;
+ value=BigNum.mul(value,1+t.sync.wealth*.05);
+ if(i===0)value=BigNum.mul(value,1+(Number(t.facilityEvo[i].unique)||0)*.1);
+ if(local)value=BigNum.mul(value,1+local);
+ return value;
+};
+const __tsBaseFacilityCost=bCostBN;
+bCostBN=function(i){const value=__tsBaseFacilityCost(i),lv=Number(tsEnsure().facilityEvo[1].unique)||0;return i===1?BigNum.mul(value,1-lv*.05):value};
+const __tsBaseFacilityBulkCost=facilityBulkCostBN;
+facilityBulkCostBN=function(i,start,count){const value=__tsBaseFacilityBulkCost(i,start,count),lv=Number(tsEnsure().facilityEvo[1].unique)||0;return i===1?BigNum.mul(value,1-lv*.05):value};
+const __tsBaseFacilityXP=facilityXPEarnBN;
+facilityXPEarnBN=function(i){
+ let value=__tsBaseFacilityXP(i);const t=tsEnsure();
+ const local=tsPercent[Number(t.abilityEvo[1].unique)||0]||0;return BigNum.mul(value,(1+t.sync.wealth*.05)*(1+local)*(1+(Number(t.facilityEvo[i].unique)||0)*(i===2?.1:0)));
+};
+const __tsBaseBattleApply=battleApplyDamage;
+battleApplyDamage=function(...args){
+ if(tsActive())return;
+ const before=(s.battleGroup||[]).map(x=>({...x})),shardsBefore=Number(s.timeShards)||0;
+ __tsBaseBattleApply(...args);
+ const gained=Math.max(0,(Number(s.timeShards)||0)-shardsBefore),adapt=Number(tsEnsure().shardAdapt)||0;
+ if(gained&&adapt>0)tsAddShards(gained*adapt*.1,false);
+ if(!s.skillTreeUnlocked||s.admin)return;
+ const remaining=new Set((s.battleGroup||[]).map(x=>x.number)),chance=Math.min(.95,.01+tsEnsure().shardSense*.005);
+ for(const x of before){
+  if(remaining.has(x.number))continue;const info=battleEnemyInfo(x.number);
+  if(info.boss||x.milestoneId||Number(x.variant)>0)continue;
+  if(Math.random()<chance)tsAddShards(1,true);
+ }
+};
+const __tsBaseCollect=collectFacilityPayouts;
+collectFacilityPayouts=function(dt,moneyFactor=1,xpFactor=1){
+ const before=Array.isArray(s.facilityTimers)?s.facilityTimers.slice():[0,0,0,0,0];
+ const out=__tsBaseCollect(dt,moneyFactor,xpFactor);tsFacilityShardTick(dt);
+ const extra=tsFacilityCopy(dt,before,Math.max(0,Number(moneyFactor)||0),Math.max(0,Number(xpFactor)||0));
+ out.money=BigNum.add(out.money,extra.money);out.xp=BigNum.add(out.xp,extra.xp);return out;
+};
+const __tsBaseAllMoney=allMoneyMult;
+allMoneyMult=function(){const t=tsEnsure();return __tsBaseAllMoney()*(t.boon?10:1)*(1+t.sync.level*.0025)};
+const __tsBaseAllXP=allXpMult;
+allXpMult=function(){const t=tsEnsure();return __tsBaseAllXP()*(t.boon?10:1)*(1+t.sync.level*.0025)};
+const __tsBaseAbilityXP=abilityXPPerSecondBN;
+abilityXPPerSecondBN=function(){const t=tsEnsure(),lv=Number(t.abilityEvo[0].common)||0;return BigNum.mul(__tsBaseAbilityXP(),(1+tsPercent[lv])*(1+t.sync.growth*.05))};
+const __tsBaseLocalSlow=localSlowXpMult;
+localSlowXpMult=function(){const lv=Number(tsEnsure().abilityEvo[1].common)||0;return __tsBaseLocalSlow()*(1+tsPercent[lv])};
+const __tsBaseBodyAdapt=bodyAdaptMult;
+bodyAdaptMult=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common)||0,unique=Number(t.abilityEvo[2].unique)||0;return __tsBaseBodyAdapt()*(1+tsPercent[common])*(1+[0,.05,.10,.15][unique])};
+const __tsBaseAutoTap=localAutoTapMult;
+localAutoTapMult=function(){const lv=Number(tsEnsure().abilityEvo[0].unique)||0;return __tsBaseAutoTap()*(1+tsPercent[lv])};
+const __tsBaseBattleDamage=battleBaseDamage;
+battleBaseDamage=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common)||0,unique=Number(t.abilityEvo[2].unique)||0;return BigNum.mul(BigNum.mul(__tsBaseBattleDamage(),1+tsPercent[common]),1+[0,.05,.10,.15][unique])};
+const __tsBasePrecisionRegen=precisionRegen;
+precisionRegen=function(base=0.1){const lv=Number(tsEnsure().abilityEvo[3].common)||0;return __tsBasePrecisionRegen(base)+Math.max(0,Number(base)||0)*tsPercent[lv]};
+const __tsBaseContinuousRate=continuousGrowthRate;
+continuousGrowthRate=function(){return __tsBaseContinuousRate()*(tsEnsure().echo.levels[0]>=3?1.10:1)};
+const __tsBaseContinuousBonus=continuousBonus;
+continuousBonus=function(){
+ const t=tsEnsure(),elapsed=Math.max(0,Number(s.continuousUseSeconds)||0),base=__tsBaseContinuousBonus();
+ if(t.echo.levels[0]<5||elapsed<=240)return base;
+ return Math.min(10,(3+Math.floor((elapsed-240)/30)*.5)*(1+.10*Math.max(0,t.echo.levels[0]-5)));
+};
+const __tsBaseTapReward=tapReward;
+tapReward=function(...args){if(tsActive())return;return __tsBaseTapReward(...args)};
+for(const name of ["buyF","buyFMax","buyFAll","buyB","buyBMax","buyBAll"]){
+ const original=window[name];if(typeof original==="function")window[name]=(...args)=>{if(tsActive())return;return original(...args)};
+}
+const __tsBaseBattleSkill=battleUseSkill;
+battleUseSkill=function(...args){if(tsActive())return false;return __tsBaseBattleSkill(...args)};
+const __tsBaseOffline=applyOfflineProgress;
+applyOfflineProgress=function(){const t=tsEnsure();if(s.on){s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;t.mpRecoveryDelay=t.boon?5*(t.echo.levels[0]>=1?.9:1):0}if(tsActive()){s.lastSeen=Date.now();return}return __tsBaseOffline()};
+
+drawSaveSlots();loadAutoGame();
+window.addEventListener("beforeunload",saveAutoGame);
+window.addEventListener("pagehide",saveAutoGame);
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="hidden")saveAutoGame();
+ else{applyOfflineProgress();saveAutoGame();render();if(tsActive())tsRender();}
+});
+window.addEventListener("pageshow",event=>{if(event.persisted){applyOfflineProgress();saveAutoGame();render();if(tsActive())tsRender();}});
+$("reset").onclick=()=>{if(confirm("進行状況・実績・APをすべてリセットしますか？")){s=fresh();pendingLevelUps=0n;pendingReward=BigNum.from(0);pendingRewardedLevels=0n;saveAutoGame();localStorage.removeItem("timeControlAchievementsV1");location.reload()}};
+let autoTapTimer=0,lastRender=0,lastXpBarUpdate=0,lastXpProcess=0,battleAutoTimer=0;
+
+
+function autoTapInterval(){return Math.max(0.5,1.5-Math.max(0,Number(s.fl[0])||0)*0.001)}
+let lastAutoSave=0,lastLoopErrorLog=0;
+function loop(now){
+ try{
+  const dt=Math.min((now-last)/1000,1);last=now;tsTick(dt);
+  if(s.on){
+   if(!tsActive()){autoTapTimer+=dt;while(autoTapTimer>=autoTapInterval()){autoTapTimer-=autoTapInterval();tapReward(true)}}
+   if(!s.admin){const tsv=tsEnsure(),baseDrain=.1*(1-Math.min(80,s.fl[3]*2+(Number(tsv.abilityEvo[3].unique)||0)*2+shopEffect("mpCost",0.5))/100);const drain=baseDrain+mpBoostDrain(baseDrain)-precisionRegen(baseDrain);s.mp-=drain*dt;s.mp=Math.min(maxMP(),s.mp)}
+   if(continuousGrowthRate()>0)s.continuousUseSeconds+=dt*continuousGrowthRate();
+   if(!tsActive())gainXP(BigNum.mul(abilityXPPerSecondBN(),dt));else if(tsEnsure().echo.levels[0]>=4)gainXP(BigNum.mul(abilityXPPerSecondBN(),dt*.10));
+   if(!s.admin&&s.mp<=0){s.mp=0;s.on=false;s.mpXpBoost=false;s.mpMoneyBoost=false;s.continuousUseSeconds=0;autoTapTimer=0;tsEnsure().mpRecoveryDelay=tsEnsure().boon?5*(tsEnsure().echo.levels[0]>=1?.9:1):0;$("log").textContent="MP切れ。能力とMPブーストが停止し、連続使用ボーナスがリセットされました。"}
+  }else{autoTapTimer=0;const tsv=tsEnsure();if(tsv.mpRecoveryDelay<=0&&!s.admin)s.mp=Math.min(maxMP(),s.mp+dt*(0.15*(1+shopEffect("mpRegen",0.05))*(1+skillMpRegenBonus())*(tsv.echo.levels[0]>=2?1.1:1)*(tsv.recoverySeconds>0?2:1)))}
+  if(!s.admin)s.mp=Math.min(maxMP(),s.mp);
+  try{if(!tsActive()){battleUpdateBossTimer(dt);battleAutoTimer+=dt;const battleInterval=battleAttackInterval();let battleTicks=0;while(battleAutoTimer>=battleInterval&&battleTicks<20){battleAutoTimer-=battleInterval;battleApplyDamage(1);battleTicks++}}}catch(battleErr){if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("戦闘処理エラー",battleErr);const battleLog=$("battleLog");if(battleLog)battleLog.textContent="戦闘処理でエラーが発生しました。経験値・レベル処理は継続しています。";}}
+   if(!tsActive())addMoneyBN(BigNum.mul(baseIncomeRateBN(),dt));
+  if(!tsActive()){const facilityPayout=collectFacilityPayouts(dt);if(BigNum.cmp(facilityPayout.money,0)>0)addMoneyBN(facilityPayout.money);if(BigNum.cmp(facilityPayout.xp,0)>0)gainXP(facilityPayout.xp);}
+  // このフレームで得たXP（自動タップ・能力・施設）をすべて加算してから一括レベルアップする。
+  // 描画直前に精算し、現在XPが必要XPを超えた状態を画面に残さない。
+  // 大量XP時の二分探索・報酬計算を毎フレーム実行しない。最大10回/秒に制限する。
+  if(now-lastXpProcess>=100){
+   lastXpProcess=now;
+   try{
+    processPendingXP();
+    updateLevelXPDisplay();
+   }catch(xpErr){
+    if(now-lastLoopErrorLog>=5000){
+     lastLoopErrorLog=now;
+     console.error("XP精算・表示更新エラー",xpErr);
+     const log=$("log");if(log)log.textContent="XP精算でエラーが発生しました。ほかの操作は継続しています。";
+    }
+   }
+  }
+  // XPバーは独立更新し、画面全体の再描画を待たない。
+  if(now-lastXpBarUpdate>=50){lastXpBarUpdate=now;updateXPBars()}
+  updateBattleManualCooldownUI();
+  if(now-lastRender>=500){lastRender=now;render();tsUpdateStatus()}
+  if(now-lastAutoSave>=5000){lastAutoSave=now;saveAutoGame()}
+ }catch(err){
+  if(now-lastLoopErrorLog>=5000){lastLoopErrorLog=now;console.error("ゲームループ内エラー",err);const log=$("log");if(log)log.textContent="一部の処理でエラーが発生しました。ゲームループは継続しています。";}
+ }finally{requestAnimationFrame(loop)}
+}
+$("buyCountFacility").value=$("buyCount").value;$("buyCountFacility").addEventListener("change",e=>{$("buyCount").value=e.target.value});$("buyCount").addEventListener("change",e=>{$("buyCountFacility").value=e.target.value});
+document.querySelectorAll(".bottomnav button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{const target=btn.dataset.view;if(target==="abilities"||target==="facilities"){shopDirty=true;render();}document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+target));document.querySelectorAll(".bottomnav button").forEach(b=>b.classList.toggle("active",b===btn));if(target==="rebirth"&&rebirthShopDirty){renderRebirthShop();rebirthShopDirty=false;}if(target==="skills")renderSkillTree();if(target==="timespace")tsRender();if(target==="developer"){refreshAdminInputs();$("adminModeBtn").textContent=s.admin?"管理者モード：ON（解除）":"管理者モード：OFF（有効化）";$("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;}window.scrollTo({top:0,behavior:"smooth"});}));
+
+tsEnsure();battleEnsureState();render();tsRender();if(tsActive()){const nav=document.querySelector(".bottomnav button[data-view=\"battle\"]");if(nav)nav.click();showFirstDistortionBattleStory();}requestAnimationFrame(loop);
+</script>
+<script>
+(()=>{
+ const ACH_KEY="timeControlAchievementsV1";
+ const achDefs=[
+  ["level10","成長の第一歩","レベル","レベル10到達",10,1,"level"],
+  ["level100","一人前","レベル","レベル100到達",100,2,"level"],
+  ["level400","転生の入口","レベル","レベル400到達",400,3,"level"],
+  ["level1k","千の境地","レベル","レベル1,000到達",1000,5,"level"],
+  ["level10k","時の支配者","レベル","レベル10,000到達",10000,10,"level"],
+  ["level100k","果てなき成長","レベル","レベル100,000到達",100000,20,"level"],
+  ["rebirth1","新たな始まり","転生","初めて転生する",1,2,"rebirth"],
+  ["rebirth5","転生を重ねて","転生","累計5回転生する",5,5,"rebirth"],
+  ["rebirth10","転生の達人","転生","累計10回転生する",10,8,"rebirth"],
+  ["rebirth50","時を越える者","転生","累計50回転生する",50,20,"rebirth"],
+  ["ability1","能力解放","能力","能力を1つ解放する",1,1,"ability"],
+  ["ability4","全能力解放","能力","4つすべての能力を解放する",4,5,"ability"],
+  ["ability100","能力熟練者","能力","いずれかの能力をLv100にする",100,3,"abilityMax"],
+  ["ability1k","能力の極致","能力","いずれかの能力をLv1,000にする",1000,8,"abilityMax"],
+  ["facility1","事業開始","施設","初めて施設を購入する",1,1,"facility"],
+  ["facilityAll","産業網","施設","5種類すべての施設を購入する",5,5,"facility"],
+  ["facility10","設備拡張","施設","いずれかの施設をLv10にする",10,2,"facilityMax"],
+  ["facility100","大規模運営","施設","いずれかの施設をLv100にする",100,5,"facilityMax"],
+  ["tp100","転生資産","転生","累計TP獲得100",100,3,"totalTP"],
+  ["tp1000","膨大な転生資産","転生","累計TP獲得1,000",1000,8,"totalTP"],
+  ["money1m","資産家","資産","所持金100万到達",1e6,3,"money"],
+  ["money1b","大富豪","資産","所持金10億到達",1e9,8,"money"],
+  ["allShop","研究完成","転生ショップ","転生ショップ強化をすべて最大",1,15,"allShop"],
+  ["longPlay","長時間研究","隠し","累計プレイ時間24時間",86400,10,"play"],
+  ["noRebirth1k","未転生の挑戦者","隠し","転生せずにレベル1,000到達",1000,15,"noRebirth"],
+  ["facilityAll100","巨大研究施設","隠し","全施設をLv100以上にする",100,20,"facilityAll100"]
+ ];
+ let ach={earned:{},blocked:{},ap:0,totalTP:0,playSeconds:0,last:Date.now(),prevTP:Number(s.tp)||0,prevLevel:s.level.toString(),prevRebirth:s.rebirth};
+ try{const saved=JSON.parse(localStorage.getItem(ACH_KEY)||"null");if(saved&&typeof saved==="object")ach={...ach,...saved,earned:saved.earned||{},blocked:saved.blocked||{}}}catch(e){}
+ function persist(){try{localStorage.setItem(ACH_KEY,JSON.stringify(ach))}catch(e){}}
+ function progress(d){
+  const t=d[6];
+  if(t==="level"||t==="noRebirth"){const target=BigInt(Math.max(0,Math.floor(Number(d[4])||0)));const value=t==="noRebirth"&&s.rebirth!==0?0n:(s.level<target?s.level:target);return Number(value)}
+  if(t==="rebirth")return s.rebirth;
+  if(t==="ability")return s.fl.filter((v,i)=>s.level>=BigInt(funcs[i].unlock)).length;
+  if(t==="abilityMax")return Math.max(...s.fl);
+  if(t==="facility")return s.bl.filter(v=>v>0).length;
+  if(t==="facilityMax")return Math.max(...s.bl);
+  if(t==="facilityAll100")return Math.min(...s.bl);
+  if(t==="totalTP")return ach.totalTP;
+  if(t==="money")return s.money;
+  if(t==="allShop")return rebirthUpgrades.every(g=>(!g.unlockDoor||(Number(s.timeSpace?.doorClearCount)||0)>=g.unlockDoor)&&g.items.every(it=>shopLv(it.id)>=shopCap(it)))?1:0;
+  if(t==="play")return ach.playSeconds;
+  return 0;
+ }
+ let achievementPageDirty=true;
+ function check(){
+  if(s.admin)return;
+  let changed=false;
+  for(const d of achDefs){if(!ach.earned[d[0]]&&!ach.blocked[d[0]]&&progress(d)>=d[4]){ach.earned[d[0]]=true;ach.ap+=d[5];changed=true;}}
+  if(changed){achievementPageDirty=true;persist();$("log").textContent="🏅 実績を達成！APを獲得しました。";}
+ }
+ function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+ function renderAchievements(){
+  check();
+  window.apTotalTP=ach.totalTP;window.apPlaySeconds=ach.playSeconds;const done=achDefs.filter(d=>ach.earned[d[0]]).length;
+  $("achCount").textContent=done+" / "+achDefs.length;
+  $("achRate").textContent=(done/achDefs.length*100).toFixed(1)+"%";
+  $("apBalance").textContent=formatStat("ap",ach.ap,0)+" AP";if($("shopApBalance"))$("shopApBalance").textContent=(s.adminAPUnlimited?"∞":ach.ap.toLocaleString("ja-JP"))+" AP";
+  $("achievementList").innerHTML=achDefs.map(d=>{
+   const ok=!!ach.earned[d[0]],p=Math.min(d[4],progress(d)),pct=Math.min(100,p/d[4]*100),fmtKey=d[6]==="totalTP"?"tp":d[6]==="money"?"money":d[6]==="rebirth"?"rebirthCount":d[6].includes("ability")?"abilityLevel":d[6].includes("facility")?"facilityLevel":"level";
+   const hidden=d[6]==="play"||d[6]==="noRebirth"||d[6]==="facilityAll100";
+   return '<div class="achievement '+(ok?'done':'locked')+'"><div class="ach-head"><b>'+(ok||!hidden?esc(d[1]):"？？？")+'</b><span class="ach-cat">'+esc(d[2])+'</span></div><div class="small">'+(ok||!hidden?esc(d[3]):"隠された実績。条件を満たすと公開されます。")+'</div><div class="reward">報酬：'+formatStat("ap",d[5],0)+' AP '+(ok?'・達成済み':'')+'</div><div class="small">'+(ok?"達成！":formatStat(fmtKey,p,0)+" / "+formatStat(fmtKey,d[4],0))+'</div><div class="progress"><span style="width:'+pct+'%"></span></div></div>';
+  }).join("");
+  achievementPageDirty=false;
+ }
+ function addField(parent,id,label,value){
+  const el=document.createElement("label");el.textContent=label;
+  const input=document.createElement("input");input.id=id;input.type="number";input.min="0";input.step="1";input.value=String(value??0);el.appendChild(input);parent.appendChild(el);
+ }
+ function setupAdmin(){
+  const abilities=$("admAbilities"),facilities=$("admFacilities"),shop=$("admShop");
+  funcs.forEach((f,i)=>addField(abilities,"admFl"+i,f.name,s.fl[i]));
+  buildings.forEach((b,i)=>addField(facilities,"admBl"+i,b.name,s.bl[i]));
+  rebirthUpgrades.flatMap(g=>g.items).forEach(it=>addField(shop,"admShop_"+it.id,it.name,shopLv(it.id)));
+  $("admLevel").type="text";$("admLevel").inputMode="numeric";$("admLevel").autocomplete="off";$("admRbMult").type="text";$("admRbMult").inputMode="decimal";$("admRbMult").autocomplete="off";
+  $("adminPanel").style.display="";
+  $("adminMoneyInf").checked=!!s.adminMoneyUnlimited;$("adminTPInf").checked=!!s.adminTPUnlimited;$("adminAPInf").checked=!!s.adminAPUnlimited;
+  $("adminModeBtn").onclick=()=>{if(s.admin)blockAdminProgress();s.admin=!s.admin;if(s.admin)s.mp=maxMP();$("adminModeBtn").textContent=s.admin?"管理者モード：ON（解除）":"管理者モード：OFF（有効化）";$("log").textContent=s.admin?"管理者モードON。能力・施設の費用が0になり、MPが無限になります。":"管理者モードOFF。通常の費用とMP消費に戻りました。";shopDirty=true;render();saveAutoGame();refreshAdminInputs()};
+  const bossSelect=$("admBattleBoss");if(bossSelect)bossSelect.innerHTML=battleBosses.map((b,i)=>`<option value="${i}">${b.name}（${(i+1)*100}体目）</option>`).join("");
+  $("adminSummonEnhancedBoss").onclick=()=>{
+   if(!s.admin){$("log").textContent="管理者モードをONにしてください。";return;}
+   const i=Math.max(0,Math.min(battleBosses.length-1,Number($("admBattleBoss").value)||0)),tier=Math.max(1,Math.min(3,Number($("admBattleTier").value)||1)),number=(i+1)*100,base=battleBosses[i];
+   const temp={number,variant:tier};s.battleGroup=[{number,hp:BigNum.json(BigNum.from(1)),variant:tier,rewardMultiplier:battleVariantMultiplier(tier),timer:120+(tier-1)*30,timerMax:120+(tier-1)*30,timerPause:0,timerExpired:false,adminTest:true}];
+   const info={...base,number,boss:true,variant:tier};s.battleGroup[0].hp=BigNum.json(battleMaxHpBN(info));s.battleEnemyHp=s.battleGroup[0].hp;battleRenderedEnemy="";renderBattle();render();saveAutoGame();setBattleLogMessage("管理者テスト： "+base.name+"（"+(tier===1?"覚醒":tier===2?"災厄":"超越")+"）を召喚しました。撃破報酬あり・討伐進行度は変化しません。");
+  };
+  $("adminSummonNormalBoss").onclick=()=>{
+   if(!s.admin){$("log").textContent="管理者モードをONにしてください。";return;}
+   const i=Math.max(0,Math.min(battleBosses.length-1,Number($("admBattleBoss").value)||0)),number=(i+1)*100,base=battleBosses[i];s.battleGroup=[{number,hp:BigNum.json(BigNum.from(1)),variant:0,timer:0,timerMax:0,timerPause:0,timerExpired:false,adminTest:true}];s.battleGroup[0].hp=BigNum.json(battleMaxHpBN({...base,number,boss:true,variant:0}));s.battleEnemyHp=s.battleGroup[0].hp;battleRenderedEnemy="";renderBattle();render();saveAutoGame();setBattleLogMessage("管理者テスト： "+base.name+"を召喚しました。");
+  };
+  $("adminClearBattle").onclick=()=>{if(!s.admin)return;s.battleGroup=[];s.battleEnemyHp=BigNum.json(0);battleRenderedEnemy="";battleSpawnWave();renderBattle();render();saveAutoGame();};
+  $("adminMoneyInf").onchange=e=>{s.adminMoneyUnlimited=e.target.checked;saveAutoGame()};
+  $("adminTPInf").onchange=e=>{s.adminTPUnlimited=e.target.checked;saveAutoGame()};
+  $("adminAPInf").onchange=e=>{s.adminAPUnlimited=e.target.checked;saveAutoGame()};
+  $("adminApply").onclick=()=>{
+   if(!s.admin){$("log").textContent="管理者モードをONにしてから適用してください。";return;}
+   const num=id=>Math.max(0,Number($(id).value)||0);
+   try{levelToBigInt($("admLevel").value)}catch(e){$("log").textContent="レベルには正の整数または指数表記を入力してください。";return;}
+   let requestedRB;try{requestedRB=parseMultiplierInput($("admRbMult").value||"1")}catch(e){$("log").textContent="転生倍率は1以上の数値で入力してください。";return;}
+   s.level=levelToBigInt($("admLevel").value);setXPBN(num("admXp"));s.money=num("admMoney");setMoneyBN(s.money);s.tp=num("admTP");ach.ap=Math.floor(num("admAP"));s.rebirth=Math.floor(num("admRebirth"));setRBMultBN(requestedRB);
+   s.fl=funcs.map((_,i)=>Math.floor(num("admFl"+i)));s.bl=buildings.map((_,i)=>Math.floor(num("admBl"+i)));
+   for(const it of rebirthUpgrades.flatMap(g=>g.items))s.shop[it.id]=Math.min(it.cap,Math.floor(num("admShop_"+it.id)));
+   // MP容量を新しい能力・ショップ設定で再計算してからMPを制限する。
+   s.mp=Math.min(maxMP(),num("admMp"));
+   // 管理者適用イベント内では巨大XPを精算しない。XP精算はゲームループで小分けに行う。
+   // これにより管理者ボタン操作中の長時間ブロックを避け、他の操作・描画を継続させる。
+   persist();shopDirty=true;rebirthShopDirty=true;render();saveAutoGame();
+   $("log").textContent=BigNum.cmp(xpBN(),needBN())>=0
+    ?"管理者設定を適用しました。XPは次のゲーム更新で一括精算します。"
+    :"管理者設定を適用しました。";
+  };
+  const preset=(kind)=>{
+   const cfg={early:[50,10000,1e5,100,100,5],mid:[400,1e7,1e9,500,1000,10],late:[10000,1e12,1e15,5000,1e6,50],max:[1e6,1e100,1e100,1e6,1e100,100]}[kind];
+   $("admLevel").value=cfg[0];$("admXp").value=cfg[1];$("admMoney").value=cfg[2];$("admMp").value=cfg[3];$("admTP").value=cfg[4];$("admRbMult").value=cfg[5];
+   $("admRebirth").value=kind==="early"?0:kind==="mid"?5:kind==="late"?20:100;
+   $("admAP").value=ach.ap;
+   funcs.forEach((f,i)=>$("admFl"+i).value=kind==="early"?5:kind==="mid"?50:kind==="late"?500:5000);
+   buildings.forEach((b,i)=>$("admBl"+i).value=kind==="early"?1:kind==="mid"?20:kind==="late"?1000:10000);
+   rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=kind==="max"?it.cap:Math.min(it.cap,kind==="late"?25:kind==="mid"?5:0));
+  };
+  $("adminPresetEarly").onclick=()=>preset("early");$("adminPresetMid").onclick=()=>preset("mid");$("adminPresetLate").onclick=()=>preset("late");$("adminPresetMax").onclick=()=>preset("max");
+  $("adminMaxShop").onclick=()=>{rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=it.cap)};
+  $("adminMaxAbilities").onclick=()=>funcs.forEach((f,i)=>$("admFl"+i).value=5000);
+  $("adminMaxFacilities").onclick=()=>buildings.forEach((b,i)=>$("admBl"+i).value=10000);
+  $("adminTimeSpaceUnlock").onclick=()=>{
+   if(!s.admin){$("log").textContent="管理者モードをONにしてください。";return;}
+   if(!confirm("時空システムの全機能を解放し、関連強化を最大にします。実際の脱出回数やマイルストーン討伐記録は変更しません。実行しますか？"))return;
+   const t=tsEnsure();t.adminFullUnlock=true;t.unlocked=true;t.boon=true;t.coreDiscovered=true;t.abilityCapsUnlocked=[true,true,true,true];t.tpRebirthCapUnlocked=true;t.tpTimeSpaceCapUnlocked=true;
+   t.cores=Math.max(Number(t.cores)||0,100000);s.timeShards=Math.max(Number(s.timeShards)||0,100000);s.timeShardsTotal=Math.max(Number(s.timeShardsTotal)||0,100000);
+   for(const def of tsCoreDefs)t.upgrades[def[0]]=def[2];
+   for(const def of tsShardUpgradeDefs){if(def.id==="sense")t.shardSense=def.max;else if(def.id==="adapt")t.shardAdapt=def.max;else t.coreResearch=def.max;}
+   t.sync={level:300,wealth:5,growth:5};t.echo.points=Math.max(Number(t.echo.points)||0,999);t.echo.levels=[5,5,5];t.echo.totalSpent=Math.max(Number(t.echo.totalSpent)||0,27);
+   for(const id of ["observe","causal","adapt","echo"]){t.permanent.unlocked[id]=true;t.permanent.levels[id]=4;}
+   t.permanent.equipped=["observe","causal","adapt"];
+   t.facilityUnlocks=[true,true,true,true,true];t.abilityUnlocks=[true,true,true,true];
+   t.facilityEvo=Array.from({length:5},()=>({common:3,unique:3}));t.abilityEvo=Array.from({length:4},()=>({common:3,unique:3}));
+   s.shardSkills=normalizeShardSkills({...s.shardSkills,linkedTap:1,facilityBoost:1,timeHarvest:1});s.skillTreeUnlocked=true;
+   shopDirty=true;rebirthShopDirty=true;saveAutoGame();render();tsRender();renderChallengePanel();
+   $("log").textContent="管理者機能：時空システムを全開放・最大強化しました。実際の脱出回数と討伐記録は維持されています。";
+  };
+ }
+ // 管理者ボタンを押した時に、管理パネルを開閉する。既存の管理者ON/OFF機能は維持。
+ function blockAdminProgress(){ for(const d of achDefs){if(!ach.earned[d[0]]&&progress(d)>=d[4])ach.blocked[d[0]]=true;} persist(); }
+ function refreshAdminInputs(){
+  ["admLevel","admXp","admMoney","admMp","admTP","admAP","admRebirth","admRbMult"].forEach((id,i)=>{const vals=[s.level.toString(),BigNum.toNumber(xpBN()),s.money,s.mp,s.tp,ach.ap,s.rebirth,multiplierInputText(rbMultBN())];$(id).value=String(vals[i]??0)});
+  funcs.forEach((f,i)=>$("admFl"+i).value=s.fl[i]||0);
+  buildings.forEach((b,i)=>$("admBl"+i).value=s.bl[i]||0);
+  rebirthUpgrades.flatMap(g=>g.items).forEach(it=>$("admShop_"+it.id).value=shopLv(it.id));
+ }
+ window.refreshAdminInputs=refreshAdminInputs;
+ setupAdmin();
+ const oldRender=render;
+ window.refreshAchievementPage=()=>{if(achievementPageDirty)renderAchievements();};
+ render=function(){const functionDetailStates=[...$("functions").querySelectorAll("details")].map(el=>el.open);oldRender();$("functions").querySelectorAll("details").forEach((el,i)=>{if(i<functionDetailStates.length)el.open=functionDetailStates[i];});if($("view-achievements")?.classList.contains("active"))window.refreshAchievementPage();};
+ const oldLoopSave=saveAutoGame;
+ saveAutoGame=function(){ach.last=Date.now();persist();return oldLoopSave()};
+ // プレイ時間と累計TPは実績用の独立データとして保存。管理者中は進捗を加算しない。
+ setInterval(()=>{
+  const now=Date.now(),dt=Math.max(0,Math.min(10,(now-(ach.last||now))/1000));ach.last=now;
+  if(!s.admin){ach.playSeconds+=dt;const tp=Number(s.tp)||0;if(tp>ach.prevTP)ach.totalTP+=tp-ach.prevTP;ach.prevTP=tp;check();}
+  else ach.prevTP=Number(s.tp)||0;
+  persist();
+ },1000);
+ // 管理者中は実績報酬を付与しない。管理者設定でAPを直接変えた場合も次回保存時に維持。
+ renderAchievements();
+})();
+</script>
+<script>
+(()=>{
+ const ACH_KEY="timeControlAchievementsV1",SHOP_KEY="timeControlAPShopV1";
+ const products=[
+  {id:"stats",name:"詳細統計",desc:"累計プレイ時間・累計獲得量・各種倍率などの詳細統計を表示",price:5,type:"once"},
+  {id:"income",name:"収入分析",desc:"施設収入と総収入の内訳を表示",price:10,type:"once"},
+  {id:"numbers",name:"数字表示拡張",desc:"日本語単位・K/M/B/T・省略なし・指数表記を切り替え",price:10,type:"once"},
+  {id:"slots",name:"セーブ枠拡張",desc:"名前付きセーブ枠を3枠から6枠に拡張",price:40,type:"once"},
+  {id:"bulk1",name:"まとめ買い拡張 I",desc:"能力・施設のまとめ買いに1,000レベルを追加",price:20,type:"once"},
+  {id:"bulk2",name:"まとめ買い拡張 II",desc:"能力・施設のまとめ買いに10,000レベルを追加",price:40,type:"once"},
+  {id:"maxbuy",name:"最大購入上限拡張",desc:"所持金で最大購入する機能の1回あたりの上限を10,000から50,000レベルに拡張",price:60,type:"once"},
+  {id:"themeBlue",name:"スキン：ブルー",desc:"深い青とシアンの研究施設テーマ",price:20,type:"theme"},
+  {id:"themePurple",name:"スキン：パープル",desc:"紫を基調にした研究施設テーマ",price:30,type:"theme"},
+  {id:"themeGold",name:"スキン：ゴールド",desc:"金色を基調にした高級テーマ",price:50,type:"theme"},
+  {id:"themeRed",name:"スキン：レッド",desc:"赤を基調にした警戒管制テーマ",price:50,type:"theme"},
+  {id:"titleResearcher",name:"称号：時間研究者",desc:"プロフィールに表示できる称号",price:15,type:"title"},
+  {id:"titlePioneer",name:"称号：時空の先駆者",desc:"プロフィールに表示できる称号",price:30,type:"title"},
+  {id:"titleMaster",name:"称号：時間の覇者",desc:"プロフィールに表示できる称号",price:60,type:"title"}
+ ];
+ const themes={themeBlue:["#080f20","#111d33","#263b5b","#38c9f5"],themePurple:["#100b20","#211638","#46315e","#bd8cff"],themeGold:["#171306","#2b2412","#665126","#f4c65e"],themeRed:["#1c0b10","#30151d","#6b3039","#ff7185"]};
+ let shop={purchased:{},activeTheme:"themeBlue",activeTitle:""};
+ function read(){try{const x=JSON.parse(localStorage.getItem(SHOP_KEY)||"{}");if(x&&typeof x==="object")shop={...shop,...x,purchased:x.purchased||{}}}catch(e){}}
+ function write(){try{localStorage.setItem(SHOP_KEY,JSON.stringify(shop))}catch(e){}}
+ function achievementData(){try{return JSON.parse(localStorage.getItem(ACH_KEY)||"{}")}catch(e){return {}}}
+ function setAchievementData(a){try{localStorage.setItem(ACH_KEY,JSON.stringify(a))}catch(e){}}
+ function owned(id){return !!shop.purchased[id]}
+ window.getApSaveSlotCount=()=>owned("slots")?6:3;window.apMaxBulk=()=>owned("maxbuy")?50000:10000;
+ window.apNumberFormat=owned("numbers")?(localStorage.getItem("timeControlAPNumberFormat")||"jp"):"jp";
+ const NUMBER_SETTINGS_KEY="timeControlAPNumberSettingsV1";
+ const NUMBER_KEYS=[["money","お金"],["xp","XP"],["tp","TP"],["ap","AP"],["mp","MP"],["level","プレイヤーレベル"],["rebirthCount","転生回数"],["abilityLevel","能力レベル"],["facilityLevel","施設レベル"],["facilityIncome","施設収入"],["multiplier","倍率"],["time","時間"]];
+ function loadNumberSettings(){
+  const oldMode=localStorage.getItem("timeControlAPNumberFormat")||"jp";let saved={};
+  try{const v=JSON.parse(localStorage.getItem(NUMBER_SETTINGS_KEY)||"null");if(v&&typeof v==="object")saved=v}catch(e){}
+  const noDecimals=["tp","ap","level","rebirthCount","abilityLevel","facilityLevel"];const out={};for(const [key] of NUMBER_KEYS)out[key]={mode:oldMode,decimals:noDecimals.includes(key)?0:key==="mp"?1:2,separator:"comma",significant:3,...(saved[key]||{})};return out;
+ }
+ function saveNumberSettings(){try{localStorage.setItem(NUMBER_SETTINGS_KEY,JSON.stringify(window.numberFormatSettings||{}))}catch(e){}}
+ function renderNumberSettings(){
+  const root=$("apNumberSettingsBody");if(!root||!owned("numbers"))return;
+  const cfg=window.numberFormatSettings||loadNumberSettings();window.numberFormatSettings=cfg;
+  root.innerHTML=NUMBER_KEYS.map(([key,label])=>{const c=cfg[key]||{};
+   return '<div class="item number-setting-row"><b>'+label+'</b><div class="number-setting-grid">'+
+   '<label>形式<select data-nfmt-key="'+key+'" data-nfmt-prop="mode"><option value="jp" '+(c.mode==="jp"?"selected":"")+'>日本語単位</option><option value="short" '+(c.mode==="short"?"selected":"")+'>K/M/B短縮</option><option value="full" '+(c.mode==="full"?"selected":"")+'>省略なし</option><option value="sci" '+(c.mode==="sci"?"selected":"")+'>指数表記</option></select></label>'+
+   '<label>小数点<select data-nfmt-key="'+key+'" data-nfmt-prop="decimals">'+[0,1,2,3,4,5,6].map(v=>'<option value="'+v+'" '+(Number(c.decimals)===v?"selected":"")+'>'+v+'桁</option>').join("")+'</select></label>'+
+   '<label>桁区切り<select data-nfmt-key="'+key+'" data-nfmt-prop="separator"><option value="comma" '+(c.separator==="comma"?"selected":"")+'>カンマ</option><option value="none" '+(c.separator==="none"?"selected":"")+'>なし</option><option value="space" '+(c.separator==="space"?"selected":"")+'>スペース</option></select></label>'+
+   '<label>指数の有効桁<select data-nfmt-key="'+key+'" data-nfmt-prop="significant">'+[2,3,4,5,6,7,8,9].map(v=>'<option value="'+v+'" '+(Number(c.significant)===v?"selected":"")+'>'+v+'桁</option>').join("")+'</select></label></div></div>';
+  }).join("");
+  root.querySelectorAll("[data-nfmt-key]").forEach(el=>el.onchange=()=>{const key=el.dataset.nfmtKey,prop=el.dataset.nfmtProp;cfg[key][prop]=(prop==="decimals"||prop==="significant")?Number(el.value):el.value;saveNumberSettings();formatCache.clear();shopDirty=true;rebirthShopDirty=true;render()});
+ }
+ function applyTheme(){const t=themes[shop.activeTheme]||themes.themeBlue;document.documentElement.style.setProperty("--bg",t[0]);document.documentElement.style.setProperty("--panel",t[1]);document.documentElement.style.setProperty("--line",t[2]);document.documentElement.style.setProperty("--accent",t[3]);}
+ function updateBalance(){const a=achievementData();$("shopApBalance").textContent=(s.adminAPUnlimited?"∞":formatStat("ap",Math.max(0,Number(a.ap)||0),0))+" AP";}
+ function renderShop(){
+  updateBalance();
+  $("apShopItems").innerHTML=products.map(p=>{
+   const has=owned(p.id),active=p.type==="theme"&&shop.activeTheme===p.id;
+   let action= p.type==="theme"?(has?(active?"適用中":'<button data-ap-theme="'+p.id+'">適用</button>'):'<button data-ap-buy="'+p.id+'">購入</button>') : p.type==="title"?(has?'<button data-ap-title="'+p.id+'">称号を設定</button>':'<button data-ap-buy="'+p.id+'">購入</button>') : (has?"購入済み":'<button data-ap-buy="'+p.id+'">購入</button>');
+   return '<div class="achievement '+(has?'done':'locked')+'"><div class="ach-head"><b>'+p.name+'</b><span class="reward">'+formatStat("ap",p.price,0)+' AP</span></div><div class="small">'+p.desc+'</div><div class="actions">'+action+'</div></div>';
+  }).join("");
+  document.querySelectorAll("[data-ap-buy]").forEach(b=>b.onclick=()=>buy(b.dataset.apBuy));
+  document.querySelectorAll("[data-ap-theme]").forEach(b=>b.onclick=()=>{shop.activeTheme=b.dataset.apTheme;write();applyTheme();renderShop()});
+  document.querySelectorAll("[data-ap-title]").forEach(b=>b.onclick=()=>setTitle(b.dataset.apTitle));
+  $("apStatsExtra").style.display=owned("stats")?"block":"none";
+  $("apIncomeExtra").style.display=owned("income")?"block":"none";
+  $("apNumberSettings").style.display=owned("numbers")?"block":"none";
+  $("apTitleArea").style.display=products.some(p=>p.type==="title"&&owned(p.id))?"block":"none";
+  if(owned("numbers"))renderNumberSettings();
+  if($("apTitleArea").style.display==="block"){
+   $("apTitleSelect").innerHTML=products.filter(p=>p.type==="title"&&owned(p.id)).map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join("");
+   $("apTitleSelect").value=shop.activeTitle||products.find(p=>p.type==="title"&&owned(p.id)).id;
+   $("apTitlePreview").textContent="現在の称号："+products.find(p=>p.id===$("apTitleSelect").value).name;
+  }
+  document.querySelectorAll("[data-ap-bulk='1']").forEach(e=>e.hidden=!owned("bulk1"));
+  document.querySelectorAll("[data-ap-bulk='2']").forEach(e=>e.hidden=!owned("bulk2"));
+  if(owned("maxbuy"))document.querySelectorAll("[data-fall],[data-ball]").forEach(b=>b.textContent="所持金で最大50,000Lv買う");
+  $("apStatsExtra").innerHTML=owned("stats")?'<h3>詳細統計</h3><div class="stat"><span>累計TP獲得</span><b>'+formatStat("tp",Math.floor(Number(window.apTotalTP||0)),0)+'</b></div><div class="stat"><span>累計プレイ時間</span><b>'+formatStat("time",Math.floor(Number(window.apPlaySeconds||0)/3600),0)+'時間</b></div><div class="stat"><span>現在の転生倍率</span><b>×'+formatMultiplierBN(rbMultBN())+'</b></div><div class="stat"><span>能力合計レベル</span><b>'+formatStat("abilityLevel",s.fl.reduce((a,b)=>a+b,0),0)+'</b></div>':'';
+  $("apIncomeExtra").innerHTML=owned("income")?'<h3>収入分析</h3><div class="stat"><span>施設の基礎収入</span><b>'+moneyFmt(facilityIncomeBN())+'</b></div><div class="stat"><span>総収入</span><b>'+moneyFmt(totalIncomeBN())+'</b></div><div class="stat"><span>施設収入構成比（参考）</span><b>'+(BigNum.toNumber(BigNum.div(facilityIncomeBN(),BigNum.add(1,facilityIncomeBN())))*100).toFixed(1)+'%</b></div>':'';
+ }
+ function setTitle(id){shop.activeTitle=id;write();$("apTitleSelect").value=id;$("apTitlePreview").textContent="現在の称号："+products.find(p=>p.id===id).name}
+ function buy(id){
+  const p=products.find(x=>x.id===id);if(!p||owned(id))return;
+  const a=achievementData(),balance=Math.max(0,Number(a.ap)||0);
+  if(!s.adminAPUnlimited&&balance<p.price){$("log").textContent="APが足りません。";return}
+  if(!s.adminAPUnlimited){a.ap=balance-p.price;setAchievementData(a)}
+  shop.purchased[id]=true;
+  if(p.type==="theme")shop.activeTheme=id;
+  write();applyTheme();
+  if(id==="slots"&&typeof drawSaveSlots==="function")drawSaveSlots();
+  window.apNumberFormat=owned("numbers")?"jp":"jp";
+  renderShop();$("log").textContent=p.name+"を購入しました。";
+ }
+ $("apNumberFormat").onchange=()=>{localStorage.setItem("timeControlAPNumberFormat",$("apNumberFormat").value);window.apNumberFormat=$("apNumberFormat").value;formatCache.clear();render()};
+ $("apTitleSelect").onchange=()=>setTitle($("apTitleSelect").value);
+ read();window.numberFormatSettings=loadNumberSettings();applyTheme();renderShop();window.renderAPShop=renderShop;render();
+})();
+</script><script>
+(function(){
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,Math.floor(Number(v)||0)));
+ const caps={timeCompression:[7,[1,1,2,2,3,4,5]],multiSpawn:[4,[1,2,3,5]],shardBoost:[7,[1,1,2,2,3,4,5]],facilityCopy:[5,[1,2,2,3,4]],regionResonance:[7,[2,2,3,3,4,5,6]],memory:[4,[2,3,5,7]]};
+ tsCoreDefs.forEach(x=>{if(caps[x[0]]){x[2]=caps[x[0]][0];x[3]=caps[x[0]][1]}});
+ tsShardUpgradeDefs.forEach(x=>{x.max=7;x.cost=x.id==="sense"?[25,40,60,85,115,150,190]:x.id==="adapt"?[40,60,85,115,150,200,260]:[50,75,100,130,165,220,290]});
+ shopCap=function(item){const g=rebirthUpgrades.find(x=>x.items.includes(item)),door=s.timeSpace?.adminFullUnlock?10:(Number(s.timeSpace?.doorClearCount)||0);if(g?.cat==="時空系TPショップ")return door>=10?item.cap+25:item.cap;return door>=5?(item.id==="offlineMoney"||item.id==="offlineXp"?item.cap+10:item.cap+25):item.cap};
+ shopLv=function(id){const lv=Math.max(0,Number(s.shop?.[id])||0);return id==="offlineMoney"||id==="offlineXp"?Math.min(30,lv):lv};
+ const baseEnsure=tsEnsure;
+ tsEnsure=function(){const t=baseEnsure();t.shardSense=clamp(t.shardSense,0,7);t.shardAdapt=clamp(t.shardAdapt,0,7);t.coreResearch=clamp(t.coreResearch,0,7);t.sync.level=clamp(t.sync.level,0,400);t.sync.wealth=clamp(t.sync.wealth,0,7);t.sync.growth=clamp(t.sync.growth,0,7);t.echo.levels=t.echo.levels.map(v=>clamp(v,0,7));t.reconstruction=t.reconstruction||{level:0};t.reconstruction.level=clamp(t.reconstruction.level,0,5);return t};
+ tsSyncCost=function(k){const t=tsEnsure(),lv=t.sync[k],max=k==="level"?400:7,baseMax=k==="level"?300:5;if(lv>=max||(!t.adminFullUnlock&&t.doorClearCount<10&&lv>=baseMax))return null;return {money:k==="level"?500*Math.pow(1.08,lv):1000*(lv+1),shards:k==="level"?1+Math.floor(lv/25):5*(lv+1)}};
+ tsSyncBuy=function(k){if(tsActive())return false;const t=tsEnsure(),c=tsSyncCost(k);if(!t.boon||!c||!canAffordMoney(c.money)||Number(s.timeShards)<c.shards)return false;spendMoneyBN(c.money);tsSpendShards(c.shards);t.sync[k]++;return true};
+ tsEchoBuy=function(i){if(tsActive())return false;const t=tsEnsure();if((!t.adminFullUnlock&&t.completedRuns<2)||i<0||i>2)return false;const lv=t.echo.levels[i],cost=[1,1,2,2,3,4,5][lv],gate=[1,50,100,200,300,350,400][lv];if(lv>=7||t.sync.level<gate||t.echo.points<cost)return false;t.echo.points-=cost;t.echo.levels[i]++;t.echo.totalSpent=(Number(t.echo.totalSpent)||0)+cost;return true};
+ tsEchoSpent=function(){const c=[1,1,2,2,3,4,5],l=tsEnsure().echo.levels;return l.reduce((a,v)=>a+c.slice(0,v).reduce((x,y)=>x+y,0),0)};
+ tsPermanentLevel=function(id){return clamp(tsEnsure().permanent.levels[id],0,5)};
+ tsPermanentEffect=function(id){const l=tsPermanentLevel(id),base=id==="causal"?[.1,.15,.2,.3,.4,.5][l]:id==="adapt"?[.1,.15,.25,.35,.5,.55][l]:id==="echo"?[.1,.15,.2,.25,.3,.35][l]:0;return base*(1+.05*Math.max(0,tsEnsure().echo.levels[2]-5))};
+ tsUpgradePermanent=function(id){if(tsActive())return false;const t=tsEnsure(),lv=Number(t.permanent.levels[id])||0;if(!t.permanent.unlocked[id]||lv>=5||t.echo.levels[2]<3||(lv===3&&t.echo.levels[2]<5)||(lv===4&&(t.doorClearCount<10||t.sync.level<400)))return false;const sh=[25,50,100,200,300][lv],money=BigNum.mul(needBN(),[10,30,75,150,300][lv]);if(!canAffordMoney(money)||Number(s.timeShards)<sh)return false;spendMoneyBN(money);tsSpendShards(sh);t.permanent.levels[id]=lv+1;return true};
+ const baseEC=tsEvolutionCost,baseER=tsEvolutionRequirement;
+ tsEvolutionCost=function(type,i,k){const a=type==="facility"?tsEnsure().facilityEvo:tsEnsure().abilityEvo,lv=a[i][k];if(lv<3)return baseEC(type,i,k);if(lv>=4)return null;return {money:type==="facility"?BigNum.mul(tsFacilityBasePrice(i),k==="common"?.35:.75):BigNum.mul(needBN(),300),shards:500}};
+ tsEvolutionRequirement=function(type,i,k){const a=type==="facility"?tsEnsure().facilityEvo:tsEnsure().abilityEvo,lv=a[i][k];if(lv<3)return baseER(type,i,k);const t=tsEnsure();if(!t.adminFullUnlock&&t.doorClearCount<10)return "10回目の扉クリアが必要";if(type==="facility"&&t.sync.wealth<7)return "豊穣同調Lv7が必要";if(type==="ability"&&t.sync.growth<7)return "成長同調Lv7が必要";if(t.sync.level<400)return "時空同調Lv400が必要";if(type==="facility"&&Number(s.bl?.[i])<=0)return "施設を所持すると解放";if(type==="ability"&&Number(s.fl?.[i])<=0)return "能力を購入すると強化可能";return ""};
+ tsEvolutionBuy=function(type,i,k){if(tsActive())return false;const req=tsEvolutionRequirement(type,i,k),c=tsEvolutionCost(type,i,k);if(req||!c||!canAffordMoney(c.money)||Number(s.timeShards)<c.shards)return false;spendMoneyBN(c.money);tsSpendShards(c.shards);(type==="facility"?tsEnsure().facilityEvo:tsEnsure().abilityEvo)[i][k]++;return true};
+ const baseCore=tsCoreUpgrade,baseShard=tsShardUpgrade;
+ tsCoreUpgrade=function(id){const t=tsEnsure(),lv=Number(t.upgrades[id])||0,base={timeCompression:5,multiSpawn:3,shardBoost:5,facilityCopy:4,regionResonance:5,memory:3}[id];if(lv>=base&&!t.adminFullUnlock&&t.doorClearCount<10)return false;if(id==="memory"&&t.echo.levels[2]<[1,2,3,5][lv])return false;return baseCore(id)};
+ tsShardUpgrade=function(id){const t=tsEnsure(),key=id==="sense"?"shardSense":id==="adapt"?"shardAdapt":"coreResearch",lv=Number(t[key])||0;return (lv<5||t.adminFullUnlock||t.doorClearCount>=10)&&baseShard(id)};
+ tsReconstructionCost=lv=>[0,2,3,4,5,6][lv]||0;
+ tsReconstructionBuy=function(){const t=tsEnsure(),lv=t.reconstruction.level,c=tsReconstructionCost(lv),reserve=t.doorClearCount?11:9;if(tsActive()||(!t.adminFullUnlock&&t.doorClearCount<10)||lv>=5||t.cores-c<reserve)return false;t.cores-=c;t.reconstruction.level++;return true};
+ tsRerollAlteration=function(){const t=tsEnsure(),d=t.distortion,l=t.reconstruction.level;if(!d.active||l<2||d.rerollsRemaining<=0||d.pendingAlteration)return false;const c=[];while(c.length<(l>=4?2:1)){const a=tsAlterations[Math.floor(Math.random()*tsAlterations.length)];if(a.n!==d.alterations[d.region]?.n&&!c.some(x=>x.n===a.n))c.push({...a})}d.pendingAlteration=c;d.pendingAlterationRegion=d.region;return true};
+ tsChooseAlteration=function(i){const d=tsEnsure().distortion;if(!d.pendingAlteration?.[i]||d.pendingAlterationRegion!==d.region)return false;const ratio=d.enemyMaxHp>0?Math.max(0,Math.min(1,d.enemyHp/d.enemyMaxHp)):1;d.alterations[d.region]={...d.pendingAlteration[i]};d.pendingAlteration=null;d.pendingAlterationRegion=-1;d.rerollsRemaining=Math.max(0,d.rerollsRemaining-1);tsSetEnemy();if(d.enemyGroup[0])d.enemyGroup[0].hp=d.enemyGroup[0].maxHp*ratio;tsSyncEnemySummary();return true};
+ const start0=tsStart;tsStart=function(m){const ok=start0(m);if(ok&&tsActive()){const d=tsEnsure().distortion,l=tsEnsure().reconstruction.level;d.rerollsRemaining=l>=5?2:l>=2?1:0;d.pendingAlteration=null;d.pendingAlterationRegion=-1;d.reconstructionShield=0}return ok};
+ const killed0=tsEnemyKilled;tsEnemyKilled=function(id){const t=tsEnsure(),d=t.distortion,was=!d.finalBoss&&d.index===5,r=d.region;killed0(id);if(was&&((d.region>r&&d.region<3)||d.finalBoss)&&t.reconstruction.level>0)d.reconstructionShield=1000*[0,.05,.05,.10,.10,.15][t.reconstruction.level]};
+ 
+ const render0=tsRender;tsRender=function(){const oldRoot=$("tsPageRoot");oldRoot?.querySelector("[data-recon]")?.remove();oldRoot?.querySelector("[data-reroll]")?.remove();render0();const root=$("tsPageRoot"),t=tsEnsure(),d=t.distortion;if(!root)return;
+  if((t.doorClearCount>=10||t.adminFullUnlock)&&!root.querySelector("[data-recon]")){const e=document.createElement("section");e.className="ts-panel";e.dataset.recon="1";const l=t.reconstruction.level,c=tsReconstructionCost(l);e.innerHTML="<h3>領域再構成 Lv"+l+"/5</h3><p>領域ボス撃破後、次の領域で受けるダメージを最大HPの5～15%分防ぐ。Lv2から領域変異を再抽選できる。</p><small>次の費用："+(c?"核"+c+"個":"最大")+"</small><br><button "+(c&&!d.active&&t.cores-c>=(t.doorClearCount?11:9)?"":"disabled")+">強化</button>";e.querySelector("button").onclick=()=>{if(tsReconstructionBuy()){tsRender();saveAutoGame()}};root.appendChild(e)}
+  if(d.active&&t.reconstruction.level>=2&&!root.querySelector("[data-reroll]")){const e=document.createElement("section");e.className="ts-panel";e.dataset.reroll="1";e.innerHTML="<h3>領域変異の再抽選（残り"+d.rerollsRemaining+"回）</h3>";if(d.pendingAlteration){d.pendingAlteration.forEach((a,i)=>{const b=document.createElement("button");b.textContent=a.n+"："+a.d;b.onclick=()=>{if(tsChooseAlteration(i)){tsRender();saveAutoGame()}};e.appendChild(b)})}else{const b=document.createElement("button");b.textContent="再抽選";b.disabled=d.rerollsRemaining<=0;b.onclick=()=>{if(tsRerollAlteration())tsRender()};e.appendChild(b)}root.appendChild(e)}
+  root.querySelectorAll(".ts-item").forEach(e=>{e.innerHTML=e.innerHTML.replace(/\/5/g,"/7").replace(/\/4/g,"/5")});
+  const hp=root.querySelector("#tsPlayerHp");if(hp&&d.reconstructionShield>0)hp.textContent+=" 領域防護 "+Math.ceil(d.reconstructionShield);
+ };
+})();
+</script>
+<script>(function(){if(tsPercent.length<5)tsPercent.push(.15);const reward0=tsBossReward;tsBossReward=function(e){const lv=tsEnsure().echo.levels[1];reward0(e);if(lv>=6)tsRewardShards(1);if(lv>=7)tsRewardShards(1)};const status0=tsUpdateStatus;tsUpdateStatus=function(){status0();const t=tsEnsure(),d=t.distortion;if(!d.active||!t.permanent.equipped.includes("observe")||tsPermanentLevel("observe")<5)return;const el=$("tsNextEnemy");if(!el||d.finalBoss)return;const b=tsBosses[Math.min(3,d.region+1)];el.textContent+=(el.textContent?" / ":"")+"次領域ボス："+b.n+" HP "+b.hp+" 攻撃 "+b.dmg}})();</script>
+<script>
+(function(){
+ if(tsPercent.length<5)tsPercent.push(.15);
+ const oldEchoGrowth=continuousGrowthRate;
+ continuousGrowthRate=function(){const lv=tsEnsure().echo.levels[0];return oldEchoGrowth()*(lv>=3?(1+.10*Math.max(0,lv-3))/(1.10):1)};
+ const oldMoney=allMoneyMult,oldXp=allXpMult;
+ allMoneyMult=function(){return oldMoney()/(1+tsEnsure().sync.level*.0025)*(1+tsSyncEnemyBonus())};
+ allXpMult=function(){return oldXp()/(1+tsEnsure().sync.level*.0025)*(1+tsSyncEnemyBonus())};
+ tsPermanentLevel=function(id){return Math.max(0,Math.min(5,Math.floor(Number(tsEnsure().permanent.levels[id])||0)))};
+ tsPermanentEffect=function(id){
+  const lv=tsPermanentLevel(id),boost=1+.05*Math.max(0,tsEnsure().echo.levels[2]-5);
+  if(id==="causal")return Math.min(.50,[.10,.15,.20,.30,.40,.50][lv]*boost);
+  if(id==="adapt")return Math.min(.55,[.10,.15,.25,.35,.50,.55][lv]*boost);
+  if(id==="echo")return Math.min(.35,[.10,.15,.20,.25,.30,.35][lv]*boost);
+  return 0;
+ };
+ tsUpgradePermanent=function(id){
+  if(tsActive())return false;const t=tsEnsure(),lv=tsPermanentLevel(id);
+  if(!t.permanent.unlocked[id]||lv>=5||t.echo.levels[2]<3||(lv>=3&&t.echo.levels[2]<5)||(lv===4&&((!t.adminFullUnlock&&t.doorClearCount<10)||t.sync.level<400)))return false;
+  const shards=[25,50,100,200,300][lv],money=BigNum.mul(needBN(),[10,30,75,150,300][lv]);
+  if(!canAffordMoney(money)||Number(s.timeShards)<shards)return false;
+  spendMoneyBN(money);tsSpendShards(shards);t.permanent.levels[id]=lv+1;return true;
+ };
+ tsEchoSpent=function(){const costs=[1,1,2,2,3,4,5],levels=tsEnsure().echo.levels;return levels.reduce((sum,lv)=>sum+costs.slice(0,lv).reduce((a,b)=>a+b,0),0)};
+ tsEchoBuy=function(branch){
+  if(tsActive()||!Number.isInteger(branch)||branch<0||branch>2)return false;
+  const t=tsEnsure();if(!t.adminFullUnlock&&t.completedRuns<2)return false;
+  const lv=t.echo.levels[branch],cost=[1,1,2,2,3,4,5][lv],gate=[1,50,100,200,300,350,400][lv];
+  if(lv>=7||t.sync.level<gate||t.echo.points<cost)return false;
+  t.echo.points-=cost;t.echo.levels[branch]++;t.echo.totalSpent=tsEchoSpent();return true;
+ };
+ tsEchoRespec=function(){
+  if(tsActive()||(!tsEnsure().adminFullUnlock&&tsEnsure().completedRuns<2))return false;
+  const t=tsEnsure(),points=tsEchoSpent(),refundCost=points*20,shards=Math.min(Number(s.timeShards)||0,refundCost),remaining=refundCost-shards,cores=Math.ceil(remaining/200);
+  if(t.cores<cores)return false;
+  s.timeShards=(Number(s.timeShards)||0)-shards+Math.max(0,cores*200-remaining);
+  t.cores-=cores;t.echo.points+=points;t.echo.levels=[0,0,0];t.echo.totalSpent=0;return true;
+ };
+ tsChooseAlteration=function(i){
+  const d=tsEnsure().distortion;
+  if(!d.pendingAlteration||!d.pendingAlteration[i]||d.pendingAlterationRegion!==d.region)return false;
+  const ratios=(d.enemyGroup||[]).map(x=>Math.max(0,Math.min(1,(Number(x.hp)||0)/Math.max(1,Number(x.maxHp)||1))));
+  d.alterations[d.region]={...d.pendingAlteration[i]};d.pendingAlteration=null;d.pendingAlterationRegion=-1;
+  d.rerollsRemaining=Math.max(0,d.rerollsRemaining-1);tsSetEnemy();
+  d.enemyGroup.forEach((x,j)=>{if(ratios[j]!==undefined)x.hp=x.maxHp*ratios[j]});
+  tsSyncEnemySummary();tsUpdateStatus();return true;
+ };
+ const oldBossReward=tsBossReward;
+ tsBossReward=function(e){const lv=tsEnsure().echo.levels[1];oldBossReward(e);if(lv>=6)tsRewardShards(1);if(lv>=7)tsRewardShards(1)};
+ const oldKilled=tsEnemyKilled;
+ tsEnemyKilled=function(id){
+  const t=tsEnsure(),d=t.distortion,region=d.region,isRegionBoss=!d.finalBoss&&d.index===5;
+  oldKilled(id);
+  if(isRegionBoss&&d.region>region&&d.region<3&&t.reconstruction.level>0)d.reconstructionShield=1000*[0,.05,.05,.10,.10,.15][t.reconstruction.level];
+ };
+ const oldStatus=tsUpdateStatus;
+ tsUpdateStatus=function(){
+  oldStatus();const t=tsEnsure(),d=t.distortion,el=$("tsNextEnemy");if(!el)return;
+  const marker=" / 次領域ボス：",at=el.textContent.indexOf(marker);if(at>=0)el.textContent=el.textContent.slice(0,at);
+  if(!d.active||!t.permanent.equipped.includes("observe")||tsPermanentLevel("observe")<5||d.finalBoss)return;
+  const b=tsBosses[Math.min(3,d.region+1)],actions=["時間圧縮・攻撃間隔短縮","結晶障壁・被ダメージ軽減","崩壊波・高威力攻撃"];
+  el.textContent+=(el.textContent?" / ":"")+"次領域ボス："+b.n+" HP "+b.hp+" 攻撃 "+b.dmg+" 特殊行動 "+actions[Math.min(2,d.region+1)];
+ };
+ facilityPayoutInterval=function(i){
+  const t=tsEnsure(),base=__tsBaseFacilityInterval(i),core=Number(t.upgrades.timeCompression)||0,evo=Number(t.facilityEvo?.[i]?.common)||0;
+  return Math.max(base*.5,base*(1-Math.min(.35,core*.05))*(1-Math.min(.15,evo*.05)));
+ };
+ bodyAdaptMult=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common)||0,unique=Number(t.abilityEvo[2].unique)||0;return __tsBaseBodyAdapt()*(1+tsPercent[common])*(1+[0,.05,.10,.15,.20][unique])};
+ battleBaseDamage=function(){const t=tsEnsure(),common=Number(t.abilityEvo[2].common)||0,unique=Number(t.abilityEvo[2].unique)||0;return BigNum.mul(BigNum.mul(__tsBaseBattleDamage(),1+tsPercent[common]),1+[0,.05,.10,.15,.20][unique])};
+})();
+</script>
+<script>
+(function(){
+ continuousGrowthRate=function(){const lv=tsEnsure().echo.levels[0];return __tsBaseContinuousRate()*(1+.10*lv)};
+ const ensure0=tsEnsure;
+ tsEnsure=function(){const t=ensure0(),costs=[1,1,2,2,3,4,5];t.echo.totalSpent=t.echo.levels.reduce((sum,lv)=>sum+costs.slice(0,lv).reduce((a,b)=>a+b,0),0);return t};
+})();
+</script>
+<script>
+(function(){
+ const killedBeforeFinalFix=tsEnemyKilled;
+ tsEnemyKilled=function(id){
+  const t=tsEnsure(),d=t.distortion,region=d.region,isRegionBoss=!d.finalBoss&&d.index===5;
+  killedBeforeFinalFix(id);
+  if(isRegionBoss){
+   if(d.region>region&&d.region<3&&t.reconstruction.level>0)d.reconstructionShield=1000*[0,.05,.05,.10,.10,.15][t.reconstruction.level];
+   else d.reconstructionShield=0;
+  }
+ };
+})();
+</script>
+</body><script id="help-system-v319">
+(function(){
+"use strict";
+const STYLE=".help-info-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:28px;height:28px;min-width:28px;min-height:28px;padding:0;margin-left:7px;border:1px solid #48bfe9;border-radius:50%;background:#102b45;color:#8de6ff;font-weight:800;font-size:14px;line-height:1;vertical-align:middle;cursor:pointer;flex:0 0 28px}.help-overlay{position:fixed;inset:0;z-index:10050;background:#030914d9;display:flex;align-items:center;justify-content:center;padding:18px}.help-dialog{width:min(520px,100%);max-height:82dvh;overflow:auto;background:linear-gradient(145deg,#142944,#0b1426);border:1px solid #3986b6;border-radius:16px;padding:20px;box-shadow:0 18px 60px #000b}.help-dialog h2{margin:0 0 12px;color:#8de6ff;font-size:1.15rem}.help-dialog p{white-space:pre-line;line-height:1.65;color:#e0edfa}.help-dialog button{width:100%;margin-top:12px;min-height:44px}.help-dialog.event{border-color:#a78bfa;box-shadow:0 0 28px #805ad544,0 18px 60px #000b}.help-dialog.event h2{color:#c5a8ff}.help-dialog .help-sub{font-size:.8rem;color:#a9bad3;margin-bottom:10px}";
+const st=document.createElement("style");st.textContent=STYLE;document.head.appendChild(st);
+const descriptions=[["プレイヤー","レベル・XP・所持金・収入倍率など、現在の成長状況を確認できます。タップでもXPとお金を獲得できます。"],["時間操作","能力を使用するとXP獲得や自動タップなどの効果が発生します。使用中はMPを消費し、停止中にMPが回復します。ブーストは追加でMPを消費します。"],["魔物討伐","自動攻撃と手動攻撃で魔物を倒します。節目の討伐ではマイルストーンボスが出現し、初回撃破などで報酬を獲得できます。"],["魔物図鑑","遭遇した魔物やボスの討伐記録を確認できます。"],["戦闘スキルツリー","TPをSPに交換し、戦闘に関わる能力や仕組みを解放・強化します。各ノードを選択すると必要条件と効果を確認できます。"],["能力強化","時間操作に関わる4種類の能力を強化します。能力ごとに効果や解放レベルが異なります。"],["収入施設","施設を購入すると毎秒のお金やXPの収入が増加します。施設ごとに解放条件と費用が異なります。"],["転生","条件を満たして転生すると、レベルや施設など一部の進行がリセットされる代わりに転生倍率とTPを獲得します。実行前にリセット対象を確認してください。"],["転生ショップ","TPを使って永続強化を購入します。強化内容と上限は各項目から確認できます。"],["セーブ・詳細","自動セーブに加え、名前付きセーブスロットを利用できます。別スロットの読み込みは現在の進行状況を置き換えます。"]];
+function show(title,body,event){const old=document.querySelector(".help-overlay");if(old)old.remove();const ov=document.createElement("div");ov.className="help-overlay";const box=document.createElement("section");box.className="help-dialog"+(event?" event":"");box.setAttribute("role","dialog");box.setAttribute("aria-modal","true");const h=document.createElement("h2");h.textContent=title;const p=document.createElement("p");p.textContent=String(body??"").replace(/\\n/g,"\n");const sub=document.createElement("div");sub.className="help-sub";sub.textContent=event?"新しい進行要素":"ヘルプ";const b=document.createElement("button");b.className="primary";b.textContent="確認";b.onclick=()=>{ov.remove();if(typeof detect==="function")detect()};box.append(sub,h,p,b);ov.append(box);ov.addEventListener("click",e=>{if(e.target===ov)ov.remove()});document.body.append(ov);b.focus()}
+window.showHelpOverlay=show;
+// 戦闘研究ヘルプは能力画面にあるため、戦闘パネルの描画に依存せず常時クリックを受け付ける。
+document.addEventListener("click",function(event){const target=event.target instanceof Element?event.target:null;const shardHelp=target&&target.closest("#shardSkillHelp");if(shardHelp){event.preventDefault();event.stopPropagation();show("欠片スキル","時空の欠片を消費して、ゲーム全体に効果を追加するスキルを習得します。\n\n・連動タップ（1個）：手動攻撃を押すと、タップXPとタップ収入も同時に獲得します。スキルツリー解放前から習得できます。\n\n・施設報酬強化（40個）：施設から受け取るお金・XPの報酬が20%増加します。スキルツリー解放後に習得できます。\n\n・時空採集（50個）：マイルストーンと強化ボスから獲得する時空の欠片が25%増加します。スキルツリー解放後に習得できます。\n\n各スキルは一度習得すると効果が永続し、同じスキルを重ねて習得することはできません。",false);return;}const help=target&&target.closest("#combatResearchHelp");if(!help)return;event.preventDefault();event.stopPropagation();show("戦闘研究","戦闘研究は、敵を倒して獲得する討伐データを使って強化する戦闘専用システムです。\n\n通常世界の敵を倒して討伐データを初めて獲得すると解放されます。\n\n⚔️ 攻撃研究：通常世界の敵・強化個体・ボスへの与ダメージを強化します。\n\n🛡️ 耐久研究：最大HP・自然回復・防御力の3つを同時に強化します。\n\n📦 討伐研究：通常報酬で獲得する討伐データの量を増やします。初回報酬やマイルストーン報酬には影響しません。\n\n3種類の研究はそれぞれ独立して強化できます。討伐データと研究レベルは転生後も保持されます。",false);},true);
+// オフライン報酬は通常ログ欄ではなく、画面中央のレイヤーで表示する。
+function showOfflineReward(){
+ const log=document.getElementById("log");
+ if(!log)return;
+ const message=(log.textContent||"").trim();
+ if(!message.startsWith("オフライン報酬："))return;
+ log.textContent="";
+ show("オフライン報酬",message,false);
+}
+const originalApplyOfflineProgress=window.applyOfflineProgress;
+if(typeof originalApplyOfflineProgress==="function"){
+ window.applyOfflineProgress=function(){
+  const before=document.getElementById("log")?.textContent||"";
+  const result=originalApplyOfflineProgress.apply(this,arguments);
+  const after=document.getElementById("log")?.textContent||"";
+  if(after.startsWith("オフライン報酬：")&&after!==before)showOfflineReward();
+  return result;
+ };
+}
+function attachInfo(){document.querySelectorAll(".view h2,.panel>h2").forEach(h=>{if(h.dataset.helpAttached)return;const title=(h.textContent||"").trim().replace(/^[^ぁ-んァ-ヶ一-龠A-Za-z0-9]+/,"");const found=descriptions.find(x=>title.includes(x[0]));if(!found)return;h.dataset.helpAttached="1";const b=document.createElement("button");b.type="button";b.className="help-info-btn";b.textContent="?";b.setAttribute("aria-label",found[0]+"の説明");b.onclick=()=>show(found[0],found[1],false);h.append(b)})}
+installOverlayHelp();
+// 初回起動時に発生したオフライン報酬も表示する。
+showOfflineReward();
+document.addEventListener("click",e=>{
+ const b=e.target.closest("#milestoneChallengeHelp");
+ if(b)show("マイルストーン再挑戦所","雑魚敵を100体倒すごとに挑戦券を1枚獲得します。所持券を使って、討伐済みのマイルストーン敵やマイルストーンボスに再挑戦できます。再挑戦に成功すると、初回報酬とは別の追加報酬を獲得できます。対象を選んで挑戦を開始すると、現在の敵を倒した後に再戦が始まります。",false);
+ const tapHelp=e.target.closest("#tapIncomeHelp");
+ if(tapHelp)show("タップ報酬","タップ収入は現在の毎秒収入の0.5%。レベルアップ報酬：Lv1000以下は毎レベル、Lv1001〜10000は2レベルごと、Lv10001〜15000は5レベルごと、Lv15001〜1兆未満は2レベルごと。マイルストーン報酬は20レベルごと。Lv1極以降は現在の日本語単位1個分ごとに報酬を獲得し、恒河沙・阿僧祇など次の単位へ進むたびに間隔もその単位1個分へ切り替わります。特別報酬は通常報酬10回ごと。Lv15000以降は所持金残高に応じた割合報酬も加算されます（通常0.5%、マイルストーン3%）。基本報酬は現在レベル・施設収入・転生倍率を基準に算出されます。通常報酬の収入係数は75%、特別報酬は250%。プレイヤーレベルに上限はありません。",false);
+ const boostHelp=e.target.closest("#boostHelp");
+ if(boostHelp)show("ブースト・連続使用","連続使用でXP倍率が上昇（10秒×1.1、30秒×1.25、60秒×1.5、120秒×2、180秒×2.5、240秒×3）。240秒以降は30秒ごとに+0.25。MP95%以上で成長速度×1.25、90%以上で×1.15、20%未満では成長停止。手動停止またはMP切れでリセット。XPブーストと連続使用ボーナスは乗算。精密制御はMP消費を最大80%減らし、10Lvごとに使用中MPを毎秒0.001回復（回復上限は能力レベルに応じて基本MP消費の最大40%）。50Lvごとに最大MPが+5。XP/収入ブーストはそれぞれ追加でMPを消費。",false);
+});
+
+function convertInlineHelp(root=document){
+ root.querySelectorAll(".milestone-help-pop").forEach(pop=>{
+  const summary=pop.querySelector(":scope > summary");
+  const content=pop.querySelector(":scope > .milestone-help-content");
+  if(!summary||!content)return;
+  const title=(summary.getAttribute("aria-label")||"説明").replace(/の説明$/,"");
+  const body=Array.from(content.querySelectorAll(".small")).map(x=>x.textContent.trim()).filter(Boolean).join("\n\n")||content.textContent.trim();
+  const b=document.createElement("button");
+  b.type="button";b.className="help-info-btn";b.textContent="?";
+  b.setAttribute("aria-label",title+"の説明");
+  b.onclick=()=>show(title,body,false);
+  pop.replaceWith(b);
+ });
+}
+function installOverlayHelp(){
+ convertInlineHelp(document);
+ const observer=new MutationObserver(records=>{
+  for(const record of records)for(const node of record.addedNodes){
+   if(node.nodeType===1)convertInlineHelp(node);
+  }
+ });
+ observer.observe(document.body,{childList:true,subtree:true});
+}
+
+const eventText={ability0:["時間適応が解放されました","時間適応を強化できるようになりました。能力強化画面で効果と必要な費用を確認できます。"],ability1:["局所減速が解放されました","局所減速を強化できるようになりました。能力強化画面で効果と必要な費用を確認できます。"],ability2:["身体適応が解放されました","身体適応を強化できるようになりました。能力強化画面で効果と必要な費用を確認できます。"],ability3:["精密制御が解放されました","精密制御を強化できるようになりました。能力強化画面で効果と必要な費用を確認できます。"],facility0:["自動収入装置を購入しました","施設を購入すると放置中のお金やXPの収入を増やせます。施設画面で毎秒収入と強化費用を確認できます。"],facility1:["高効率収入装置を購入しました","この施設は購入すると毎秒収入を増やします。施設画面で現在の収入と次の購入費用を確認できます。"],facility2:["エネルギー収益炉を購入しました","この施設は購入すると毎秒収入を増やします。施設画面で現在の収入と次の購入費用を確認できます。"],facility3:["大型収益プラントを購入しました","この施設は購入すると毎秒収入を増やします。施設画面で現在の収入と次の購入費用を確認できます。"],facility4:["高次元収益施設を購入しました","この施設は購入すると毎秒収入を増やします。施設画面で現在の収入と次の購入費用を確認できます。"],shardFirst:["未知の欠片を入手した","見慣れない欠片が手元に残った。名前も用途も分からない。これは一体、何なのだろうか……。"],timeSpace:["新システムが解放されました","時空に関する新しい仕組みが利用可能になりました。時空画面で内容を確認できます。"],timeBoon:["新たな時空の恩恵を獲得","時空の恩恵が解放されました。利用できる強化や新しい仕組みを確認してください。"],facilityUnlock0:["新施設が解放されました","新しい収入施設が利用可能になりました。収入施設画面で効果と購入条件を確認できます。"],facilityUnlock1:["新施設が解放されました","新しい収入施設が利用可能になりました。収入施設画面で効果と購入条件を確認できます。"],facilityUnlock2:["新施設が解放されました","新しい収入施設が利用可能になりました。収入施設画面で効果と購入条件を確認できます。"],facilityUnlock3:["新施設が解放されました","新しい収入施設が利用可能になりました。収入施設画面で効果と購入条件を確認できます。"],facilityUnlock4:["新施設が解放されました","新しい収入施設が利用可能になりました。収入施設画面で効果と購入条件を確認できます。"],abilityCap0:["能力の上限が解放されました","時間適応をさらに強化できるようになりました。能力強化画面で上限を確認できます。"],abilityCap1:["能力の上限が解放されました","局所減速をさらに強化できるようになりました。能力強化画面で上限を確認できます。"],abilityCap2:["能力の上限が解放されました","身体適応をさらに強化できるようになりました。能力強化画面で上限を確認できます。"],abilityCap3:["能力の上限が解放されました","精密制御をさらに強化できるようになりました。能力強化画面で上限を確認できます。"],shardSkillLinkedTap:["欠片の新しい使い道を発見","欠片を使った新しい強化が利用可能になりました。欠片の強化画面を確認してください。"],shardSkillFacilityBoost:["欠片の新しい使い道を発見","欠片を使った新しい強化が利用可能になりました。欠片の強化画面を確認してください。"],shardSkillTimeHarvest:["欠片の新しい使い道を発見","欠片を使った新しい強化が利用可能になりました。欠片の強化画面を確認してください。"],skillNode:["新しいスキルを解放しました！","スキルツリーに新しいスキルが追加されました。取得したスキルの効果を確認してください。"],rebirth:["転生が可能になりました","レベル400に到達しました。転生すると一部の進行がリセットされ、転生倍率とTPを獲得できます。転生画面で内容を確認してください。"],skill:["戦闘スキルツリー解放","戦闘スキルツリーが利用可能になりました。TPをSPに交換して、戦闘に関わる新しい効果を解放できます。"],core:["新しい素材を発見","新しい素材を発見しました。詳細は時空関連の画面で確認できます。"],crafted:["新しい仕組みが解放されました","制作が完了しました。関連する機能や説明を確認できます。"],door:["領域を突破しました","領域の突破を達成しました。進行状況と新しく利用可能になった強化を確認してください."]};
+function snapshot(){const t=window.tsEnsure?tsEnsure():{},skills=Object.keys(s.skillTree?.unlocked||{}).filter(k=>!!s.skillTree.unlocked[k]).sort();return {level:typeof s.level==="bigint"?s.level:BigInt(Math.max(1,Number(s.level)||1)),fl:(s.fl||[]).slice(),bl:(s.bl||[]).slice(),rebirth:Number(s.rebirth)||0,skill:!!s.skillTreeUnlocked,skills,shardTotal:Math.max(0,Number(s.timeShardsTotal)||0),core:!!t.coreDiscovered,crafted:!!t.coreCrafted,door:Number(t.doorClearCount)||0,tsUnlocked:!!t.unlocked,boon:!!t.boon,facilityUnlocks:(t.facilityUnlocks||[]).slice(),abilityCaps:(t.abilityCapsUnlocked||[]).slice(),shardSkills:{...(s.shardSkills||{})},tpRebirthCap:!!t.tpRebirthCapUnlocked,tpTimeSpaceCap:!!t.tpTimeSpaceCapUnlocked}}
+function enqueue(key){s.helpSeen=s.helpSeen||{};s.helpQueue=Array.isArray(s.helpQueue)?s.helpQueue:[];if(s.helpSeen[key]||s.helpQueue.some(x=>x.key===key))return;let e=eventText[key];if(!e&&key.startsWith("skillNode:"))e=eventText.skillNode;if(!e&&key==="tpRebirthCap")e=["通常TPショップの上限が解放されました","通常TPショップの強化上限が拡張されました。各項目の新しい上限を確認してください。"];if(!e&&key==="tpTimeSpaceCap")e=["時空系強化の上限が解放されました","時空系強化と時空系TPショップの上限が拡張されました。"];if(!e)return;s.helpQueue.push({key,title:e[0],body:e[1],priority:key==="door"||key==="crafted"||key==="core"||key==="shardFirst"?1:2});s.helpQueue.sort((a,b)=>a.priority-b.priority);s.helpSeen[key]=true}
+function detect(){const now=snapshot();if(previous){if(previous.level<400n&&now.level>=400n)enqueue("rebirth");if(!previous.skill&&now.skill)enqueue("skill");if(previous.shardTotal===0&&now.shardTotal>0)enqueue("shardFirst");if(!previous.core&&now.core&&!now.crafted)enqueue("core");if(!previous.crafted&&now.crafted)enqueue("crafted");if(!previous.tsUnlocked&&now.tsUnlocked)enqueue("timeSpace");if(!previous.boon&&now.boon)enqueue("timeBoon");if(now.door>previous.door)enqueue("door");for(let i=0;i<4;i++){if((previous.fl[i]||0)===0&&now.level>=BigInt([3,8,12,20][i]))enqueue("ability"+i);if(!previous.abilityCaps[i]&&now.abilityCaps[i])enqueue("abilityCap"+i)}for(let i=0;i<5;i++){if((previous.bl[i]||0)===0&&(now.bl[i]||0)>0)enqueue("facility"+i);if(!previous.facilityUnlocks[i]&&now.facilityUnlocks[i])enqueue("facilityUnlock"+i)}for(const id of ["linkedTap","facilityBoost","timeHarvest"])if(!previous.shardSkills[id]&&now.shardSkills[id])enqueue("shardSkill"+id[0].toUpperCase()+id.slice(1));for(const id of now.skills)if(!previous.skills.includes(id))enqueue("skillNode:"+id);if(!previous.tpRebirthCap&&now.tpRebirthCap)enqueue("tpRebirthCap");if(!previous.tpTimeSpaceCap&&now.tpTimeSpaceCap)enqueue("tpTimeSpaceCap")}previous=now;const q=Array.isArray(s.helpQueue)?s.helpQueue:[];if(q.length&&!document.querySelector(".help-overlay")){const e=q.shift();s.helpQueue=q;show(e.title,e.body,true);if(window.saveAutoGame)saveAutoGame()}}
+let previous=null;const baseRender=window.render;if(typeof baseRender==="function")window.render=function(){const r=baseRender.apply(this,arguments);attachInfo();detect();return r};const baseTsRender=window.tsRender;if(typeof baseTsRender==="function")window.tsRender=function(){const r=baseTsRender.apply(this,arguments);attachInfo();detect();return r};document.addEventListener("DOMContentLoaded",attachInfo);attachInfo();if(typeof window.render==="function"){attachInfo();previous=snapshot()}
+})();
+</script>
+</html>
+
+<script>
+(function(){
+ // 残響の適応成長は「現在の振り分け量」ではなく「累計投資量」で保持する。
+ const ensureBefore304=tsEnsure;
+ tsEnsure=function(){
+  const t=ensureBefore304();
+  if(t.echo.adaptationSpent===undefined||!Number.isFinite(Number(t.echo.adaptationSpent))){
+   t.echo.adaptationSpent=Math.max(0,Number(t.echo.totalSpent)||0);
+  }
+  t.echo.adaptationSpent=Math.max(0,Math.floor(Number(t.echo.adaptationSpent)||0));
+  return t;
+ };
+ tsDistortionAdaptation=function(){
+  const t=tsEnsure(),spent=Math.max(0,Number(t.echo.adaptationSpent)||0);
+  const progress=spent/(spent+18),timeAbility=Math.min(.10,(Number(s.fl?.[0])||0)*.0001);
+  return {spent,progress,time:Math.min(.20,.20*progress+timeAbility),combat:.05*progress,explore:.05*progress,environment:.05*progress};
+ };
+ // 購入時だけ累計投資量を増やす。振り直しでは減らさない。
+ tsEchoBuy=function(branch){
+  if(tsActive()||!Number.isInteger(branch)||branch<0||branch>2)return false;
+  const t=tsEnsure();
+  if(!t.adminFullUnlock&&t.completedRuns<2)return false;
+  const lv=t.echo.levels[branch],cost=[1,1,2,2,3,4,5][lv],gate=[1,50,100,200,300,350,400][lv];
+  if(lv>=7||t.sync.level<gate||t.echo.points<cost)return false;
+  t.echo.points-=cost;t.echo.levels[branch]++;
+  t.echo.adaptationSpent+=cost;t.echo.totalSpent=tsEchoSpent();
+  return true;
+ };
+ // 振り直しは現在のポイントだけを返し、適応の累計成長は維持する。
+ tsEchoRespec=function(){
+  const t=tsEnsure();
+  if(tsActive()||(!t.adminFullUnlock&&t.completedRuns<2))return false;
+  const points=tsEchoSpent(),refundCost=points*20;
+  const shards=Math.min(Number(s.timeShards)||0,refundCost),remaining=refundCost-shards;
+  const cores=Math.ceil(remaining/200);
+  if(t.cores<cores)return false;
+  s.timeShards=(Number(s.timeShards)||0)-shards+Math.max(0,cores*200-remaining);
+  t.cores-=cores;t.echo.points+=points;t.echo.levels=[0,0,0];t.echo.totalSpent=0;
+  return true;
+ };
+ // 報酬関数を一度だけ定義し直し、Lv6/Lv7の追加欠片を重複加算しない。
+ tsBossReward=function(e){
+  const t=tsEnsure(),d=t.distortion,key="boss"+d.region,lv=t.echo.levels[1];
+  if(d.claimedBosses[key])return;
+  d.claimedBosses[key]=true;t.cores+=e.cores;t.coreDiscovered=true;
+  if(t.echo.levels[0]>=3&&t.echo.levels[1]>=3&&t.echo.levels[2]>=3&&s.on&&!d.synergyTimeInterference){
+   d.synergyTimeInterference=true;t.echo.points++;tsRewardShards(1);
+  }
+  if(t.echo.levels[1]>=3&&t.echo.levels[2]>=3)t.cores++;
+  if(t.echo.levels[1]>=4)t.cores++;
+  if(lv>=5)tsRewardShards(2);
+  if(lv>=6)tsRewardShards(1);
+  if(lv>=7)tsRewardShards(1);
+  if(d.run>=2&&d.region===0)tsUnlockPermanent("observe");
+  if(d.run>=2&&d.region===1)tsUnlockPermanent("causal");
+  if(d.run>=2&&d.region===2)tsUnlockPermanent("adapt");
+  if(t.permanent.equipped.includes("echo")&&d.region<3)d.regionBoost=tsPermanentEffect("echo");
+ };
+ // 管理者用の時空全開放を現在の最大値に同期させる。
+ const adminUnlockButton=$("adminTimeSpaceUnlock");
+ if(adminUnlockButton){
+  const previousAdminUnlock=adminUnlockButton.onclick;
+  adminUnlockButton.onclick=function(ev){
+   if(previousAdminUnlock)previousAdminUnlock.call(this,ev);
+   if(!s.admin)return;
+   const t=tsEnsure();
+   if(!t.adminFullUnlock)return;
+   t.unlocked=true;t.boon=true;t.coreDiscovered=true;
+   t.abilityCapsUnlocked=[true,true,true,true];
+   t.tpRebirthCapUnlocked=true;t.tpTimeSpaceCapUnlocked=true;
+   t.cores=Math.max(Number(t.cores)||0,100000);
+   s.timeShards=Math.max(Number(s.timeShards)||0,100000);
+   s.timeShardsTotal=Math.max(Number(s.timeShardsTotal)||0,100000);
+   for(const def of tsCoreDefs)t.upgrades[def[0]]=def[2];
+   for(const def of tsShardUpgradeDefs){
+    if(def.id==="sense")t.shardSense=def.max;
+    else if(def.id==="adapt")t.shardAdapt=def.max;
+    else t.coreResearch=def.max;
+   }
+   t.sync={level:400,wealth:7,growth:7};
+   t.echo.points=Math.max(Number(t.echo.points)||0,999);
+   t.echo.levels=[7,7,7];t.echo.totalSpent=54;
+   t.echo.adaptationSpent=Math.max(Number(t.echo.adaptationSpent)||0,54);
+   for(const id of ["observe","causal","adapt","echo"]){
+    t.permanent.unlocked[id]=true;t.permanent.levels[id]=5;
+   }
+   t.permanent.equipped=["observe","causal","adapt"];
+   t.facilityUnlocks=[true,true,true,true,true];
+   t.abilityUnlocks=[true,true,true,true];
+   t.facilityEvo=Array.from({length:5},()=>({common:4,unique:4}));
+   t.abilityEvo=Array.from({length:4},()=>({common:4,unique:4}));
+   t.reconstruction=t.reconstruction||{level:0};t.reconstruction.level=5;
+   s.shardSkills=normalizeShardSkills({...s.shardSkills,linkedTap:1,facilityBoost:1,timeHarvest:1});
+   s.skillTreeUnlocked=true;
+   for(const group of rebirthUpgrades)for(const item of group.items)s.shop[item.id]=shopCap(item);
+   shopDirty=true;rebirthShopDirty=true;
+   saveAutoGame();render();tsRender();renderChallengePanel();
+   $("log").textContent="管理者機能：時空システムを現行上限まで全開放しました。実際の脱出回数と討伐記録は維持されています。";
+  };
+ }
+ // 能力進化の上限表示を実際のLv4に合わせる。
+ const renderBefore304=tsRender;
+ tsRender=function(){
+  renderBefore304();
+  const root=$("tsPageRoot");if(!root)return;
+  root.querySelectorAll(".ts-item").forEach(el=>{
+   el.innerHTML=el.innerHTML.replace(/(共通進化\s+\d+)\/3(・固有進化\s+\d+)\/3/g,"$1/4$2/4");
+  });
+ };
+})();
+</script>
+
+<script id="combat-system-v332">
+(function(){
+ "use strict";
+ const combatKeys=["attack","durability","slaying"];
+ const combatTierReward={1:8,2:30,3:120};
+ const combatBossFirst={dragon:80,demon:120,titan:160,ancientDragon:200,chaos:320};
+ const combatEnhancedBossFirst={1:80,2:240,3:800};
+ const combatNormalMilestones=[[10,5],[50,15],[100,30],[500,75],[1000,150],[5000,400],[10000,750],[50000,2000],[100000,4000]];
+ const combatTierMilestones={1:[[10,10],[50,25],[100,50],[500,100]],2:[[10,30],[50,75],[100,150],[500,300]],3:[[10,100],[50,250],[100,500],[500,1000]]};
+ const combatBossMilestones=[[5,50],[10,100],[25,250],[50,500],[100,1000]];
+ const combatBaseAttack={slime:4,goblin:6,skeleton:8,wolf:12};
+ const combatBossAbilities={
+  dragon:{name:"灼熱のブレス",interval:25,damage:.03},
+  demon:{name:"魔力崩壊",interval:30,regenStop:5},
+  titan:{name:"大地震",interval:20,damage:.04},
+  ancientDragon:{name:"時空侵食",interval:30,regenReduce:.5,regenDuration:8},
+  chaos:{name:"混沌の一撃",interval:25,damage:.03,regenReduce:.5,regenDuration:5}
+ };
+ let combatTickAt=performance.now();
+ let combatLastRenderKey="";
+ let combatHistoryRenderKey="";
+ let combatInitialised=false;
+
+ function combatLevel(v){
+  const n=Math.max(0,Math.floor(Number(v)||0));
+  return Math.min(Number.MAX_SAFE_INTEGER,n);
+ }
+ function combatResearchLevel(key){
+  if(!s.combatResearch||typeof s.combatResearch!=="object")return 0;
+  return combatLevel(s.combatResearch[key]);
+ }
+ function combatHpStudyMultiplier(){
+  const r=combatResearchLevel("durability");
+  return 1+.02*Math.min(r,50)+.01*Math.min(Math.max(r-50,0),50)+.005*Math.max(r-100,0)
+   +(r>=5?.1:0)+(r>=25?.2:0)+(r>=50?.3:0);
+ }
+ function combatRegenStudyMultiplier(){
+  const r=combatResearchLevel("durability");
+  return 1+Math.min(r,25)*.005+Math.min(Math.max(r-25,0),25)*.0025+Math.max(r-50,0)*.001
+   +(r>=5?.05:0)+(r>=25?.1:0)+(r>=50?.15:0);
+ }
+ function combatDefenseValue(){
+  const r=combatResearchLevel("durability");
+  const base=10*Math.min(r,50)+5*Math.min(Math.max(r-50,0),50)+2.5*Math.max(r-100,0);
+  return base*(1+(r>=10?.2:0)+(r>=50?.3:0));
+ }
+ function combatDamageReduction(){
+  const defense=combatDefenseValue();
+  return .8*defense/(defense+1000);
+ }
+ function combatAttackBaseMultiplier(){
+  const r=combatResearchLevel("attack");
+  return 1+.02*Math.min(r,50)+.01*Math.min(Math.max(r-50,0),50)+.005*Math.max(r-100,0);
+ }
+ function combatSlayingBaseMultiplier(){
+  const r=combatResearchLevel("slaying");
+  return 1+Math.min(r,25)*.01+Math.min(Math.max(r-25,0),25)*.005
+   +Math.min(Math.max(r-50,0),50)*.0025+Math.max(r-100,0)*.00125;
+ }
+ function combatSlayingMultiplier(info){
+  const r=combatResearchLevel("slaying");
+  let bonus=0;
+  if(info&&info.boss)bonus+=r>=25?.1:0;
+  else if(Number(info?.variant)>0)bonus+=r>=10?.05:0;
+  else bonus+=r>=5?.05:0;
+  if(r>=50)bonus+=.1;
+  if(info&&info.boss&&Number(info.variant)>0&&r>=10)bonus+=.05;
+  return combatSlayingBaseMultiplier()+bonus;
+ }
+ function combatAttackMultiplier(info){
+  const r=combatResearchLevel("attack");
+  let bonus=0;
+  if(info&&info.boss)bonus+=r>=25?.1:0;
+  else if(Number(info?.variant)>0)bonus+=r>=10?.1:0;
+  else bonus+=r>=5?.1:0;
+  if(r>=50)bonus+=.15;
+  if(info&&info.boss&&Number(info.variant)>0&&r>=10)bonus+=.1;
+  return combatAttackBaseMultiplier()+bonus;
+ }
+ function combatPlayerMaxHpBN(){
+  const level=levelToBN(s.combatHpPeakLevel||s.level||1);
+  const offset=BigNum.cmp(level,1)>0?BigNum.sub(level,1):BigNum.from(0);
+  const base=BigNum.add(100,BigNum.add(BigNum.mul(offset,2),BigNum.mul(BigNum.mul(offset,offset),.001)));
+  return BigNum.mul(base,combatHpStudyMultiplier());
+ }
+ function combatSetHp(value){
+  const v=BigNum.from(value);
+  s.combatHpBig=BigNum.json(BigNum.cmp(v,0)>0?v:BigNum.from(0));
+ }
+ function combatHpBN(){
+  return BigNum.from(s.combatHpBig||combatPlayerMaxHpBN());
+ }
+ function combatHpRatio(){
+  const max=combatPlayerMaxHpBN();
+  if(BigNum.cmp(max,0)<=0)return 0;
+  const n=BigNum.toNumber(BigNum.div(combatHpBN(),max));
+  return Number.isFinite(n)?Math.max(0,Math.min(1,n)):0;
+ }
+ function combatEnsureState(){
+  if(!s.combatDataBig){
+   try{s.combatDataBig=BigNum.json(s.combatData||0)}catch(e){s.combatDataBig=BigNum.json(0)}
+  }
+  try{s.combatDataBig=BigNum.json(s.combatDataBig)}catch(e){s.combatDataBig=BigNum.json(0)}
+  const data=BigNum.from(s.combatDataBig);
+  const dataNumber=BigNum.toNumber(data);
+  s.combatData=Number.isFinite(dataNumber)?Math.max(0,dataNumber):Number.MAX_VALUE;
+  if(!s.combatResearch||typeof s.combatResearch!=="object"||Array.isArray(s.combatResearch))s.combatResearch={};
+  combatKeys.forEach(k=>s.combatResearch[k]=combatLevel(s.combatResearch[k]));
+  if(!s.combatFirstRewards||typeof s.combatFirstRewards!=="object"||Array.isArray(s.combatFirstRewards))s.combatFirstRewards={};
+  if(!s.combatClaims||typeof s.combatClaims!=="object"||Array.isArray(s.combatClaims))s.combatClaims={};
+  if(!s.combatKillCounts||typeof s.combatKillCounts!=="object"||Array.isArray(s.combatKillCounts)){
+   const bosses=Math.max(0,Math.floor(Number(s.bossDefeats)||0));
+   const total=Math.max(0,Math.floor(Number(s.battleKills)||0));
+   s.combatKillCounts={normal:Math.max(0,total-bosses),bosses,tiers:{1:0,2:0,3:0}};
+  }
+  if(!s.combatKillCounts.tiers||typeof s.combatKillCounts.tiers!=="object")s.combatKillCounts.tiers={1:0,2:0,3:0};
+  s.combatKillCounts.normal=Math.max(0,Math.floor(Number(s.combatKillCounts.normal)||0));
+  s.combatKillCounts.bosses=Math.max(0,Math.floor(Number(s.combatKillCounts.bosses)||0));
+  [1,2,3].forEach(t=>s.combatKillCounts.tiers[t]=Math.max(0,Math.floor(Number(s.combatKillCounts.tiers[t])||0)));
+  if(!Array.isArray(s.combatRewardHistory))s.combatRewardHistory=[];
+  if(s.combatRewardHistory.length>100)s.combatRewardHistory=s.combatRewardHistory.slice(-100);
+  if(!["all","important","minimal"].includes(s.combatNotifyMode))s.combatNotifyMode="important";
+  if(typeof s.combatResearchUnlocked!=="boolean")s.combatResearchUnlocked=BigNum.cmp(data,0)>0;
+  if(BigNum.cmp(data,0)>0)s.combatResearchUnlocked=true;
+  if(typeof s.combatHpPeakLevel!=="string"||!s.combatHpPeakLevel){
+   s.combatHpPeakLevel=levelToBigInt(s.level||1).toString();
+  }
+  let peak=levelToBigInt(s.combatHpPeakLevel);
+  if(levelToBigInt(s.level||1)>peak)peak=levelToBigInt(s.level||1);
+  s.combatHpPeakLevel=peak.toString();
+  const max=combatPlayerMaxHpBN();
+  if(!s.combatHpBig){
+   combatSetHp(max);
+  }else{
+   let hp=BigNum.from(s.combatHpBig);
+   const oldMax=s.combatHpMaxCacheBig?BigNum.from(s.combatHpMaxCacheBig):max;
+   if(BigNum.cmp(max,oldMax)!==0){
+    const ratio=BigNum.cmp(oldMax,0)>0?BigNum.div(hp,oldMax):BigNum.from(1);
+    hp=BigNum.mul(max,Math.max(0,Math.min(1,BigNum.toNumber(ratio))));
+   }
+   if(BigNum.cmp(hp,max)>0)hp=max;
+   if(BigNum.cmp(hp,0)<0)hp=BigNum.from(0);
+   combatSetHp(hp);
+  }
+  s.combatHpMaxCacheBig=BigNum.json(max);
+  s.combatDownUntil=Math.max(0,Number(s.combatDownUntil)||0);
+  s.combatInvulnerableUntil=Math.max(0,Number(s.combatInvulnerableUntil)||0);
+  s.combatRegenBlockUntil=Math.max(0,Number(s.combatRegenBlockUntil)||0);
+  s.combatRegenReduceUntil=Math.max(0,Number(s.combatRegenReduceUntil)||0);
+  s.combatRegenReduceFactor=Math.max(0,Math.min(1,Number(s.combatRegenReduceFactor??1)));
+  s.combatEnemyAttackTimer=Math.max(0,Number(s.combatEnemyAttackTimer)||0);
+  s.combatBossAttackTimer=Math.max(0,Number(s.combatBossAttackTimer)||0);
+  s.combatAttackCursor=Math.max(0,Math.floor(Number(s.combatAttackCursor)||0));
+  s.combatEnemyMode=String(s.combatEnemyMode||"");
+  if(typeof s.combatLastEvent!=="string")s.combatLastEvent="";
+ }
+ function combatFloorBN(value){
+  const x=BigNum.from(value);
+  if(x.m<=0||x.e<0)return BigNum.from(0);
+  const digits=String(x.d||"0").replace("-","");
+  if(x.e+1>=digits.length)return x;
+  const whole=digits.slice(0,x.e+1);
+  return whole?BigNum.from(BigInt(whole)):BigNum.from(0);
+ }
+ function combatResearchCostBN(currentLevel){
+  const r=combatLevel(currentLevel);
+  if(r===0)return BigNum.from(1);
+  const raw=BigNum.mul(5,bigPowPositive(1.03,r-1));
+  const n=BigNum.toNumber(raw);
+  if(Number.isFinite(n)&&n<Number.MAX_SAFE_INTEGER)return BigNum.from(Math.ceil(n));
+  return raw;
+ }
+ function combatEscape(value){
+  return String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+ }
+ function combatNotify(message,amount,kind,important){
+  let value=BigNum.from(amount||0);
+  if(BigNum.cmp(value,0)<=0)return;
+  value=combatFloorBN(value);
+  if(BigNum.cmp(value,0)<=0)return;
+  s.combatDataBig=BigNum.json(BigNum.add(BigNum.from(s.combatDataBig||0),value));
+  const n=BigNum.toNumber(BigNum.from(s.combatDataBig));
+  s.combatData=Number.isFinite(n)?Math.max(0,n):Number.MAX_VALUE;
+  const wasUnlocked=!!s.combatResearchUnlocked;
+  s.combatResearchUnlocked=true;
+  const row={time:Date.now(),kind:String(kind||"通常報酬"),name:String(message||"討伐データ"),amount:BigNum.json(value),important:!!important};
+  s.combatRewardHistory.unshift(row);
+  if(s.combatRewardHistory.length>100)s.combatRewardHistory.length=100;
+  const mode=s.combatNotifyMode||"important";
+  const shouldNotify=!wasUnlocked||mode==="all"||(mode==="important"&&important)||(mode==="minimal"&&!wasUnlocked);
+  if(shouldNotify){
+   const prefix=(!wasUnlocked?"🔓 戦闘研究が解放！\n":"");
+   showEnhancedRewardToast(prefix+row.name+"\n討伐データ +"+xpBNFmt(value));
+  }
+  if(!wasUnlocked)s.combatLastEvent="戦闘研究が解放されました。攻撃・耐久・討伐の3研究を強化できます。";
+ }
+ function combatRewardThreshold(group,key,count,rows,label){
+  const claimed=Array.isArray(s.combatClaims[key])?s.combatClaims[key]:[];
+  for(const pair of rows){
+   const threshold=pair[0],reward=pair[1],claimKey=String(threshold);
+   if(count===threshold&&!claimed.includes(claimKey)){
+    claimed.push(claimKey);
+    combatNotify(label+" 累計"+threshold+"体報酬",reward,"節目報酬",true);
+   }
+  }
+  s.combatClaims[key]=claimed;
+ }
+ function combatRecordKill(record){
+  const target=record.target,info=record.info;
+  if(!target||target.adminTest||target.milestoneId||target.mutationId||info?.milestone||info?.mutationId||s.admin||tsActive())return;
+  const number=Math.max(1,Math.floor(Number(info.number)||1));
+  const variant=Math.max(0,Math.min(3,Math.floor(Number(target.variant??info.variant)||0)));
+  const isBoss=!!info.boss;
+  let base=isBoss?(variant===3?800:variant===2?300:variant===1?100:20):(variant===3?40:variant===2?15:variant===1?5:1);
+  const progression=1+Math.floor((number-1)/10);
+  const multiplier=combatSlayingMultiplier({boss:isBoss,variant});
+  const normalReward=combatFloorBN(BigNum.mul(base,BigNum.mul(progression,multiplier)));
+  combatNotify((info.name||"魔物")+" 討伐・通常報酬",normalReward,"通常報酬",false);
+
+  if(isBoss&&variant===0){
+   const key="boss:"+String(info.kind||"unknown");
+   if(!s.combatFirstRewards[key]){
+    s.combatFirstRewards[key]=true;
+    const reward=combatBossFirst[info.kind]||160;
+    combatNotify((info.name||"ボス")+" 初回討伐報酬",reward,"初回報酬",true);
+   }
+  }else if(isBoss&&variant>0){
+   const key="enhancedBoss:"+variant;
+   if(!s.combatFirstRewards[key]){
+    s.combatFirstRewards[key]=true;
+    combatNotify(["","覚醒ボス","災厄ボス","超越ボス"][variant]+" 初回討伐報酬",combatEnhancedBossFirst[variant],"初回報酬",true);
+   }
+  }else if(!isBoss&&variant>0){
+   const key="enhancedMob:"+variant;
+   if(!s.combatFirstRewards[key]){
+    s.combatFirstRewards[key]=true;
+    combatNotify(["","覚醒個体","災厄個体","超越個体"][variant]+" 初回討伐報酬",combatTierReward[variant],"初回報酬",true);
+   }
+  }
+
+  if(isBoss){
+   s.combatKillCounts.bosses++;
+   combatRewardThreshold("bosses","bosses",s.combatKillCounts.bosses,combatBossMilestones,"ボス");
+  }else if(variant===0){
+   s.combatKillCounts.normal++;
+   combatRewardThreshold("normal","normal",s.combatKillCounts.normal,combatNormalMilestones,"通常敵");
+  }
+  if(variant>0){
+   s.combatKillCounts.tiers[variant]++;
+   combatRewardThreshold("tiers"+variant,"tier:"+variant,s.combatKillCounts.tiers[variant],combatTierMilestones[variant],["","覚醒個体","災厄個体","超越個体"][variant]);
+  }
+ }
+ function combatIsDown(){
+  return Number(s.combatDownUntil||0)>0;
+ }
+ function combatTakeDamage(rawDamage,source,ignoreDefense){
+  combatEnsureState();
+  const now=Date.now();
+  if(s.admin||combatIsDown()||now<Number(s.combatInvulnerableUntil||0))return BigNum.from(0);
+  let damage=BigNum.from(rawDamage||0);
+  if(!ignoreDefense)damage=BigNum.mul(damage,1-combatDamageReduction());
+  if(BigNum.cmp(damage,0)<=0)return BigNum.from(0);
+  const hp=combatHpBN();
+  if(BigNum.cmp(damage,hp)>=0){
+   combatSetHp(0);
+   s.combatDownUntil=now+10000;
+   s.combatInvulnerableUntil=0;
+   s.combatLastEvent="戦闘不能。10秒後に最大HPの50%で復帰します。";
+   setBattleLogMessage("戦闘不能！ 10秒後にHP50%で復帰します。敵の攻撃とこちらの攻撃は一時停止します。");
+   if(typeof window.showHelpOverlay==="function")window.showHelpOverlay("戦闘不能！","HPが0になりました。\n\n10秒後に最大HPの50%で自動復帰します。\n\n戦闘不能中は敵の攻撃とこちらの攻撃が一時停止します。",false);
+  }else{
+   combatSetHp(BigNum.sub(hp,damage));
+   s.combatLastEvent=(source||"敵の攻撃")+"から "+xpBNFmt(damage)+" ダメージ";
+  }
+  return damage;
+ }
+ function combatEnemyDamage(target,info){
+  const growth=battleHpGrowthMultiplierBN(info.number);
+  const variant=Math.max(0,Math.min(3,Number(target.variant??info.variant)||0));
+  const variantMult=variant===3?2.5:variant===2?1.8:variant===1?1.3:1;
+  const base=info.boss?12*.3:(combatBaseAttack[info.kind]||8);
+  return BigNum.mul(BigNum.mul(base,growth),variantMult);
+ }
+ function combatRegen(dt){
+  if(combatIsDown()||BigNum.cmp(combatHpBN(),0)<=0)return;
+  const max=combatPlayerMaxHpBN();
+  if(BigNum.cmp(combatHpBN(),max)>=0)return;
+  const now=Date.now();
+  if(now<Number(s.combatRegenBlockUntil||0))return;
+  let factor=combatRegenStudyMultiplier();
+  if(now<Number(s.combatRegenReduceUntil||0))factor*=Number(s.combatRegenReduceFactor||.5);
+  const amount=BigNum.mul(max,.0005*factor*Math.max(0,dt));
+  const next=BigNum.add(combatHpBN(),amount);
+  combatSetHp(BigNum.cmp(next,max)>0?max:next);
+ }
+ function combatBossAbilityStatus(target,info){
+  const cfg=combatBossAbilities[info?.kind];
+  if(!target||!info?.boss||!cfg)return "";
+  if(!target.combatAbilityStarted)return cfg.name+"：ボスHP70%以下で発動";
+  const timer=Math.max(0,Number(target.combatAbilityTimer)||0);
+  if(target.combatAbilityWarning)return cfg.name+"：発動予告 "+timer.toFixed(1)+"秒";
+  return cfg.name+"：次回まで "+timer.toFixed(1)+"秒";
+ }
+ function combatUpdateBossAbility(dt){
+  const target=s.battleGroup?.[0];
+  if(!target)return;
+  const info=battleEnemyInfo(target.number);
+  if(!info.boss)return;
+  const cfg=combatBossAbilities[info.kind];
+  if(!cfg)return;
+  const max=battleMaxHpBN(info);
+  if(!target.combatAbilityStarted&&BigNum.cmp(BigNum.from(target.hp),BigNum.mul(max,.7))<=0){
+   target.combatAbilityStarted=true;
+   target.combatAbilityWarning=true;
+   target.combatAbilityTimer=3;
+   setBattleLogMessage(info.name+"の固有能力「"+cfg.name+"」発動予告！ 3秒後に発動します。");
+  }
+  if(!target.combatAbilityStarted)return;
+  target.combatAbilityTimer=Math.max(0,(Number(target.combatAbilityTimer)||0)-dt);
+  if(target.combatAbilityTimer>0)return;
+  if(target.combatAbilityWarning){
+   target.combatAbilityWarning=false;
+   target.combatAbilityTimer=cfg.interval;
+   const parts=[];
+   if(cfg.damage){
+    const amount=BigNum.mul(combatPlayerMaxHpBN(),cfg.damage);
+    combatTakeDamage(amount,cfg.name,true);
+    parts.push("最大HPの"+Math.round(cfg.damage*100)+"%ダメージ");
+   }
+   if(cfg.regenStop){
+    s.combatRegenBlockUntil=Math.max(Number(s.combatRegenBlockUntil)||0,Date.now()+cfg.regenStop*1000);
+    parts.push("自然回復停止 "+cfg.regenStop+"秒");
+   }
+   if(cfg.regenReduce){
+    s.combatRegenReduceUntil=Math.max(Number(s.combatRegenReduceUntil)||0,Date.now()+(cfg.regenDuration||8)*1000);
+    s.combatRegenReduceFactor=cfg.regenReduce;
+    parts.push("自然回復50%低下 "+(cfg.regenDuration||8)+"秒");
+   }
+   s.combatLastEvent=cfg.name+"： "+parts.join("・");
+   setBattleLogMessage(info.name+"の「"+cfg.name+"」！ "+parts.join("・"));
+  }else{
+   target.combatAbilityWarning=true;
+   target.combatAbilityTimer=3;
+   setBattleLogMessage(info.name+"の固有能力「"+cfg.name+"」発動予告！ 3秒後に発動します。");
+  }
+ }
+ function combatTick(dt){
+  combatEnsureState();
+  if(tsActive())return;
+  const now=Date.now();
+  if(combatIsDown()){
+   if(now>=Number(s.combatDownUntil||0)){
+    combatSetHp(BigNum.mul(combatPlayerMaxHpBN(),.5));
+    s.combatDownUntil=0;
+    s.combatInvulnerableUntil=now+3000;
+    s.combatLastEvent="HP50%で復帰。3秒間は敵の攻撃を受けません。";
+    setBattleLogMessage("戦闘復帰！ HP50%で再開しました。3秒間は無敵です。");
+    saveAutoGame();
+   }else return;
+  }
+  if(s.admin){
+   combatSetHp(combatPlayerMaxHpBN());
+   return;
+  }
+  combatRegen(dt);
+  const group=s.battleGroup||[];
+  const target=group[0];
+  if(!target){
+   s.combatEnemyAttackTimer=0;s.combatBossAttackTimer=0;s.combatEnemyMode="";
+   return;
+  }
+  const info=battleEnemyInfo(target.number);
+  const mode=info.boss?"boss":"mob";
+  if(s.combatEnemyMode!==mode){
+   s.combatEnemyMode=mode;s.combatEnemyAttackTimer=0;s.combatBossAttackTimer=0;s.combatAttackCursor=0;
+  }
+  if(info.boss){
+   combatUpdateBossAbility(dt);
+   s.combatBossAttackTimer+=dt;
+   let attacks=0;
+   while(s.combatBossAttackTimer>=1&&attacks<2&&!combatIsDown()){
+    s.combatBossAttackTimer-=1;attacks++;
+    const current=s.battleGroup?.[0];if(!current)break;
+    const currentInfo=battleEnemyInfo(current.number);
+    combatTakeDamage(combatEnemyDamage(current,currentInfo),currentInfo.name+"の通常攻撃",false);
+   }
+  }else{
+   s.combatEnemyAttackTimer+=dt;
+   if(s.combatEnemyAttackTimer>=3&&!combatIsDown()){
+    s.combatEnemyAttackTimer-=3;
+    const currentGroup=s.battleGroup||[];
+    if(currentGroup.length){
+     if(s.combatAttackCursor>=currentGroup.length)s.combatAttackCursor=0;
+     const index=s.combatAttackCursor%currentGroup.length;
+     const current=currentGroup[index],currentInfo=battleEnemyInfo(current.number);
+     s.combatAttackCursor=(index+1)%Math.max(1,currentGroup.length);
+     combatTakeDamage(combatEnemyDamage(current,currentInfo),currentInfo.name+"の攻撃",false);
+    }
+   }
+  }
+ }
+ function combatResearchReadout(key){
+  const r=combatResearchLevel(key);
+  if(key==="attack")return "基本倍率 ×"+combatAttackBaseMultiplier().toFixed(3)+"（対象別の節目ボーナスは別加算）";
+  if(key==="durability"){
+   const reduction=combatDamageReduction()*100;
+   return "最大HP ×"+combatHpStudyMultiplier().toFixed(3)+" ／ 自然回復 "+(.05*combatRegenStudyMultiplier()).toFixed(5)+"%/秒 ／ 防御力 "+combatDefenseValue().toFixed(1)+"（軽減 "+reduction.toFixed(2)+"%）";
+  }
+  return "基本獲得倍率 ×"+combatSlayingBaseMultiplier().toFixed(3)+"（対象別の節目ボーナスは別加算）";
+ }
+ function combatResearchCard(key,title,desc){
+  const r=combatResearchLevel(key),cost=combatResearchCostBN(r);
+  const costText=s.admin?"管理者：無料":"必要 "+xpBNFmt(cost)+" 討伐データ";
+  return '<details class="item combat-research-fold" style="padding:10px"><summary style="cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;list-style:revert"><b>'+title+'</b><button type="button" data-combat-buy="'+key+'" style="white-space:nowrap;padding:7px 10px">'+costText+'で強化</button><span class="small" style="white-space:nowrap">Lv '+formatStat("level",r,0)+'</span><span class="small" style="grid-column:1/-1;color:var(--muted,#888)">タップで詳細</span></summary><div class="small" style="margin:8px 0 5px">'+desc+'</div><div class="small">'+combatEscape(combatResearchReadout(key))+'</div></details>';
+ }
+ function combatBuildPanel(root){
+  const unlocked=!!s.combatResearchUnlocked||s.admin;
+  root.innerHTML=
+   '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div class="milestone-heading"><b>🛡️ プレイヤー耐久</b><details class="milestone-help-pop"><summary aria-label="HPの説明" title="HPの説明を見る">?</summary><div class="milestone-help-content"><div class="small">HPは敵の攻撃を受けると減少し、0になると戦闘不能になります。</div><div class="small">自然回復で少しずつ回復します。耐久研究を強化すると最大HP・自然回復・防御力が上昇します。</div><div class="small">防御力は敵から受けるダメージを軽減します。戦闘不能になると10秒後に最大HPの50%で復帰します。</div><div class="small">時間操作中は通常世界のHP回復・敵の攻撃・戦闘研究効果が停止します。</div></div></details></div><b id="combatHpText">-</b></div>'+
+   '<div class="battle-hp" style="margin-top:7px"><span id="combatHpBar" style="width:100%"></span></div>'+
+   '<div class="small" id="combatHpDetails" style="margin-top:6px">自然回復・防御力</div>'+
+   '<div class="small" id="combatStateText" style="margin-top:5px">戦闘中</div>'+
+   '<div class="small" id="combatLastEvent" style="margin-top:4px"></div>'+
+   '<div class="divider" style="margin:12px 0;border-top:1px solid var(--border,#8884)"></div>'+
+   '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><label class="small" for="combatNotifyMode">報酬通知</label><select id="combatNotifyMode"><option value="all">すべて</option><option value="important">重要のみ</option><option value="minimal">最小限</option></select></div>'+
+   '<details style="margin-top:10px"><summary class="small">討伐データ履歴（最新100件）</summary><div id="combatHistoryList" class="small" style="max-height:220px;overflow:auto;margin-top:8px"></div></details>';
+  const help=root.querySelector("#combatResearchHelp");
+  if(help)help.onclick=()=>show("戦闘研究","戦闘研究は、敵を倒して獲得する討伐データを使って強化する戦闘専用システムです。\n\n通常世界の敵を倒して討伐データを初めて獲得すると解放されます。\n\n⚔️ 攻撃研究：通常世界の敵・強化個体・ボスへの与ダメージを強化します。\n\n🛡️ 耐久研究：最大HP・自然回復・防御力の3つを同時に強化します。\n\n📦 討伐研究：通常報酬で獲得する討伐データの量を増やします。初回報酬や節目報酬には影響しません。\n\n3種類の研究はそれぞれ独立して強化できます。討伐データと研究レベルは転生後も保持されます。",false);
+  const select=root.querySelector("#combatNotifyMode");
+  if(select){select.value=s.combatNotifyMode||"important";select.onchange=()=>{s.combatNotifyMode=select.value;saveAutoGame();combatLastRenderKey="";combatRenderPanel();};}
+  combatLastRenderKey="";
+  combatHistoryRenderKey="";
+ }
+ function combatBuyResearch(key){
+  combatEnsureState();
+  if(!combatKeys.includes(key)||(!s.combatResearchUnlocked&&!s.admin))return;
+  const lv=combatResearchLevel(key),cost=combatResearchCostBN(lv);
+  if(!s.admin&&BigNum.cmp(BigNum.from(s.combatDataBig),cost)<0){
+   setBattleLogMessage("討伐データが足りません。");
+   return;
+  }
+  if(!s.admin)s.combatDataBig=BigNum.json(BigNum.sub(BigNum.from(s.combatDataBig),cost));
+  s.combatResearch[key]=lv+1;
+  const amount=BigNum.toNumber(BigNum.from(s.combatDataBig));
+  s.combatData=Number.isFinite(amount)?amount:Number.MAX_VALUE;
+  combatEnsureState();
+  s.combatLastEvent=({attack:"攻撃研究",durability:"耐久研究",slaying:"討伐研究"})[key]+"をLv"+(lv+1)+"に強化しました。";
+  saveAutoGame();render();
+ }
+ function combatRenderPanel(){
+  const root=$("combatSurvivalPanel");
+  if(!root)return;
+  combatEnsureState();
+  const unlocked=!!s.combatResearchUnlocked||s.admin;
+  const key=[unlocked,combatResearchLevel("attack"),combatResearchLevel("durability"),combatResearchLevel("slaying"),s.combatNotifyMode].join("|");
+  if(!root.dataset.ready||root.dataset.ready!=="1"){
+   combatBuildPanel(root);root.dataset.ready="1";
+  }else if(combatLastRenderKey!==key){
+   const list=$("combatResearchCards");
+   const text=$("combatUnlockText");
+   if(list){
+    list.innerHTML=unlocked
+     ?combatResearchCard("attack","⚔️ 攻撃研究","通常世界の敵・強化個体・ボスへの与ダメージを強化。")
+      +combatResearchCard("durability","🛡️ 耐久研究","最大HP・自然回復・防御力の3効果を同時に強化。")
+      +combatResearchCard("slaying","📦 討伐研究","通常報酬の討伐データ獲得量を増加。初回・節目報酬には影響しません。")
+     :'<div class="small">通常世界の敵を倒し、討伐データを初めて獲得すると研究が解放されます。</div>';
+   }
+   if(text)text.textContent=unlocked?"3種類の研究は独立して強化できます。転生後も研究レベルと討伐データは保持されます。":"通常世界の敵を倒して討伐データを初めて獲得すると、戦闘研究が解放されます。";
+   document.querySelectorAll("#abilitiesCombatResearch [data-combat-buy]").forEach(btn=>btn.onclick=event=>{event.stopPropagation();combatBuyResearch(btn.dataset.combatBuy);});
+   combatLastRenderKey=key;
+  }
+  const max=combatPlayerMaxHpBN(),hp=combatHpBN();
+  const hpText=root.querySelector("#combatHpText");
+  if(hpText)hpText.textContent=xpBNFmt(hp)+" / "+xpBNFmt(max);
+  const bar=root.querySelector("#combatHpBar");
+  if(bar)bar.style.width=(combatHpRatio()*100)+"%";
+  const details=root.querySelector("#combatHpDetails");
+  if(details){
+   const regen=.05*combatRegenStudyMultiplier();
+   details.textContent="自然回復 "+regen.toFixed(5)+"%/秒（約 "+xpBNFmt(BigNum.mul(max,regen/100))+" HP/秒） ／ 防御力 "+combatDefenseValue().toFixed(1)+" ／ 通常攻撃軽減 "+(combatDamageReduction()*100).toFixed(2)+"%";
+  }
+  const state=root.querySelector("#combatStateText");
+  if(state){
+   const now=Date.now();
+   if(tsActive())state.textContent="歪み内部：通常世界のHP・敵攻撃・戦闘研究効果は停止中。研究強化は可能です。";
+   else if(combatIsDown())state.textContent="戦闘不能：復帰まで "+Math.max(0,(s.combatDownUntil-now)/1000).toFixed(1)+"秒";
+   else if(now<s.combatInvulnerableUntil)state.textContent="戦闘復帰後の保護："+Math.max(0,(s.combatInvulnerableUntil-now)/1000).toFixed(1)+"秒";
+   else if(now<s.combatRegenBlockUntil)state.textContent="自然回復停止："+Math.max(0,(s.combatRegenBlockUntil-now)/1000).toFixed(1)+"秒";
+   else if(now<s.combatRegenReduceUntil)state.textContent="自然回復50%低下："+Math.max(0,(s.combatRegenReduceUntil-now)/1000).toFixed(1)+"秒";
+   else state.textContent="戦闘中：敵の攻撃は通常敵3秒ごと／ボス1秒ごと。";
+  }
+  const last=root.querySelector("#combatLastEvent");
+  if(last)last.textContent=s.combatLastEvent||"";
+  const data=$("abilitiesCombatDataValue");
+  if(data)data.textContent=xpBNFmt(BigNum.from(s.combatDataBig||0));
+  const notify=root.querySelector("#combatNotifyMode");
+  if(notify&&notify.value!==s.combatNotifyMode)notify.value=s.combatNotifyMode;
+  const history=s.combatRewardHistory||[];
+  const historyKey=history.length+"|"+(history[0]?.time||0)+"|"+(history[0]?.name||"");
+  if(historyKey!==combatHistoryRenderKey){
+   const list=root.querySelector("#combatHistoryList");
+   if(list){
+    list.innerHTML=history.length?history.map(item=>{
+     const when=new Date(Number(item.time)||0).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+     return '<div style="padding:5px 0;border-bottom:1px solid var(--border,#8884)"><b>'+combatEscape(item.name)+'</b><br><span>'+when+' ／ +'+xpBNFmt(BigNum.from(item.amount||0))+' 討伐データ</span></div>';
+    }).join(""):'まだ報酬履歴はありません。';
+   }
+   combatHistoryRenderKey=historyKey;
+  }
+  document.querySelectorAll("#abilitiesCombatResearch [data-combat-buy]").forEach(btn=>{
+   const id=btn.dataset.combatBuy;
+   const cost=combatResearchCostBN(combatResearchLevel(id));
+   const affordable=s.admin||BigNum.cmp(BigNum.from(s.combatDataBig||0),cost)>=0;
+   btn.disabled=!unlocked||!affordable;
+   btn.textContent=(s.admin?"管理者：無料":"必要 "+xpBNFmt(cost)+" 討伐データ")+"で強化";
+  });
+ }
+ const combatLegacyEnsure=battleEnsureState;
+ battleEnsureState=function(){
+  combatLegacyEnsure();
+  combatEnsureState();
+ };
+ const combatLegacyDamageForTarget=battleDamageForTarget;
+ battleDamageForTarget=function(target,mult=1,bossMultiplier=1,advance=false,hitOffset=0){
+  const damage=combatLegacyDamageForTarget(target,mult,bossMultiplier,advance,hitOffset);
+  if(!target||tsActive())return damage;
+  const info=battleEnemyInfo(target.number);
+  return BigNum.mul(damage,combatAttackMultiplier(info));
+ };
+ const combatLegacyApplyDamage=battleApplyDamage;
+ battleApplyDamage=function(mult=1,targetCount=1,bossMultiplier=1,deferSpawn=false,targetSequence=null){
+  if(!tsActive()&&combatIsDown())return;
+  const before=(s.battleGroup||[]).map(target=>({target:{...target},info:{...battleEnemyInfo(target.number)}}));
+  const result=combatLegacyApplyDamage.apply(this,arguments);
+  const alive=new Set((s.battleGroup||[]).map(target=>Number(target.number)));
+  before.forEach(record=>{
+   if(!alive.has(Number(record.target.number)))combatRecordKill(record);
+  });
+  return result;
+ };
+ const combatLegacyUpdateBossTimer=battleUpdateBossTimer;
+ battleUpdateBossTimer=function(dt){
+  if(combatIsDown())return;
+  return combatLegacyUpdateBossTimer(dt);
+ };
+ const combatLegacyUseSkill=battleUseSkill;
+ battleUseSkill=function(){
+  if(!tsActive()&&combatIsDown())return;
+  return combatLegacyUseSkill.apply(this,arguments);
+ };
+ if(typeof window.battleManualAttack==="function"){
+  const combatLegacyManualAttack=window.battleManualAttack;
+  window.battleManualAttack=function(){
+   if(!tsActive()&&combatIsDown())return;
+   return combatLegacyManualAttack.apply(this,arguments);
+  };
+  const manual=$("battleManual");
+  if(manual)manual.onclick=window.battleManualAttack;
+ }
+ const combatLegacyRenderBattle=renderBattle;
+ renderBattle=function(){
+  combatLegacyRenderBattle();
+  combatRenderPanel();
+ };
+ const rebirthButton=$("rebirthBtn");
+ if(rebirthButton&&typeof rebirthButton.onclick==="function"){
+  const combatLegacyRebirthClick=rebirthButton.onclick;
+  rebirthButton.onclick=function(ev){
+   const previousState=s;
+   const saved={};
+   Object.keys(previousState).forEach(k=>{if(k.startsWith("combat"))saved[k]=previousState[k]});
+   combatLegacyRebirthClick.call(this,ev);
+   if(s!==previousState&&Number(s.rebirth)>Number(previousState.rebirth)){
+    Object.assign(s,saved);
+    combatEnsureState();
+    saveAutoGame();
+    render();
+   }
+  };
+ }
+ combatEnsureState();
+ combatInitialised=true;
+ renderBattle();
+ const combatTimer=setInterval(()=>{
+  const now=performance.now();
+  const dt=Math.max(0,Math.min(.25,(now-combatTickAt)/1000));
+  combatTickAt=now;
+  try{combatTick(dt)}catch(err){console.error("戦闘HP・敵攻撃処理エラー",err);}
+ },100);
+ window.combatSystemV332={maxHp:combatPlayerMaxHpBN,attackMultiplier:combatAttackMultiplier,damageReduction:combatDamageReduction,researchCost:combatResearchCostBN};
+})();
+</script>
