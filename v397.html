@@ -1113,7 +1113,7 @@ const rebirthUpgrades=[
  {cat:"施設効率化",items:[
   {id:"facilityMoney",name:"施設お金収益",desc:"施設のお金収益 +2% / Lv",base:2,cap:100},
   {id:"facilityXp",name:"施設XP収益",desc:"施設XP収益 +2% / Lv",base:2,cap:100},
-  {id:"facilityDiscount",name:"施設購入費用割引",desc:"施設の購入費用 -0.5% / Lv（最大25%）",base:5,cap:50}]},
+  {id:"facilityDiscount",name:"施設購入費用割引",desc:"施設の購入費用 -0.5% / Lv（通常上限25%、上限解放後37.5%）",base:5,cap:50}]},
  {cat:"タップ性能",items:[
   {id:"tapMoney",name:"タップお金",desc:"タップのお金獲得 +2% / Lv",base:2,cap:100},
   {id:"tapXp",name:"タップXP",desc:"タップXP獲得 +2% / Lv",base:2,cap:100}]},
@@ -1123,12 +1123,12 @@ const rebirthUpgrades=[
  {cat:"MP効率化",items:[
   {id:"mpCapacity",name:"MP最大容量",desc:"最大MP +5 / Lv",base:3,cap:100},
   {id:"mpRegen",name:"MP自然回復",desc:"MP自然回復 +5% / Lv",base:3,cap:100},
-  {id:"mpCost",name:"MP自然消費軽減",desc:"時間操作中の自然MP消費 -0.5% / Lv（最大25%）",base:4,cap:50}]},
+  {id:"mpCost",name:"MP自然消費軽減",desc:"時間操作中の自然MP消費 -0.5% / Lv（通常上限25%、上限解放後37.5%）",base:4,cap:50}]},
  {cat:"放置効率化",items:[
   {id:"offlineMoney",name:"オフラインお金",desc:"オフライン中も毎秒収入の割合分を獲得。最大100%。Lv20で8時間、Lv30で12時間。",base:4,cap:20},
   {id:"offlineXp",name:"オフラインXP",desc:"オフライン中も施設XPの割合分を獲得。最大100%。Lv20で8時間、Lv30で12時間。",base:4,cap:20}]},
  {cat:"レベル成長",items:[
-  {id:"needDiscount",name:"必要XP軽減",desc:"次レベルに必要なXP -0.5% / Lv（最大25%）",base:5,cap:50},
+  {id:"needDiscount",name:"必要XP軽減",desc:"次レベルに必要なXP -0.5% / Lv（通常上限25%、上限解放後37.5%）",base:5,cap:50},
   {id:"levelReward",name:"レベル報酬",desc:"レベルアップ報酬 +2% / Lv",base:3,cap:100}]},
  {cat:"転生効率化",items:[
   {id:"startMoney",name:"転生後初期資金",desc:"転生後の初期資金 +100 / Lv",base:2,cap:100},
@@ -1146,10 +1146,10 @@ const rebirthUpgrades=[
   {id:"battleDamage",name:"基礎攻撃力",desc:"戦闘ダメージ +2% / Lv（最大+200%）",base:8,cap:100},
   {id:"bossDamage",name:"ボス特効",desc:"ボスへのダメージ +1.5% / Lv（最大+150%）",base:10,cap:100},
   {id:"battleHaste",name:"攻撃速度",desc:"攻撃速度 +1% / Lv（最大+50%）",base:8,cap:50},
-  {id:"ticketBonus",name:"挑戦券獲得量",desc:"雑魚敵100体ごとの挑戦券 +1枚 / 10Lv（最大+5枚）",base:12,cap:50}]},
+  {id:"ticketBonus",name:"挑戦券獲得量",desc:"雑魚敵100体ごとの挑戦券 +1枚 / 10Lv（通常上限+5枚、上限解放後+7枚）",base:12,cap:50}]},
  {cat:"時空系TPショップ",unlockDoor:10,items:[
   {id:"timeShardGain",name:"時空欠片収集",desc:"歪み内部の欠片獲得量 +2% / Lv",base:10,cap:50},
-  {id:"timeCoreDiscount",name:"核生成効率",desc:"時空の核の制作費用 -1% / Lv（最大25%）",base:15,cap:25},
+  {id:"timeCoreDiscount",name:"核生成効率",desc:"時空の核の制作費用 -1% / Lv（通常上限25%、上限解放後50%）",base:15,cap:25},
   {id:"distortionAttack",name:"歪み戦闘強化",desc:"歪み内部の攻撃力 +1% / Lv",base:12,cap:50},
   {id:"distortionGuard",name:"歪み防護",desc:"歪み内部の被ダメージ -0.5% / Lv",base:12,cap:50}]}
 ];
@@ -1422,7 +1422,7 @@ const floorSq250PrefixBig=[0n];for(let r=0;r<250;r++)floorSq250PrefixBig.push(fl
 const FLOOR_SQ250_BLOCK_BIG=floorSq250PrefixBig[250];
 function floor100SumPrefixBig(n){const q=n/100n,r=n%100n;return 100n*q*(q-1n)/2n+q*r}
 function floorSq250SumPrefixBig(n){const q=n/250n,r=n%250n;return 62500n*q*(q-1n)*(2n*q-1n)/6n+62250n*q*(q-1n)/2n+q*FLOOR_SQ250_BLOCK_BIG+250n*q*q*r+q*r*(r-1n)+floorSq250PrefixBig[Number(r)]}
-function requiredXPSum(startN,count){const start=toLevelInteger(startN),amount=toLevelInteger(count);if(amount<=0n)return BigNum.from(0);const end=start+amount,sum=amount*(2n*start+amount-1n)/2n,f100=floor100SumPrefixBig(end)-floor100SumPrefixBig(start),f250=floorSq250SumPrefixBig(end)-floorSq250SumPrefixBig(start),total=100n*amount+(9n*sum)/2n+f100+f250,discount=1-Math.min(25,shopEffect("needDiscount",0.5))/100;return BigNum.mul(BigNum.from(total),discount)}
+function requiredXPSum(startN,count){const start=toLevelInteger(startN),amount=toLevelInteger(count);if(amount<=0n)return BigNum.from(0);const end=start+amount,sum=amount*(2n*start+amount-1n)/2n,f100=floor100SumPrefixBig(end)-floor100SumPrefixBig(start),f250=floorSq250SumPrefixBig(end)-floorSq250SumPrefixBig(start),total=100n*amount+(9n*sum)/2n+f100+f250,discount=1-Math.min(37.5,shopEffect("needDiscount",0.5))/100;return BigNum.mul(BigNum.from(total),discount)}
 function affordableLevelCount(maxCount=100n){const xp=xpBN();if(BigNum.cmp(xp,needBN())<0)return 0n;const start=s.level-1n,limit=BigInt(maxCount);if(limit<=0n)return 0n;if(BigNum.cmp(requiredXPSum(start,limit),xp)<=0)return limit;let low=0n,high=limit;while(high-low>1n){const mid=(low+high)/2n;if(BigNum.cmp(requiredXPSum(start,mid),xp)<=0)low=mid;else high=mid}return low}
 
 function totalIncomeAtLevelBN(level){
@@ -1712,8 +1712,8 @@ function maxGeometricCount(base,rate,startLevel,budget,limit){let lo=0,hi=Math.m
 function geometricCostBN(base,rate,level,discount=1){if(level<0)return BigNum.from(0);const log=Math.log(base)+level*Math.log(rate)+Math.log(Math.max(1e-12,discount));if(!Number.isFinite(log))return BigNum.from("1e1000000000");const e=Math.floor(log/Math.LN10);return BigNum.from({m:Math.exp(log-e*Math.LN10),e})}
  function fCostBN(i){return s.admin?BigNum.from(0):geometricCostBN(funcs[i].base,funcs[i].rate,s.fl[i])}
  function fCost(i){return s.admin?0:safeCost(funcs[i].base,funcs[i].rate,s.fl[i])}
-function facilityCostAt(i,level){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(i===0)return level===0?Math.max(1,Math.floor(250*discount)):Math.max(1,Math.floor(safeCost(300,1.22,level-1)*discount));const rates=[1.22,1.35,1.35,1.30,1.25];return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?level-1:level,discount)}
-function bCostBN(i){const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;if(s.admin)return BigNum.from(0);if(i===0&&s.bl[i]===0)return BigNum.from(Math.max(1,Math.floor(250*discount)));const rates=[1.22,1.35,1.35,1.30,1.25];return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?s.bl[i]-1:s.bl[i],discount)}
+function facilityCostAt(i,level){const discount=1-Math.min(37.5,shopEffect("facilityDiscount",0.5))/100;if(i===0)return level===0?Math.max(1,Math.floor(250*discount)):Math.max(1,Math.floor(safeCost(300,1.22,level-1)*discount));const rates=[1.22,1.35,1.35,1.30,1.25];return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?level-1:level,discount)}
+function bCostBN(i){const discount=1-Math.min(37.5,shopEffect("facilityDiscount",0.5))/100;if(s.admin)return BigNum.from(0);if(i===0&&s.bl[i]===0)return BigNum.from(Math.max(1,Math.floor(250*discount)));const rates=[1.22,1.35,1.35,1.30,1.25];return geometricCostBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?s.bl[i]-1:s.bl[i],discount)}
  function bCost(i){return bCostBN(i)}
 function updateXPBars(){
  const progress=xpProgress();
@@ -2754,7 +2754,7 @@ function geometricCostSumBN(base,rate,startLevel,count,discount=1){if(count<=0)r
 function maxGeometricCountBN(base,rate,startLevel,budget,limit,discount=1){let lo=0,hi=Math.max(0,Math.floor(limit));while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(BigNum.cmp(geometricCostSumBN(base,rate,startLevel,mid,discount),budget)<=0)lo=mid;else hi=mid-1}return lo}
 window.buyFMax=i=>{if(!tsAbilityUnlocked(i))return;const cap=abilityLevelCap(),target=Math.min(Number($("buyCount").value)||5,Math.max(0,cap-s.fl[i])),free=s.admin||s.adminMoneyUnlimited,count=free?target:maxGeometricCountBN(funcs[i].base,funcs[i].rate,s.fl[i],moneyBN(),target);if(count){const total=free?BigNum.from(0):geometricCostSumBN(funcs[i].base,funcs[i].rate,s.fl[i],count);if(!free&&!spendMoneyBN(total))return;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベルまとめて強化しました。`;render()}else{$('log').textContent="購入資金が足りないか、能力レベル上限です。"}};
 window.buyFAll=i=>{if(!tsAbilityUnlocked(i))return;const cap=abilityLevelCap(),limit=Math.min((window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),Math.max(0,cap-s.fl[i])),free=s.admin||s.adminMoneyUnlimited,count=free?limit:maxGeometricCountBN(funcs[i].base,funcs[i].rate,s.fl[i],moneyBN(),limit);if(!count){$('log').textContent="購入資金が足りないか、能力レベル上限です。";return}const total=free?BigNum.from(0):geometricCostSumBN(funcs[i].base,funcs[i].rate,s.fl[i],count);if(!free&&!spendMoneyBN(total))return;s.fl[i]+=count;shopDirty=true;$('log').textContent=`${funcs[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()};
-function facilityBulkCostBN(i,start,count){if(count<=0)return BigNum.from(0);const discount=1-Math.min(25,shopEffect("facilityDiscount",0.5))/100;let total=BigNum.from(0),offset=0;if(i===0&&start===0){total=BigNum.from(Math.max(1,Math.floor(250*discount)));offset=1;if(count===1)return total}const rates=[1.22,1.35,1.35,1.30,1.25];return BigNum.add(total,geometricCostSumBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?Math.max(0,start-1):start,count-offset,discount))}
+function facilityBulkCostBN(i,start,count){if(count<=0)return BigNum.from(0);const discount=1-Math.min(37.5,shopEffect("facilityDiscount",0.5))/100;let total=BigNum.from(0),offset=0;if(i===0&&start===0){total=BigNum.from(Math.max(1,Math.floor(250*discount)));offset=1;if(count===1)return total}const rates=[1.22,1.35,1.35,1.30,1.25];return BigNum.add(total,geometricCostSumBN(i===0?300:buildings[i].cost,i===0?1.22:rates[i]||1.30,i===0?Math.max(0,start-1):start,count-offset,discount))}
 function facilityBulkCount(i,limit){limit=Math.max(0,Math.floor(limit));if(!limit)return 0;if(s.admin||s.adminMoneyUnlimited)return limit;let lo=0,hi=limit;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(BigNum.cmp(facilityBulkCostBN(i,s.bl[i],mid),moneyBN())<=0)lo=mid;else hi=mid-1}return lo}
 window.buyB=i=>{if(!tsFacilityUnlocked(i))return;const cost=bCostBN(i),free=s.admin||s.adminMoneyUnlimited;if(!free&&!spendMoneyBN(cost)){$('log').textContent="購入資金が足りません。";return}s.bl[i]++;shopDirty=true;render()};
 window.buyBAll=i=>{if(!tsFacilityUnlocked(i))return;const limit=(window.apMaxBulk?window.apMaxBulk():10000)+shopEffect("bulkLimit",1000),count=facilityBulkCount(i,limit),free=s.admin||s.adminMoneyUnlimited;if(!count){$('log').textContent="購入資金が足りません。";return}const total=free?BigNum.from(0):facilityBulkCostBN(i,s.bl[i],count);if(!free&&!spendMoneyBN(total))return;s.bl[i]+=count;shopDirty=true;$('log').textContent=`${buildings[i].name}を${count}レベル購入しました（所持金で買えるだけ）。`;render()};
@@ -2910,7 +2910,7 @@ function tsRewardShards(n){
 }
 function tsCraft(n){
  if(tsActive())return false;
- const t=tsEnsure(),cost=Math.max(120,Math.floor(200*(1-t.coreResearch*.05)*(1-shopEffect("timeCoreDiscount",.01))));
+ const t=tsEnsure(),cost=Math.max(60,Math.floor(200*(1-t.coreResearch*.05)*(1-shopEffect("timeCoreDiscount",.01))));
  const amount=Math.min(Math.max(1,Math.min(1000,Math.floor(n)||1)),Math.floor((Number(s.timeShards)||0)/cost));
  if(!amount)return false;tsSpendShards(amount*cost);t.cores+=amount;t.coreDiscovered=true;t.coreCrafted=true;return true;
 }
@@ -3238,7 +3238,7 @@ function tsRender(){
  const shardName=typeof shardDisplayName==="function"?shardDisplayName():"時空の欠片";
  const shardDiscovered=(Number(s.timeShardsTotal)||0)>0||(Number(s.timeShards)||0)>0;
  const coreName=t.coreCrafted?"時空の核":"？？？？";
- const craftCost=Math.max(120,Math.floor(200*(1-t.coreResearch*.05)*(1-shopEffect("timeCoreDiscount",.01))));
+ const craftCost=Math.max(60,Math.floor(200*(1-t.coreResearch*.05)*(1-shopEffect("timeCoreDiscount",.01))));
  const coreHtml=tsCoreDefs.map(x=>{
   const lv=Number(t.upgrades[x[0]])||0,cost=tsCoreCost(x[0]),memoryGate=x[0]==="memory"?(lv>=4||t.echo.levels[2]>=[1,2,3,5][lv]):true;
   const allowed=s.skillTreeUnlocked&&cost>0&&t.cores-cost>=coreReserve&&memoryGate&&!d.active;
