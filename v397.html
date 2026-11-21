@@ -805,6 +805,46 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  #view-battle .battle-stage .battle-boss .monster-art{height:138px;max-height:138px}
 }
 </style>
+<style id="v397-monster-art-fit">
+/* 敵画像を戦闘ステージ内に確実に収める */
+#view-battle .battle-stage{overflow:hidden!important}
+#view-battle .battle-stage .monster-art{
+ width:auto!important;
+ max-width:100%!important;
+ height:122px!important;
+ max-height:122px!important;
+ object-fit:contain!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-stage .battle-boss .monster-art,
+#view-battle .battle-stage .battle-boss .slime-monster-art{
+ height:118px!important;
+ max-height:118px!important;
+ max-width:100%!important;
+}
+#view-battle .battle-stage .battle-mob .monster-art,
+#view-battle .battle-stage .battle-mob .slime-monster-art{
+ width:100%!important;
+ height:58px!important;
+ max-height:58px!important;
+ object-fit:contain!important;
+}
+#view-battle .battle-stage .goblin-art-wrap,
+#view-battle .battle-stage .skeleton-art-wrap,
+#view-battle .battle-stage .slime-elite-art{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ max-width:100%;
+ min-width:0;
+ overflow:hidden;
+}
+@media(max-width:520px){
+ #view-battle .battle-stage .monster-art{height:116px!important;max-height:116px!important}
+ #view-battle .battle-stage .battle-boss .monster-art,
+ #view-battle .battle-stage .battle-boss .slime-monster-art{height:112px!important;max-height:112px!important}
+}
+</style>
 <script>
 const $=id=>document.getElementById(id);
 const funcs=[
