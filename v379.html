@@ -2311,13 +2311,13 @@ function renderBattle(){
  const stage=$("battleStage");if(!stage)return;
  const key=group.map(x=>x.number+":"+(x.milestoneId||"")+":"+(x.mutationId||"")+":"+(Number(x.variant)||0)).join(",");
  if(battleRenderedEnemy!==key){
-  stage.innerHTML='<div class="battle-mob-group">'+group.map(enemy=>{
+  stage.innerHTML=group.length?'<div class="battle-mob-group">'+group.map(enemy=>{
    const e=battleEnemyInfo(enemy.number);
    const tier=Number(enemy.variant)||0,tierName=tier===3?"超越個体":tier===2?"災厄個体":tier===1?"覚醒個体":"";
    return '<div class="battle-mob '+(e.boss?'boss ':'')+(tier?'elite-'+tier:'')+'">'+battleMonsterArt(e.kind,tier)+'<div class="battle-mob-name">'+(e.boss?'BOSS ':'')+e.name+'</div>'+(tier&&!e.milestoneDedicated?'<div class="battle-elite-label">'+tierName+'</div>':'')+'</div>';
-  }).join("")+'</div>';
-  stage.classList.toggle("battle-boss",!!info.boss);stage.classList.toggle("battle-mutation",!!info.mutationId);
-  $("battleEnemyName").textContent=(info.mutationId?"突然変異ボス：":(info.milestone&&info.boss?"マイルストーンボス：":(info.boss?"BOSS：":"")))+(!info.milestone?(info.variant===3?"超越":info.variant===2?"災厄":info.variant===1?"覚醒":""):"")+(!info.milestone&&info.variant?" ":"")+info.name+(group.length>1?" ほか"+(group.length-1)+"体":"");
+  }).join("")+'</div>':'<div class="battle-empty">'+(s.milestoneFailed?"マイルストーン挑戦失敗・再挑戦待ち":"敵データがありません")+'</div>';
+  stage.classList.toggle("battle-boss",!!(target&&info.boss));stage.classList.toggle("battle-mutation",!!(target&&info.mutationId));
+  $("battleEnemyName").textContent=target?(info.mutationId?"突然変異ボス：":(info.milestone&&info.boss?"マイルストーンボス：":(info.boss?"BOSS：":"")))+(!info.milestone?(info.variant===3?"超越":info.variant===2?"災厄":info.variant===1?"覚醒":""):"")+(!info.milestone&&info.variant?" ":"")+info.name+(group.length>1?" ほか"+(group.length-1)+"体":""):(s.milestoneFailed?"マイルストーン挑戦失敗・再挑戦待ち":"敵データなし");
   battleRenderedEnemy=key;
  }
  const ratio=target?Math.max(0,Math.min(1,BigNum.toNumber(BigNum.div(hp,max)))):0;
