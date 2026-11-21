@@ -908,6 +908,59 @@ main{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
  }
 }
 </style>
+<style id="v397-battle-skill-single-slot">
+/* 戦闘スキル欄はスキルボタン1個分だけ見せ、残りは縦スクロール */
+#view-battle .battle-skill-actions{
+ height:92px!important;
+ min-height:92px!important;
+ max-height:92px!important;
+ box-sizing:border-box!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions .battle-skill-fold{
+ display:flex!important;
+ flex-direction:column!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ overflow:hidden!important;
+}
+#view-battle .battle-skill-actions .battle-skill-fold>summary{
+ flex:0 0 36px!important;
+ height:36px!important;
+ min-height:36px!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-auto-rows:34px!important;
+ gap:0!important;
+ flex:1 1 auto!important;
+ min-height:0!important;
+ max-height:none!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ padding:0 1px 2px!important;
+ box-sizing:border-box!important;
+}
+#view-battle .battle-skill-actions .battle-skill-list button{
+ width:100%!important;
+ min-height:34px!important;
+ height:34px!important;
+ max-height:34px!important;
+ box-sizing:border-box!important;
+ flex-shrink:0!important;
+ overflow:hidden!important;
+}
+@media(max-width:520px){
+ #view-battle .battle-skill-actions{
+  height:90px!important;
+  min-height:90px!important;
+  max-height:90px!important;
+ }
+}
+</style>
 <script>
 const $=id=>document.getElementById(id);
 const funcs=[
