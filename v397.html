@@ -4523,10 +4523,27 @@ let previous=null;const baseRender=window.render;if(typeof baseRender==="functio
   }
   return "基本獲得倍率 ×"+combatSlayingBaseMultiplier().toFixed(3)+"（対象別の節目ボーナスは別加算）";
  }
+ function combatResearchBulkCostBN(startLevel,count){
+  let total=BigNum.from(0);
+  for(let i=0;i<count;i++)total=BigNum.add(total,combatResearchCostBN(startLevel+i));
+  return total;
+ }
+ function combatResearchAffordableCount(key,target){
+  if(s.admin)return target;
+  let remaining=BigNum.from(s.combatDataBig||0),count=0,level=combatResearchLevel(key);
+  while(count<target){
+   const cost=combatResearchCostBN(level+count);
+   if(BigNum.cmp(remaining,cost)<0)break;
+   remaining=BigNum.sub(remaining,cost);count++;
+  }
+  return count;
+ }
  function combatResearchCard(key,title,desc){
-  const r=combatResearchLevel(key),cost=combatResearchCostBN(r);
-  const costText=s.admin?"管理者：無料":"必要 "+xpBNFmt(cost)+" 討伐データ";
-  return '<details class="item combat-research-fold" style="padding:10px"><summary style="cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;list-style:revert"><b>'+title+'</b><button type="button" data-combat-buy="'+key+'" style="white-space:nowrap;padding:7px 10px">'+costText+'で強化</button><span class="small" style="white-space:nowrap">Lv '+formatStat("level",r,0)+'</span><span class="small" style="grid-column:1/-1;color:var(--muted,#888)">タップで詳細</span></summary><div class="small" style="margin:8px 0 5px">'+desc+'</div><div class="small">'+combatEscape(combatResearchReadout(key))+'</div></details>';
+  const r=combatResearchLevel(key),target=Math.max(1,Math.min(10000,Math.floor(Number($("buyCount")?.value)||5)));
+  const count=combatResearchAffordableCount(key,target),total=s.admin?BigNum.from(0):combatResearchBulkCostBN(r,count);
+  const costText=s.admin?"無料":count>0?"合計 "+xpBNFmt(total)+" 討伐データ":"討伐データ不足";
+  const label=count>0?(count+"レベルまとめて強化"):"購入不可";
+  return '<details class="item combat-research-fold" style="padding:10px"><summary style="cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;list-style:revert"><b>'+title+'</b><button type="button" data-combat-buy="'+key+'" '+(count<=0?'disabled':'')+' style="white-space:nowrap;padding:7px 10px">'+label+'</button><span class="small" style="white-space:nowrap">Lv '+formatStat("level",r,0)+'</span><span class="small" style="grid-column:1/-1;color:var(--muted,#888)">'+costText+' ／ 上限 '+target+'レベル</span><span class="small" style="grid-column:1/-1;color:var(--muted,#888)">タップで詳細</span></summary><div class="small" style="margin:8px 0 5px">'+desc+'</div><div class="small">'+combatEscape(combatResearchReadout(key))+'</div></details>';
  }
  function combatBuildPanel(root){
   const unlocked=!!s.combatResearchUnlocked||s.admin;
@@ -4551,17 +4568,19 @@ let previous=null;const baseRender=window.render;if(typeof baseRender==="functio
  function combatBuyResearch(key){
   combatEnsureState();
   if(!combatKeys.includes(key)||(!s.combatResearchUnlocked&&!s.admin))return;
-  const lv=combatResearchLevel(key),cost=combatResearchCostBN(lv);
-  if(!s.admin&&BigNum.cmp(BigNum.from(s.combatDataBig),cost)<0){
-   setBattleLogMessage("討伐データが足りません。");
-   return;
+  const target=Math.max(1,Math.min(10000,Math.floor(Number($("buyCount")?.value)||5)));
+  const lv=combatResearchLevel(key),count=combatResearchAffordableCount(key,target);
+  if(count<=0){setBattleLogMessage("討伐データが足りません。");return;}
+  const total=s.admin?BigNum.from(0):combatResearchBulkCostBN(lv,count);
+  if(!s.admin){
+   if(BigNum.cmp(BigNum.from(s.combatDataBig),total)<0){setBattleLogMessage("討伐データが足りません。");return;}
+   s.combatDataBig=BigNum.json(BigNum.sub(BigNum.from(s.combatDataBig),total));
   }
-  if(!s.admin)s.combatDataBig=BigNum.json(BigNum.sub(BigNum.from(s.combatDataBig),cost));
-  s.combatResearch[key]=lv+1;
+  s.combatResearch[key]=lv+count;
   const amount=BigNum.toNumber(BigNum.from(s.combatDataBig));
-  s.combatData=Number.isFinite(amount)?amount:Number.MAX_VALUE;
+  s.combatData=Number.isFinite(amount)?Math.max(0,amount):Number.MAX_VALUE;
   combatEnsureState();
-  s.combatLastEvent=({attack:"攻撃研究",durability:"耐久研究",slaying:"討伐研究"})[key]+"をLv"+(lv+1)+"に強化しました。";
+  s.combatLastEvent=({attack:"攻撃研究",durability:"耐久研究",slaying:"討伐研究"})[key]+"を"+count+"レベルまとめて強化しました（Lv"+(lv+count)+"）。";
   saveAutoGame();render();
  }
  function combatRenderPanel(){
@@ -4569,7 +4588,7 @@ let previous=null;const baseRender=window.render;if(typeof baseRender==="functio
   if(!root)return;
   combatEnsureState();
   const unlocked=!!s.combatResearchUnlocked||s.admin;
-  const key=[unlocked,combatResearchLevel("attack"),combatResearchLevel("durability"),combatResearchLevel("slaying"),s.combatNotifyMode].join("|");
+  const key=[unlocked,combatResearchLevel("attack"),combatResearchLevel("durability"),combatResearchLevel("slaying"),s.combatNotifyMode,$("buyCount")?.value||5,BigNum.toString(BigNum.from(s.combatDataBig||0))].join("|");
   if(!root.dataset.ready||root.dataset.ready!=="1"){
    combatBuildPanel(root);root.dataset.ready="1";
   }else if(combatLastRenderKey!==key){
